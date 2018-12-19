@@ -1,5 +1,5 @@
 import graphene
-from DigitalMeLib.graphql import BaseQuery, BaseMutation
+from DigitalMe.graphql import BaseQuery, BaseMutation
 
 
 class Query(BaseQuery):

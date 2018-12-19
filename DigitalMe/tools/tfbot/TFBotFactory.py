@@ -1,5 +1,5 @@
 from Jumpscale import j
-from DigitalMeLib.tools.builder.ZOSContainer import ZOSContainer
+from DigitalMe.tools.builder.ZOSContainer import ZOSContainer
 import re
 from io import StringIO
 import os

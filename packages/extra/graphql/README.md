@@ -33,13 +33,13 @@ from all other packages and create automatic queries for each model
 
 - create a file called `graphql_.py` inside your package which gonna contain queries & mutations for this package
 - To create queries or mutations please refer to  [Graphene](https://docs.graphene-python.org/en/latest/) library docs
-- Make sure your query classes inherit from `DigitalMeLib.graphql import BaseQuery`
-- Make sure your mutation classes inherit from `DigitalMeLib.graphql import BaseMutation`
+- Make sure your query classes inherit from `DigitalMe.graphql import BaseQuery`
+- Make sure your mutation classes inherit from `DigitalMe.graphql import BaseMutation`
 - **examples**:
     - **Query** defined in a `graphql_.py` file:
         ```python
         import graphene
-        from DigitalMeLib.graphql import BaseQuery, BaseMutation
+        from DigitalMe.graphql import BaseQuery, BaseMutation
 
 
         class Query(BaseQuery):

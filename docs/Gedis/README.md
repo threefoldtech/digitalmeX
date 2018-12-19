@@ -40,7 +40,7 @@ client = j.clients.gedis.get("test")
 client.gedis_examples.echo("s")
 
 ```
-**to see more usage examples please read the tests in [gedis_factory class](DigitalMeLib/servers/gedis/GedisFactory.py)**
+**to see more usage examples please read the tests in [gedis_factory class](DigitalMe/servers/gedis/GedisFactory.py)**
 
 
 ## JavaScript Client

@@ -60,7 +60,7 @@ see
 ```
 !!!include(
         name="Package.py",start_include=False,end_include=False
-        giturl="https://raw.githubusercontent.com/threefoldtech/digital_me/{{JS9_BRANCH}}/DigitalMeLib/servers/digitalme",
+        giturl="https://raw.githubusercontent.com/threefoldtech/digital_me/{{JS9_BRANCH}}/DigitalMe/servers/digitalme",
         start="SCHEMA_PACKAGE",
         end="##ENDSCHEMA",
         )

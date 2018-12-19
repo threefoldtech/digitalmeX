@@ -1,6 +1,6 @@
 from blueprints.graphql import *
 from Jumpscale import j
-from DigitalMeLib.graphql import BaseQuery, BaseMutation
+from DigitalMe.graphql import BaseQuery, BaseMutation
 from flask import request, jsonify
 login_manager = j.servers.web.latest.loader.login_manager
 
