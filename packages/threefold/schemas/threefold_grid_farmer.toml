@@ -1,0 +1,11 @@
+
+@url = threefold.grid.farmer
+name* = ""
+description = ""
+error = ""
+iyo_org* = ""
+wallets = (LS)
+emailaddr = (LS)
+mobile = (LS)
+pubkeys = "" (S)
+

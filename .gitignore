@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#pycharm
+.idea
+dump.rdb
+packages/examples/models/bcdb_model*
+packages/dm_base/blueprints/base/static

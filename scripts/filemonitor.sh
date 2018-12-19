@@ -1,0 +1,1 @@
+js_shell 'j.servers.digitalme.monitor_changes("test")'
