@@ -37,7 +37,7 @@ class ZOSContainer(JSBASE):
             self._node=node
         return self._node
 
-    def sync(self, monitor=False,paths=["{DIR_CODE}/github/threefoldtech/jumpscale_core",
+    def sync(self, monitor=False,paths=["{DIR_CODE}/github/threefoldtech/jumpscaleX",
                                         "{DIR_CODE}/github/threefoldtech/jumpscale_lib",
                                         "{DIR_CODE}/github/threefoldtech/jumpscale_prefab",
                                         "{DIR_CODE}/github/threefoldtech/digital_me"]):
