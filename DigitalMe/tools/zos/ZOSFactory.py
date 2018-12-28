@@ -28,7 +28,7 @@ class ZOSFactory(JSBASE):
         """
         args={"PATH":path}
         script = j.core.text.strip(script,args=args)
-        j.tools.prefab.local.core.execute_bash(script,profile=False)
+        j.sal.process.execute(script,profile=False)
 
     def _exec(self,cmd):
         cmd="cd /sandbox/var;zos %s" % cmd

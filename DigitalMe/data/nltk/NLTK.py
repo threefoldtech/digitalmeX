@@ -1,11 +1,15 @@
 
 from Jumpscale import j
 
-import nltk
+try:
+    import nltk
+    from nltk.tokenize import wordpunct_tokenize
+except:
+    pass
 from nameparser.parser import HumanName
 from pprint import pprint as print
 from unidecode import unidecode
-from nltk.tokenize import wordpunct_tokenize
+
 #https://pypi.python.org/pypi/transliterate
 
 VOWELS_ORD=[97,101,105,111,117,121]
@@ -23,7 +27,7 @@ class NLTKFactory(JSBASE):
         JSBASE.__init__(self)
 
     def install(self):
-        j.tools.prefab.local.runtimes.pip.install("nltk,nameparser,unidecode")
+        j.builder.runtimes.pip.install("nltk,nameparser,unidecode")
         self.download_nltk()
 
 

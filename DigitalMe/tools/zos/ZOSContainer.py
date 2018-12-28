@@ -65,7 +65,7 @@ class ZOSContainer(JSBASE):
             if j.data.types.list.check(source):
                 source=source[0]
             self._logger.info("monitor:%s" % source)
-            source2 = j.tools.prefab.local.core.replace(source)
+            source2 = j.builder.tools.replace(source)
             observer.schedule(event_handler, source2, recursive=True)
         observer.start()
         try:

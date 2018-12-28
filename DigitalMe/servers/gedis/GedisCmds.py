@@ -50,7 +50,7 @@ class GedisCmds(JSBASE):
             self.data = self.schema.get(capnpbin=capnpbin)
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
-            klass = j.tools.loader.load(obj_key=cname,path=path,reload=False)
+            klass = j.tools.codeloader.load(obj_key=cname,path=path,reload=False)
             kobj = klass()
             if hasattr(kobj,"schema"):
                 #means is a generated actor which exposes a model (schema)
