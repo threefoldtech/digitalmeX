@@ -6,28 +6,12 @@ from .GedisServer import GedisServer
 from .GedisCmds import GedisCmds
 from .GedisChatBot import GedisChatBotFactory
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigFactory = j.application.JSFactoryBaseClass
 
 
-class GedisFactory(JSConfigBase):
-    def __init__(self):
-        self.__jslocation__ = "j.servers.gedis"
-
-        JSConfigBase.__init__(self, GedisServer)
-
-        self._template_engine = None
-        self._template_code_server = None
-        self._code_model_template = None
-        self._code_start_template = None
-        self._code_test_template = None
-        self._js_client_template = None
-
-    def get(self, instance='main', data=None, interactive=False):
-        if data is None:
-            data = {}
-
-        return super(GedisFactory, self).get(instance=instance, data=data, interactive=interactive)        
-
+class GedisFactory(JSConfigFactory):
+    __jslocation__ = "j.servers.gedis"
+    _CHILDCLASS = GedisServer
 
     def geventserver_get(self, instance=""):
         """
@@ -40,22 +24,23 @@ class GedisFactory(JSConfigBase):
         server = self.get(instance=instance)
         return server.redis_server
 
-    def configure(self,instance="test",port=8889,
-                    host="localhost",ssl=False,adminsecret="",interactive=False,configureclient=True):
+    def configure(self,name="test",port=8889,
+                    host="localhost",ssl=False,adminsecret="",configureclient=True):
 
         data = {
             "port": str(port),
             "host": host,
             "adminsecret_": adminsecret,
             "ssl": ssl,
+            "name": name
         }
 
-        if configureclient:
-            j.clients.gedis.configure(instance=instance,
-                                      host=host, port=port, secret=adminsecret, ssl=ssl, reset=True, get=False)
+        # if configureclient:
+        #     j.clients.gedis.configure(name=name,
+        #                               host=host, port=port, secret=adminsecret, ssl=ssl, reset=True, get=False)
 
-        server=self.get(instance, data, interactive=interactive)
-        server.client_configure() #configures the client
+        server=self.get(**data)
+        # server.client_configure() #configures the client
         return server
 
     def _cmds_get(self, key, capnpbin):

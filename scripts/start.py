@@ -23,10 +23,10 @@ def configure():
     j.servers.gedis.configure(host="localhost", port="8000", ssl=False,
                                        zdb_instance=name, secret="", instance=name)
     # configure a local webserver server (the master one)
-    j.servers.web.configure(instance=name, port=5050, port_ssl=0, host="localhost", secret="", ws_dir=ws_dir)    
+    j.servers.web.configure(instance=name, port=5050, port_ssl=0, host="localhost", secret="", ws_dir=ws_dir)
 
 def start_full():
-    
+
     configure()
 
     j.servers.digitalme.filemonitor_start(gedis_instance_name='test')
@@ -37,7 +37,7 @@ def start_full():
         j.clients.zdb.testdb_server_start_client_get(start=True)
 
 
-    rack.add("gedis", j.servers.gedis.geventservers_get(name))
+    rack.add("gedis", j.servers.gedis.geventserver_get(name))
 
     # use jumpscale way of doing wsgi server (make sure it exists already)
     ws = j.servers.web.geventserver_get(name)
@@ -62,10 +62,10 @@ def go():
     try:
         forever.wait()
     except KeyboardInterrupt:
-        rack.stop()    
+        rack.stop()
 
 def start_wiki():
-    
+
     configure()
 
     # multicast_client = j.clients.multicast.get(data={"port": 8123}, interactive=False)
