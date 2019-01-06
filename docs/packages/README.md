@@ -8,6 +8,8 @@ A package is functionality being added to digitalme
 
 are subdirs of a package
 
+
+
 - actors
     - is the logic inside a package
     - the code inside an actor should call as much as possible libraries in jumpscale (sals, clients, ...)
@@ -15,9 +17,6 @@ are subdirs of a package
         - published  in webserver under:  $locationdm/$packagename/api/$restmethods (TO BE IMPLEMENTED)
     - also published in gedis under namespace $packagename
     - each file inside is an actor
-- blueprints
-    - flask blueprint, is the webserver part
-    - each subdir is a blueprint
 - chatflows
     - interactive communication, implemented as chat bots
     - each file inside is a chat bot
@@ -30,13 +29,7 @@ are subdirs of a package
 - docmacros
     - macro's as used in docsite(s)
     - each file inside is a docmacro (can be in subdirs)
-- zrobotrepos
-    - path or url for zerorobot
-    - each subdir is a zrobot_repo
-- configobjects
-    - configuration objects which are serialized as yaml or toml or json
-    - get loaded in BCDB for this DigitalME
-    - each file inside is a configuration obj (can be in subdirs)
+
 
 ## toml config items
 

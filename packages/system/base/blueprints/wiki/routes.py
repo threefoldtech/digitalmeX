@@ -44,7 +44,7 @@ def wiki_route(subpath, methods=['GET', 'POST']):
 
     url = "/".join(parts)
 
-    ds = j.tools.docsites.docsite_get(wikicat, die=False)
+    ds = j.tools.markdowndocs.docsite_get(wikicat, die=False)
     if ds == None:
         return "Cannot find docsite with name:%s" % wikicat
 

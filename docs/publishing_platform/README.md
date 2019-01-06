@@ -52,14 +52,14 @@ login_manager = j.servers.web.latest.loader.login_manager
 - Load your docsites : Docsites is a framework used to load the md files created. 
 
 ```python
-j.tools.docsites.load(
+j.tools.markdowndocs.load(
     "https://The link to your md files",name="The name of your website")
 ```
 
 - Use the loaded docsites:
 To be able to use the content of the md files
 ```python
-    ds = j.tools.docsites.docsite_get("The name of your website")
+    ds = j.tools.markdowndocs.docsite_get("The name of your website")
 ```
 
 - Write your own blueprint routes for the md files
@@ -96,11 +96,11 @@ from Jumpscale import j
 
 login_manager = j.servers.web.latest.loader.login_manager
 
-j.tools.docsites.load(
+j.tools.markdowndocs.load(
     "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/simpleblogsite",
     name="simpleblogsite")
 
-ds = j.tools.docsites.docsite_get("simpleblogsite")
+ds = j.tools.markdowndocs.docsite_get("simpleblogsite")
 name = "simpleblogsite"
 default_blog = "man_explore"
 

@@ -147,7 +147,7 @@ class Package(JSBASE):
                         basename = j.sal.fs.getBaseName(src2)
                         if key == "docsite":
                             dsname="%s_%s"%(self.name,basename)
-                            j.tools.docsites.load(src2, dsname)
+                            j.tools.markdowndocs.load(src2, dsname)
                         # elif key == "blueprint":
                         #     if self.path not in j.servers.web.latest.loader.paths:
                         #         j.servers.web.latest.loader.paths.append(self.path)
