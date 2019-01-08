@@ -209,7 +209,7 @@ class Handler(JSBASE):
             if cmd.schema_out:
                 if (response_type == 'auto' and content_type == 'capnp') or response_type == 'capnp':
                     result = result._data
-            print("content_type: {}, response_type: {}".format(content_type, response_type))
+            # print("content_type: {}, response_type: {}".format(content_type, response_type))
             response.encode(result)
 
     def command_split(self,cmd,actor="system",namespace="system"):
@@ -353,4 +353,3 @@ class Handler(JSBASE):
             msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
             self._logger.debug(msg)
             return None, e.args[0]
-

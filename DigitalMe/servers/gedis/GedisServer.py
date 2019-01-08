@@ -251,7 +251,7 @@ class GedisServer(JSBaseConfig, StreamServer):
         """
         this method is only used when not used in digitalme
         """
-        self.code_generate_last_step()
+        # self.code_generate_last_step()
 
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
         # t = threading.Thread(target=self.websocket_server.serve_forever)

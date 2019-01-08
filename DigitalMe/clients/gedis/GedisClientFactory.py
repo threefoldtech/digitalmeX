@@ -17,38 +17,37 @@ class GedisClientCmds():
     #     return self._client.config_template
 
     def __str__(self):
-        if self._client.config.data["ssl"]:
-            return "Gedis Client: (instance=%s) (address=%s:%-4s)\n(ssl=True, certificate:%s)" % (
-                self._client.instance,
-                self._client.config.data["host"],
-                self._client.config.data["port"],
-                self._client.config.data["sslkey"]
+        if self._client.ssl:
+            return "Gedis Client: (name=%s) (address=%s:%-4s)\n(ssl=True, certificate:%s)" % (
+                self._client.name,
+                self._client.host,
+                self._client.port,
+                self._client.sslkey
             )
 
-        return "Gedis Client: (instance=%s) (address=%s:%-4s)" % (
-            self._client.instance,
-            self._client.config.data["host"],
-            self._client.config.data["port"]
+        return "Gedis Client: (name=%s) (address=%s:%-4s)" % (
+            self._client.name,
+            self._client.host,
+            self._client.port
         )
 
     __repr__ = __str__
 
 
 class GedisClientFactory(JSConfigBase):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.gedis"
-        JSConfigBase.__init__(self, GedisClient)
+    __jslocation__ = "j.clients.gedis"
+    _CHILDCLASS = GedisClient
+
+    def _init(self):
         self._template_engine = None
         self._template_code_client = None
         self._code_model_template = None
 
-    def get(self,instance='main',data={},reset=False,configureonly=False):
-
-        client = JSConfigBase.get(self,instance=instance, data=data, reset=reset,
-                                                     configureonly=configureonly)
-        if configureonly:
-            print("CONFIGURE ONLY")
-            return
+    def get(self, name='main', configureonly=False, **kwargs):
+        client = JSConfigBase.get(self, name=name, **kwargs)
+        # if self.configureonly:
+        #     print("CONFIGURE ONLY")
+        #     returns
 
         if client._connected:
             cl = GedisClientCmds()
@@ -57,11 +56,9 @@ class GedisClientFactory(JSConfigBase):
             cl.__dict__.update(cl._client.cmds.__dict__)
             return cl
 
-
-
     def configure(
         self,
-        instance="main",
+        name="main",
         host="localhost",
         port=5000,
         secret="",
@@ -69,7 +66,7 @@ class GedisClientFactory(JSConfigBase):
         ssl=False,
         ssl_cert_file="",
         reset=False, get=True
-        ):
+    ):
 
         data = {}
 
@@ -82,4 +79,3 @@ class GedisClientFactory(JSConfigBase):
 
         if get:
             return self.get(instance=instance, data=data, reset=reset)
-
