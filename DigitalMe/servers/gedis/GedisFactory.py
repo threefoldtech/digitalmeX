@@ -35,12 +35,12 @@ class GedisFactory(JSConfigFactory):
             "name": name
         }
 
-        # if configureclient:
-        #     j.clients.gedis.configure(name=name,
-        #                               host=host, port=port, secret=adminsecret, ssl=ssl, reset=True, get=False)
+        if configureclient:
+            j.clients.gedis.configure(name=name,
+                                      host=host, port=port, secret=adminsecret, ssl=ssl, reset=True, get=False)
 
         server=self.get(**data)
-        # server.client_configure() #configures the client
+        server.client_configure() #configures the client
         return server
 
     def _cmds_get(self, key, capnpbin):
