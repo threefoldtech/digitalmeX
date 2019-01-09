@@ -1,35 +1,27 @@
 from Jumpscale import j
 
-JSConfigBase = j.application.JSFactoryBaseClass
 from .GedisClient import GedisClient
 
+JSConfigBase = j.application.JSFactoryBaseClass
 
-class GedisClientCmds():
-    def __init__(self):
-        pass
 
-    # @property
-    # def _config(self):
-    #     return self._client.config
-    #
-    # @property
-    # def _config_template(self):
-    #     return self._client.config_template
+class GedisClientCmds:
+
+    def __init__(self, client):
+        self._client = client
+        self.models = client.models
+        self.__dict__.update(client.cmds.__dict__)
 
     def __str__(self):
-        if self._client.ssl:
-            return "Gedis Client: (name=%s) (address=%s:%-4s)\n(ssl=True, certificate:%s)" % (
-                self._client.name,
-                self._client.host,
-                self._client.port,
-                self._client.sslkey
-            )
-
-        return "Gedis Client: (name=%s) (address=%s:%-4s)" % (
+        output = "Gedis Client: (instance=%s) (address=%s:%-4s)" % (
             self._client.name,
             self._client.host,
             self._client.port
         )
+        if self._client.data.ssl:
+            # FIXME: we should probably NOT print the key. this is VERY private information
+            output += "\n(ssl=True, certificate:%s)" % self._client.sslkey
+        return output
 
     __repr__ = __str__
 
@@ -45,37 +37,20 @@ class GedisClientFactory(JSConfigBase):
 
     def get(self, name='main', configureonly=False, **kwargs):
         client = JSConfigBase.get(self, name=name, **kwargs)
-        # if self.configureonly:
-        #     print("CONFIGURE ONLY")
-        #     returns
+        if configureonly:
+            return
 
         if client._connected:
-            cl = GedisClientCmds()
-            cl._client = client
-            cl.models = client.models
-            cl.__dict__.update(cl._client.cmds.__dict__)
-            return cl
+            return GedisClientCmds(client)
 
-    def configure(
-        self,
-        name="main",
-        host="localhost",
-        port=5000,
-        secret="",
-        namespace="default",
-        ssl=False,
-        ssl_cert_file="",
-        reset=False, get=True
-    ):
-
-        data = {}
-
-        data["host"] = host
-        data["port"] = str(port)
-        data["namespace"] = namespace
-        data["adminsecret_"] = secret
-        data["ssl"] = ssl
-        data['sslkey'] = ssl_cert_file
-
-        if get:
-            return self.get(instance=instance, data=data, reset=reset)
+    def configure(self, name="main", host="localhost", port=5000, secret="", namespace="default",
+                  ssl=False, ssl_cert_file="", reset=False,):
+        data = {
+            "host": host,
+            "port": str(port),
+            "namespace": namespace,
+            "adminsecret_": secret,
+            "ssl": ssl,
+            'sslkey': ssl_cert_file,
+        }
+        return self.get(name=name, **data)

@@ -24,23 +24,20 @@ class GedisFactory(JSConfigFactory):
         server = self.get(instance=instance)
         return server.redis_server
 
-    def configure(self,name="test",port=8889,
-                    host="localhost",ssl=False,adminsecret="",configureclient=True):
+    def configure(self, name="test", port=8889,
+                  host="localhost", ssl=False, password="", configureclient=False):
 
         data = {
             "port": str(port),
             "host": host,
-            "adminsecret_": adminsecret,
+            "password_": password,
             "ssl": ssl,
             "name": name
         }
 
+        server = self.get(**data)
         if configureclient:
-            j.clients.gedis.configure(name=name,
-                                      host=host, port=port, secret=adminsecret, ssl=ssl, reset=True, get=False)
-
-        server=self.get(**data)
-        server.client_configure() #configures the client
+            server.client_configure()  # configures the client
         return server
 
     def _cmds_get(self, key, capnpbin):
@@ -48,7 +45,7 @@ class GedisFactory(JSConfigFactory):
         Used in client only, starts from capnpbin (python client)
         """
         namespace, name = key.split("__")
-        return GedisCmds(namespace=namespace,name=name, capnpbin=capnpbin)
+        return GedisCmds(namespace=namespace, name=name, capnpbin=capnpbin)
 
     def test_server_start(self):
         """
@@ -64,7 +61,6 @@ class GedisFactory(JSConfigFactory):
             "https://github.com/threefoldtech/digital_me/tree/master/packages/examples/models")
         bcdb.models_add(path=path)
 
-
         path = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/digital_me/tree/master/packages/examples/actors")
         gedis.actors_add(namespace="gedis_examples", path=path)
@@ -72,9 +68,7 @@ class GedisFactory(JSConfigFactory):
 
         gedis.start()
 
-
-
-    def test(self,zdb_start=True):
+    def test(self, zdb_start=True):
         """
         js_shell 'j.servers.gedis.test(zdb_start=False)'
         """
@@ -85,7 +79,7 @@ class GedisFactory(JSConfigFactory):
             cl = j.clients.zdb.test()
 
         gedis = self.configure(name="test", port=8888, host="localhost", ssl=False,
-                               adminsecret="123456")
+                               password="123456", interactive=False)
 
         print("START GEDIS IN TMUX")
         cmd = "js_shell 'j.servers.gedis.test_server_start()'"
@@ -143,7 +137,6 @@ class GedisFactory(JSConfigFactory):
 
         # j.shell()
 
-
     # def chatbot_test(self):
     #     """
     #     js_shell 'j.servers.gedis.chatbot_test()'
@@ -158,7 +151,7 @@ class GedisFactory(JSConfigFactory):
 #             port=8889,
 #             host="localhost",
 #             ssl=False,
-#             adminsecret="",
+#             password="",
 # ]        ):
 #         """
 #         creates new server on path, if not specified will be current path
@@ -184,10 +177,9 @@ class GedisFactory(JSConfigFactory):
 #         # dest = path
 #         # self._logger.info("copy templates to:%s" % dest)
 #
-#         gedis = self.configure(instance=instance, port=port, host=host, ssl=ssl, adminsecret=adminsecret)
+#         gedis = self.configure(instance=instance, port=port, host=host, ssl=ssl, password=password)
 #
 #         # j.tools.jinja2.copy_dir_render(src, dest, reset=reset, j=j, name="aname", config=gedis.config.data,
 #         #                                instance=instance)
 #
 #         self._logger.info("gedis app now in: '%s'\n    do:\n    cd %s;sh start.sh" % (dest, dest))
-

@@ -1,9 +1,8 @@
-import os
-import sys
-from Jumpscale import j
 import imp
-from redis.connection import ConnectionError
+import os
 
+from Jumpscale import j
+from redis.connection import ConnectionError
 
 JSConfigBase = j.application.JSBaseConfigClass
 
@@ -23,37 +22,36 @@ class GedisClient(JSConfigBase):
     @url = jumpscale.gedis.client
     name* = "main"
     host = "127.0.0.1" (S)
-    port = 9900 (ipport) 
+    port = 9900 (ipport)
     namespace = "default" (S)
-    adminsecret_ = "" (S)
+    password_ = "" (S)
     ssl = False (B)
     sslkey = "" (S)
     configureonly=False (B)
     """
 
     def _init(self):
-        # j.clients.gedis.latest = self
+        j.clients.gedis.latest = self
+        self.namespace = self.data.namespace
 
-        self.code_generated_dir = j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
         j.sal.fs.createDir(self.code_generated_dir)
-        j.sal.fs.touch(j.sal.fs.joinPaths(
-            self.code_generated_dir, '__init__.py'))
+        j.sal.fs.touch(j.sal.fs.joinPaths(self.code_generated_dir, '__init__.py'))
 
-        if self.configureonly:
+        if self.data.configureonly:
             return
 
         self._redis = None  # connection to server
-
         self._models = None
         self._cmds = None
-
         self.cmds_meta = {}
-        self._connected = True
+
+        self._connect()
 
         test = self.redis.execute_command("ping")
         if test != b'PONG':
             raise RuntimeError('Can not ping server')
+        self._connected = True
 
         self.redis.execute_command("select", self.namespace)
 
@@ -64,51 +62,40 @@ class GedisClient(JSConfigBase):
         cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
 
         for key, capnpbin in cmds_meta["cmds"].items():
-            if not "__model_" in key:
-                self.cmds_meta[key] = j.servers.gedis._cmds_get(
-                    key, capnpbin).cmds
+            if "__model_" not in key:
+                self.cmds_meta[key] = j.servers.gedis._cmds_get(key, capnpbin).cmds
 
-    def generate(self, reset=False):
-        self.models
+    def generate(self):
+        self._models = Models()
+
+        # this will make sure we have all the local schemas
+        def do():
+            schemas_meta = self.redis.execute_command("core_schemas_get", self.namespace)
+            return schemas_meta
+
+        schemas_meta = self._cache.get("core_schemas_get", method=do, retry=4, die=True)
+
+        schemas_meta = j.data.serializers.msgpack.loads(schemas_meta)
+        for key, txt in schemas_meta.items():
+            if key not in j.data.schema.schemas:
+                schema = j.data.schema.get(txt)
+
+                args = sorted([p for p in schema.properties if p.index], key=lambda p: p.name)
+                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in args]).strip(',')
+                kwargs = ''.join(["{0}".format(p.name) for p in args]).strip(',')
+
+                tpath = "%s/templates/ModelBase.py" % (j.clients.gedis._dirpath)
+                model_class = j.tools.jinja2.code_python_render(obj_key="model", path=tpath,
+                                                                objForHash=schema.text,
+                                                                obj=schema, find_args=find_args, kwargs=kwargs)
+
+                model = model_class(client=self)
+                setattr(self._models, schema.url.replace(".", "_"), model)
 
     @property
     def models(self):
         if self._models is None:
-
-            self._models = Models()
-
-            # this will make sure we have all the local schemas
-
-            def do():
-                schemas_meta = self.redis.execute_command(
-                    "core_schemas_get", self.namespace)
-                return schemas_meta
-
-            schemas_meta = self._cache.get(
-                "core_schemas_get", method=do, retry=4, die=True)
-
-            schemas_meta = j.data.serializers.msgpack.loads(schemas_meta)
-            for key, txt in schemas_meta.items():
-                if key not in j.data.schema.schemas:
-                    schema = j.data.schema.get(txt)
-
-                    args = sorted(
-                        [p for p in schema.properties if p.index], key=lambda p: p.name)
-                    find_args = ''.join(
-                        ["{0}={1},".format(p.name, p.default_as_python_code) for p in args]).strip(',')
-                    kwargs = ''.join(["{0}".format(p.name)
-                                      for p in args]).strip(',')
-
-                    tpath = "%s/templates/ModelBase.py" % (
-                        j.clients.gedis._dirpath)
-                    model_class = j.tools.jinja2.code_python_render(obj_key="model", path=tpath,
-                                                                    objForHash=schema.text,
-                                                                    obj=schema, find_args=find_args, kwargs=kwargs)
-
-                    model = model_class(client=self)
-
-                    self._models.__dict__[schema.url.replace(".", "_")] = model
-
+            self.generate()
         return self._models
 
     @property
@@ -119,7 +106,6 @@ class GedisClient(JSConfigBase):
                 cmds = CmdsBase()
                 cmds.cmds = cmds_
                 cmds.name = nsfull.replace(".", "_")
-                # for name,cmd in cmds.items():
                 location = nsfull.replace(".", "_")
                 cmds_name_lower = nsfull.split(".")[-1].strip().lower()
                 cmds.cmds_name_lower = cmds_name_lower
@@ -134,14 +120,11 @@ class GedisClient(JSConfigBase):
                 if "__" in cmds_name_lower:
                     cmds_name_lower = cmds_name_lower.split("__", 1)[1]
 
-                self.cmds.__dict__[cmds_name_lower] = cl(
-                    client=self, cmds=cmds.cmds)
+                setattr(self.cmds, cmds_name_lower, cl(client=self, cmds=cmds.cmds))
                 self._logger.debug("cmds:%s" % name)
-
         return self._cmds
 
-    @property
-    def redis(self):
+    def _connect(self):
         """
         this gets you a redis instance, when executing commands you have to send the name of the function without
         the postfix _cmd as is, do not capitalize it
@@ -150,25 +133,23 @@ class GedisClient(JSConfigBase):
         :return: redis instance
         """
         if self._redis is None:
-            addr = self.host
-            port = self.port
-            secret = self.adminsecret_
-            ssl_certfile = self.sslkey
+            addr = self.data.host
+            port = self.data.port
+            secret = self.data.password_
+            ssl_certfile = self.data.sslkey
 
-            if self.ssl:
-                if not self.sslkey:
-                    ssl_certfile = j.sal.fs.joinPaths(
-                        os.path.dirname(self.code_generated_dir), 'ca.crt')
-                self._logger.info("redisclient: %s:%s (ssl:True  cert:%s)" % (
-                    addr, port, ssl_certfile))
+            if self.data.ssl:
+                if not self.data.sslkey:
+                    ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self.code_generated_dir), 'ca.crt')
+                self._logger.info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
             else:
                 self._logger.info("redisclient: %s:%s " % (addr, port))
 
-            self._redis = j.clients.redis.get(
+            self.redis = j.clients.redis.get(
                 ipaddr=addr,
                 port=port,
                 password=secret,
-                ssl=self.ssl,
+                ssl=self.data.ssl,
                 ssl_ca_certs=ssl_certfile,
                 ping=False
             )

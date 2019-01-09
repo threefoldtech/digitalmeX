@@ -1,4 +1,6 @@
+from io import BytesIO
 from logging import getLogger
+
 from Jumpscale import j
 from redis.connection import Encoder, PythonParser, SocketBuffer
 from redis.exceptions import ConnectionError
@@ -58,80 +60,70 @@ class RedisResponseWriter(object):
 
     def __init__(self, socket):
         self.socket = socket
-        self.dirty = True
-        self.encoder = Encoder(
-            encoding='utf-8',
-            encoding_errors='strict',
-            decode_responses=False
-        )
+        self.buffer = BytesIO()
 
     def encode(self, value):
         """Respond with data."""
         if value is None:
-            self._write('$-1\r\n')
+            self._write_buffer('$-1\r\n')
         elif isinstance(value, int):
-            self._write(':%d\r\n' % value)
+            self._write_buffer(':%d\r\n' % value)
         elif isinstance(value, bool):
-            self._write(':%d\r\n' % (1 if value else 0))
+            self._write_buffer(':%d\r\n' % (1 if value else 0))
         elif isinstance(value, str):
             if "\n" in value:
                 self._bulk(value)
             else:
-                self._write('+%s\r\n' % value)
+                self._write_buffer('+%s\r\n' % value)
         elif isinstance(value, bytes):
             self._bulkbytes(value)
-        elif isinstance(value, list) and value and value[0] == "*REDIS*":
-            self._array(value[1:])
+        elif isinstance(value, list):
+            if value and value[0] == "*REDIS*":
+                value = value[1:]
+            self._array(value)
         elif hasattr(value, '__repr__'):
             self._bulk(value.__repr__())
         else:
             value = j.data.serializers.json.dumps(value, encoding='utf-8')
-            # self._bulk(value)
-            self._write('+%s\r\n' % value)
+            self.encode(value)
+
+        self._send()
 
     def status(self, msg="OK"):
         """Send a status."""
-        self._write("+%s\r\n" % msg)
+        self._write_buffer("+%s\r\n" % msg)
+        self._send()
 
     def error(self, msg):
         """Send an error."""
         print("###:%s" % msg)
-        self._write("-ERR %s\r\n" % str(msg))
+        self._write_buffer("-ERR %s\r\n" % str(msg))
+        self._send()
 
     def _bulk(self, value):
         """Send part of a multiline reply."""
         data = ["$", str(len(value)), "\r\n", value, "\r\n"]
-        self._write("".join(data))
+        self._write_buffer("".join(data))
 
     def _array(self, value):
         """send an array."""
-        data2 = self.__array(value)
-        self._write(data2)
-
-    def __array(self, value):
-        data = ["*", str(len(value)), "\r\n"]
+        self._write_buffer("*%d\r\n" % len(value))
         for item in value:
-            if j.data.types.list.check(item):
-                data.append(self.__array(item))
-            else:
-                data.append("+%s" % item)
-            data.append("\r\n")
-        data2 = "".join(data)
-        return data2
+            self.encode(item)
 
     def _bulkbytes(self, value):
         data = [b"$", str(len(value)).encode(), b"\r\n", value, b"\r\n"]
-        self._write(b"".join(data))
+        self._write_buffer(b"".join(data))
 
-    def _write(self, data):
-        if not self.dirty:
-            self.dirty = True
-
+    def _write_buffer(self, data):
         if isinstance(data, str):
             data = data.encode()
-        print("SENDING {} {} on wire".format(data, type(data)))
 
-        self.socket.sendall(data)
+        self.buffer.write(data)
+
+    def _send(self):
+        self.socket.sendall(self.buffer.getvalue())
+        self.buffer = BytesIO()  # seems faster then truncating
 
 
 class WebsocketResponseWriter():

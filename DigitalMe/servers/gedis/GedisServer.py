@@ -1,24 +1,28 @@
-import sys
 import os
-from Jumpscale import j
-from gevent.pool import Pool
-from gevent import time, signal
+import signal
+import sys
+
 import gevent
+from gevent import time
+from gevent.pool import Pool
 from gevent.server import StreamServer
-from .handlers import Handler
+
+from Jumpscale import j
+
 from .GedisChatBot import GedisChatBotFactory
 from .GedisCmds import GedisCmds
+from .handlers import Handler
 
 JSBaseConfig = j.application.JSBaseConfigClass
 
 
 def waiter(job):
-    while job.result == None:
+    while job.result is None:
         time.sleep(0.1)
     return job.result
 
 
-class GedisServer(JSBaseConfig, StreamServer):
+class GedisServer(JSBaseConfig):
     _SCHEMATEXT = """
     @url = jumpscale.gedis.server
     name* = "main" (S)
@@ -27,6 +31,7 @@ class GedisServer(JSBaseConfig, StreamServer):
     ssl = False (B)
     password_ = "" (S)
     """
+
     def _init(self):
         self._sig_handler = []
 
@@ -34,22 +39,18 @@ class GedisServer(JSBaseConfig, StreamServer):
         self.classes = {}  # the code as set by the gediscmds class = actor cmds
         self.schema_urls = []  # used at python client side
 
-        # self.static_files = {}
-
-        # self.cmds = {}  #will be dynamically loaded while the server is being used
-
-        # self.serializer = None
-
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
 
+        self.host = self.data.host
+        self.port = self.data.port
         self.address = '{}:{}'.format(self.host, self.port)
+        self.ssl = self.data.ssl
 
         self.web_client_code = None
-        self.code_generated_dir = j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "codegen", "gedis", self.name, "server")
+        self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "server")
 
-        self.chatbot = GedisChatBotFactory(ws=self)
+        self.chatbot = GedisChatBotFactory()
 
         self.namespaces = ["system", "default"]
 
@@ -60,26 +61,22 @@ class GedisServer(JSBaseConfig, StreamServer):
 
         # create dirs for generated codes and make sure is empty
         for cat in ["server", "client"]:
-            code_generated_dir = j.sal.fs.joinPaths(
-                j.dirs.VARDIR, "codegen", "gedis", self.name, cat)
+            code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, cat)
             j.sal.fs.remove(code_generated_dir)
             j.sal.fs.createDir(code_generated_dir)
-            j.sal.fs.touch(j.sal.fs.joinPaths(
-                code_generated_dir, '__init__.py'))
+            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
 
         # now add the one for the server
         if self.code_generated_dir not in sys.path:
             sys.path.append(self.code_generated_dir)
 
-        self.actors_add(namespace="system", path="%s/systemactors" %
-                        j.servers.gedis._dirpath)  # add the system actors
+        self.actors_add(namespace="system", path=j.sal.fs.joinPaths(
+            j.servers.gedis._dirpath, "systemactors"))  # add the system actors
 
-        self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
+        for sig in [signal.SIGINT, signal.SIGTERM]:
+            self._sig_handler.append(gevent.signal(sig, self.stop))
 
-        # from gevent import monkey
-        # monkey.patch_thread() #TODO:*1 dirty hack, need to use gevent primitives, suggest to add flask server
-        # import threading
-        self.handler = Handler(self)
+        handler = Handler(self)
         if self.ssl:
             self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
             # Server always supports SSL
@@ -87,7 +84,7 @@ class GedisServer(JSBaseConfig, StreamServer):
             self.redis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
-                handle=self.handler.handle_redis,
+                handle=handler.handle_redis,
                 keyfile=self.ssl_priv_key_path,
                 certfile=self.ssl_cert_path
             )
@@ -95,21 +92,8 @@ class GedisServer(JSBaseConfig, StreamServer):
             self.redis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
-                handle=self.handler.handle_redis
+                handle=handler.handle_redis
             )
-
-    # CODE GENERATION
-
-    def code_generate_webclient(self):
-        # generate web client
-        commands = []
-        for key, cmds_ in self.cmds_meta.items():
-            # if 'model_' in key:
-            #     continue
-            commands.append(cmds_)
-        self.code_js_client = j.tools.jinja2.template_render("%s/templates/client.js" % j.servers.gedis._dirpath,
-                                                             commands=commands)
-
     ########################POPULATION OF SERVER#########################
 
     def models_add(self, models, namespace="default"):
@@ -120,22 +104,26 @@ class GedisServer(JSBaseConfig, StreamServer):
         """
         if namespace not in self.namespaces:
             self.namespaces.append(namespace)
-        reset = True
+
+        reset = True  # FIXME: this mean we always reset, why ?
+
+        # FIXME: what is models is not a list or have no models attribute ?
         if not j.data.types.list.check(models):
             if hasattr(models, "models"):
                 models = models.models.values()
+
         for model in models:
-            mname = "model_%s.py" % (model.schema.key)
-            self._logger.info("generate model: %s" % mname)
-            dest = j.sal.fs.joinPaths(self.code_generated_dir, mname)
-            self._logger.debug(dest)
+            model_name = "model_%s.py" % (model.schema.key)
+            dest = j.sal.fs.joinPaths(self.code_generated_dir, model_name)
+            self._logger.info("generate model: %s at %s", model_name, dest)
             if reset or not j.sal.fs.exists(dest):
-                # find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in table.schema.properties if p.index]).strip(',')
-                # kwargs = ''.join(["{0}={0},".format(p.name, p.name) for p in table.schema.properties if p.index]).strip(',')
-                r = j.tools.jinja2.template_render(path="%s/templates/actor_model_server.py" % (j.servers.gedis._dirpath),
-                                                   dest=dest, bcdb=model.bcdb,
-                                                   schema=model.schema, model=model)
-                self.actor_add(namespace=namespace, path=dest)
+                j.tools.jinja2.template_render(
+                    path=j.sal.fs.joinPaths(j.servers.gedis._dirpath, "templates/actor_model_server.py"),
+                    dest=dest,
+                    bcdb=model.bcdb,
+                    schema=model.schema,
+                    model=model)
+                self.actor_add(path=dest, namespace=namespace)
             self.schema_urls.append(model.schema.url)
 
     def actors_add(self, path, namespace="default"):
@@ -147,13 +135,14 @@ class GedisServer(JSBaseConfig, StreamServer):
         :return:
         """
         if not j.sal.fs.isDir(path):
-            raise RuntimeError
+            raise ValueError("actor_add: path needs to point to an existing directory")
+
         files = j.sal.fs.listFilesInDir(path, recursive=False, filter="*.py")
-        for path2 in files:
-            basepath = j.sal.fs.getBaseName(path2)
-            if not "__" in basepath and not basepath.startswith("test"):
-                # name2 = "%s_%s"%(name,j.sal.fs.getBaseName(path2)[:-3])
-                self.actor_add(path2, namespace=namespace)
+        for file_path in files:
+            basepath = j.sal.fs.getBaseName(file_path)
+            if "__" in basepath or basepath.startswith("test"):
+                continue
+            self.actor_add(file_path, namespace=namespace)
 
     def actor_add(self, path, namespace="default"):
         """
@@ -165,68 +154,115 @@ class GedisServer(JSBaseConfig, StreamServer):
         """
         if namespace not in self.namespaces:
             self.namespaces.append(namespace)
+
         if not j.sal.fs.exists(path):
-            raise RuntimeError("cannot find actor:%s" % path)
-        self._logger.debug("actor_add:%s:%s" % (namespace, path))
-        name = j.sal.fs.getBaseName(path)[:-3]
-        if namespace in name and name.startswith("model"):
-            name = "model_%s" % name.split(namespace, 1)[1].strip("_")
-        key = "%s__%s" % (namespace, name)
-        self.cmds_meta[key] = GedisCmds(
-            server=self, path=path, name=name, namespace=namespace)
+            raise ValueError("actor_add: cannot find actor at %s" % path)
+
+        self._logger.debug("actor_add:%s:%s", namespace, path)
+        name = actor_name(path, namespace)
+        key = actor_key(name, namespace)
+        self.cmds_meta[key] = GedisCmds(server=self, path=path, name=name, namespace=namespace)
 
     ####################################################################
 
-    def actors_get(self, namespace="default"):
+    def actors_list(self, namespace="default"):
+        """
+        list all actors loaded in the server
+        optinally filter base on namespace
+
+        :param namespace: if specified filer the actors based on the namespace used, defaults to "default"
+        :param namespace: str, optional
+        :return: list of actors
+        :rtype: list
+        """
+        # TODO: unittest
         res = []
         for key, cmds in self.cmds_meta.items():
-            if key.startswith("%s__" % namespace):
+            if not namespace or key.startswith("%s__" % namespace):
                 res.append(cmds)
         return res
 
-    def actors_methods_get(self, namespace="default"):
-        actors = self.actors_get(namespace)
+    def actors_methods_list(self, namespace="default"):
+        """
+        list the actors and their methods
+
+        return a dict like:
+        {
+            'actor_name': {
+                'schema': "str_schema",
+                'cmds': {
+                    "cmd_name1": "cmd1_args",
+                    "cmd_name2": "cmd2_args",
+                }
+            }
+        }
+
+        :param namespace: if specified filer the actors based on the namespace used, defaults to "default"
+        :param namespace: str, optional
+        :return: dict of actor and they commands
+        :rtype: dict
+        """
+        # TODO: unittest
+        actors = self.actors_list(namespace)
         res = {}
         for actor in actors:
-            res[actor.name] = {}
-            res[actor.name]["schema"] = str(actor.schema)
-            res[actor.name]["cmds"] = {}
-            for cmdkey, cmd in actor.cmds.items():
-                res[actor.name]["cmds"][cmd.name] = str(cmd.args)
+            res[actor.name] = {
+                'schema': str(actor.schema),
+                'cmds': {cmd.name: str(cmd.args) for cmd in actor.cmds.values()},
+            }
         return res
 
     ##########################CLIENT FROM SERVER #######################
 
     def client_get(self, namespace="default"):
+        """
+        Helper method to get a client that connect to this instance of the server
+
+        it configure a client using the same info as the server.
+
+        :param namespace: namespace to use, defaults to "default"
+        :param namespace: str, optional
+        :return: gedis client
+        :rtype: GedisClient
+        """
 
         data = {}
         data["host"] = self.host
         data["port"] = self.port
-        data["adminsecret_"] = self.password
+        data["password_"] = self.password_
         data["ssl"] = self.ssl
         data["namespace"] = namespace
 
-        return j.clients.gedis.get(instance=self.name, data=data, reset=False, configureonly=False)
+        return j.clients.gedis.get(name=self.name, configureonly=False, **data)
 
     def client_configure(self, namespace="default"):
+        """
+        Helper method to create a gedis client instance that connect to this instance of the server
 
-        data = {}
-        data["host"] = self.host
-        data["port"] = self.port
-        data["adminsecret_"] = self.password_
-        data["ssl"] = self.ssl
-        data["namespace"] = namespace
+        it configure a client using the same info as the server.
 
-        return j.clients.gedis.get(instance=self.name, data=data, reset=False, configureonly=True)
+        :param namespace: namespace to use, defaults to "default"
+        :param namespace: str, optional
+        :return: gedis client
+        :rtype: GedisClient
+        """
+
+        data = {
+            "host": self.host,
+            "port": self.port,
+            "password_": self.password_,
+            "ssl": self.ssl,
+            "namespace": namespace,
+        }
+        return j.clients.gedis.get(name=self.name, configureonly=True, **data)
 
     #######################PROCESSING OF CMDS ##############
 
-    def job_schedule(self, method,  timeout=60, wait=False, depends_on=None, **kwargs):
+    def job_schedule(self, method, timeout=60, wait=False, depends_on=None, **kwargs):
         """
         @return job, waiter_greenlet
         """
-        job = self.workers_queue.enqueue_call(
-            func=method, kwargs=kwargs, timeout=timeout, depends_on=depends_on)
+        job = self.workers_queue.enqueue_call(func=method, kwargs=kwargs, timeout=timeout, depends_on=depends_on)
         greenlet = gevent.spawn(waiter, job)
         job.greenlet = greenlet
         self.workers_jobs[job.id] = job
@@ -235,49 +271,39 @@ class GedisServer(JSBaseConfig, StreamServer):
         return job
 
     def sslkeys_generate(self):
-        if self.ssl:
-            path = os.path.dirname(self.code_generated_dir)
-            res = j.sal.ssl.ca_cert_generate(path)
-            if res:
-                self._logger.info("generated sslkeys for gedis in %s" % path)
-            else:
-                self._logger.info(
-                    'using existing key and cerificate for gedis @ %s' % path)
-            key = j.sal.fs.joinPaths(path, 'ca.key')
-            cert = j.sal.fs.joinPaths(path, 'ca.crt')
-            return key, cert
+        if not self.ssl:
+            raise RuntimeError("sslkeys_generate: gedis server is not configure to use ssl")
+
+        path = os.path.dirname(self.code_generated_dir)
+        res = j.sal.ssl.ca_cert_generate(path)
+        if res:
+            self._logger.info("generated sslkeys for gedis in %s" % path)
+        else:
+            self._logger.info('using existing key and cerificate for gedis @ %s' % path)
+        key = j.sal.fs.joinPaths(path, 'ca.key')
+        cert = j.sal.fs.joinPaths(path, 'ca.crt')
+        return key, cert
 
     def start(self):
         """
         this method is only used when not used in digitalme
         """
-        # self.code_generate_last_step()
-
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
         # t = threading.Thread(target=self.websocket_server.serve_forever)
         # t.setDaemon(True)
         # t.start()
         # self._logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
-
-        # j.shell()
-        print("RUNNING")
-        print(self)
+        self._logger.info("%s RUNNING", str(self))
         self.redis_server.serve_forever()
-
-    # def gevent_websocket_server_get():
-    #     self.websocket_server = pywsgi.WSGIServer(('0.0.0.0', 9999), self.websocketapp, handler_class=WebSocketHandler)
-
-        # self.websocket_server = self.jsapi_server.websocket_server  #is the server we can use
-        # self.jsapi_server.code_js_client = self.code_js_client
-        # self.jsapi_server.instance = self.name
-        # self.jsapi_server.cmds = self.cmds
-        # self.jsapi_server.classes = self.classes
-        # self.jsapi_server.cmds_meta = self.cmds_meta
 
     def stop(self):
         """
         stop receiving requests and close the server
         """
+        # TODO: gracefull shutdown. wait for the greenlet to finish
+        # since we start the server by passing it a gevent.Pool we can control
+        # all the greenlet used by the server
+
         # prevent the signal handler to be called again if
         # more signal are received
         for h in self._sig_handler:
@@ -291,3 +317,38 @@ class GedisServer(JSBaseConfig, StreamServer):
             self.address, self.code_generated_dir)
 
     __str__ = __repr__
+
+
+def actor_name(path, namespace):
+    """
+    extract the name of an actor based on its path and namespace used
+
+    :param path: path of the actor file
+    :type path: str
+    :param namespace: 0-db namespace used by this actor
+    :type namespace: str
+    :return: key used to keep the actor in memory
+    :rtype: str
+    """
+    # TODO: unit tests this
+    name, _ = os.path.splitext(os.path.basename(path))
+    if namespace in name and name.startswith("model"):
+        name = "model_%s" % name.split(namespace, 1)[1].strip("_")
+    return name
+
+
+def actor_key(name, namespace):
+    """
+    generate the key used to key the actor in memory bases
+    on the actor path and namespace used
+
+
+    :param name: name of the actor
+    :type name: str
+    :param namespace: 0-db namespace used by this actor
+    :type namespace: str
+    :return: key used to keep the actor in memory
+    :rtype: str
+    """
+    # TODO: unit tests this
+    return "%s__%s" % (namespace, name)
