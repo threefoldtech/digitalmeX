@@ -6,7 +6,7 @@ from .ZOSNode import ZOSNode
 
 class ZOSCmdFactory(j.application.JSFactoryBaseClass):
 
-    __jslocation__ = "j.world.zos"
+    __jslocation__ = "j.kosmos.zos"
 
     ZOSNode = ZOSNode
 
