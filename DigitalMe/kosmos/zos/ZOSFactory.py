@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from .ZOSNode import ZOSNode
+# from .ZOSNode import ZOSNode
 
 
 
@@ -8,7 +8,7 @@ class ZOSCmdFactory(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.kosmos.zos"
 
-    ZOSNode = ZOSNode
+    # ZOSNode = ZOSNode
 
     def _init(self):
         self.zosnodes={}
