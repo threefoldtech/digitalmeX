@@ -6,7 +6,6 @@ import gevent
 from gevent import time
 from gevent.pool import Pool
 from gevent.server import StreamServer
-
 from Jumpscale import j
 
 from .GedisChatBot import GedisChatBotFactory
