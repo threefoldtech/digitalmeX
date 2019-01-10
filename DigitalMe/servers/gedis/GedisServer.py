@@ -75,24 +75,6 @@ class GedisServer(JSBaseConfig):
         for sig in [signal.SIGINT, signal.SIGTERM]:
             self._sig_handler.append(gevent.signal(sig, self.stop))
 
-        handler = Handler(self)
-        if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
-            # Server always supports SSL
-            # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=handler.handle_redis,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
-            )
-        else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=handler.handle_redis
-            )
     ########################POPULATION OF SERVER#########################
 
     def models_add(self, models, namespace="default"):
@@ -288,10 +270,25 @@ class GedisServer(JSBaseConfig):
         this method is only used when not used in digitalme
         """
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
-        # t = threading.Thread(target=self.websocket_server.serve_forever)
-        # t.setDaemon(True)
-        # t.start()
-        # self._logger.info("start Server on {0} - PORT: {1} - WEBSOCKETS PORT: {2}".format(self.host, self.port, self.websockets_port))
+        self._logger.info("start Server on {0} - PORT: {1}".format(self.host, self.port))
+        handler = Handler(self)
+        if self.ssl:
+            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+            # Server always supports SSL
+            # client can use to talk to it in SSL or not
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=handler.handle_redis,
+                keyfile=self.ssl_priv_key_path,
+                certfile=self.ssl_cert_path
+            )
+        else:
+            self.redis_server = StreamServer(
+                (self.host, self.port),
+                spawn=Pool(),
+                handle=handler.handle_redis
+            )
         self._logger.info("%s RUNNING", str(self))
         self.redis_server.serve_forever()
 

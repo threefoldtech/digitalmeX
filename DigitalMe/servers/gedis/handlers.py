@@ -76,58 +76,21 @@ class Handler(JSBASE):
                 log.error("fail to get command", namespace=namespace, command=command)
                 continue
 
+            header = {}
             params = {}
-            content_type = 'auto'
-            response_type = 'auto'
             if cmd.schema_in:
-                if len(request) < 2:
-                    response.error("can not handle with request, not enough arguments")
+                try:
+                    header = read_header(request)
+                except ValueError:
+                    response.error("Invalid header was provided, "
+                                   "the header should be a json object with the key header, "
+                                   "e.g: {'content_type':'json', 'response_type':'capnp'})")
                     continue
-                header = None
-                # If request length is > 2 we will expect a header
-                if len(request) > 2:
-                    try:
-                        header = j.data.serializers.json.loads(request[2])
-                    except BaseException:
-                        response.error("Invalid header was provided, "
-                                       "the header should be a json object with the key header, "
-                                       "e.g: {'content_type':'json', 'response_type':'capnp'})")
-                        continue
-                if header:
-                    if 'content_type' in header:
-                        content_type = header['content_type']
-                    if 'response_type' in header:
-                        response_type = header['response_type']
-                if content_type.casefold() == 'auto':
-                    try:
-                        # Try capnp
-                        id, data = j.data.serializers.msgpack.loads(request[1])
-                        o = cmd.schema_in.get(capnpbin=data)
-                        if id:
-                            o.id = id
-                        content_type = 'capnp'
-                    except BaseException:
-                        # Try Json
-                        o = cmd.schema_in.get(data=j.data.serializers.json.loads(request[1]))
-                        content_type = 'json'
 
-                elif content_type.casefold() == 'json':
-                    try:
-                        o = cmd.schema_in.get(data=j.data.serializers.json.loads(request[1]))
-                    except BaseException:
-                        response.error("the content is not valid json while you provided content_type=json")
-                        continue
-                elif content_type.casefold() == 'capnp':
-                    try:
-                        id, data = j.data.serializers.msgpack.loads(request[1])
-                        o = cmd.schema_in.get(capnpbin=data)
-                        if id:
-                            o.id = id
-                    except BaseException:
-                        response.error("the content is not valid capnp while you provided content_type=capnp")
-                        continue
-                else:
-                    response.error("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+                try:
+                    input_args = read_input_args(request, header, cmd)
+                except ValueError as err:
+                    response.error(str(err))
                     continue
 
                 # FIXME: avoid using eval
@@ -135,13 +98,14 @@ class Handler(JSBASE):
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 
+
                 for key in method_arguments:
                     if key.find('=') != -1:
                         # with default
                         key, default = key.split('=')
-                        params[key] = getattr(o, key, default)
+                        params[key] = getattr(input_args, key, default)
                     else:
-                        params[key] = getattr(o, key)
+                        params[key] = getattr(input_args, key)
 
             else:
                 if len(request) > 1:
@@ -151,8 +115,8 @@ class Handler(JSBASE):
                 params["schema_out"] = cmd.schema_out
 
             result = None
-
             try:
+                print("parms cmd",params)
                 if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
@@ -168,6 +132,8 @@ class Handler(JSBASE):
                 continue
 
             def should_encode(item):
+                response_type = header.get('response_type', 'auto')
+                content_type = header.get('content_type', 'auto')
                 if cmd.schema_out and hasattr(item, '_data'):
                     if response_type == 'capnp' or (response_type == 'auto' and (content_type in ['capnp', 'auto'])):
                         item = item._data
@@ -263,6 +229,52 @@ def command_split(cmd, actor="system", namespace="system"):
         raise RuntimeError("cmd not properly formatted")
 
     return namespace, actor, cmd
+
+
+def read_header(request):
+    if len(request) < 2:
+        raise ValueError("can not handle with request, not enough arguments")
+
+    # If request length is > 2 we will expect a header
+    if len(request) > 2:
+        return j.data.serializers.json.loads(request[2])
+    return {}
+
+
+def read_input_args(request, header, command):
+
+    content_type = header.get('content_type', 'auto').casefold()
+
+    if content_type == 'auto':
+        try:
+            # Try capnp
+            id, data = j.data.serializers.msgpack.loads(request[1])
+            args = command.schema_in.get(capnpbin=data)
+            if id:
+                args.id = id
+            content_type = 'capnp'
+        except Exception:
+            # Try Json
+            args = command.schema_in.get(data=j.data.serializers.json.loads(request[1]))
+            content_type = 'json'
+
+    elif content_type == 'json':
+        try:
+            args = command.schema_in.get(data=j.data.serializers.json.loads(request[1]))
+        except Exception:
+            raise ValueError("the content is not valid json while you provided content_type=json")
+    elif content_type == 'capnp':
+        try:
+            id, data = j.data.serializers.msgpack.loads(request[1])
+            args = command.schema_in.get(capnpbin=data)
+            if id:
+                args.id = id
+        except Exception:
+            raise ValueError("the content is not valid capnp while you provided content_type=capnp")
+    else:
+        raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+
+    return args
     # def handle_websocket(self,socket, namespace):
     #
     #     message = socket.receive()

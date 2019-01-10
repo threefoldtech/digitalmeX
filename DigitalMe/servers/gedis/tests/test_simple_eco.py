@@ -18,9 +18,12 @@ class TestSimpleEcho:
         self.server.actor_add(actor_path)
         self.proc = Process(target=self.server.start, args=())
         self.proc.start()
+        # self.gl = gevent.spawn(self.server.start)
         wait_start_server('127.0.0.1', 8889)
 
     def teardown(self):
+        # self.gl.kill()
+        # self.gl.join()
         self.proc.terminate()
         self.proc.join()
 
