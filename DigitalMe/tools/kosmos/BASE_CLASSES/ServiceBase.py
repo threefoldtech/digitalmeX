@@ -5,7 +5,7 @@ from gevent import queue
 from gevent import spawn
 from gevent.event import Event
 
-import inspect
+# import inspect
 
 skip_for_debug=False
 
