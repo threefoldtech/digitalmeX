@@ -22,26 +22,28 @@ class Handler(JSBASE):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._logger.info('connection error: {}'.format(str(err)))
+            self._logger.info('connection error', error=str(err), address=address)
         finally:
             parser.on_disconnect()
-            self._logger.info('close connection from {}'.format(address))
+            self._logger.info('connection closed', address=address)
 
     def _handle_redis(self, socket, address, parser, response):
+        # log = self._logger.bind(address=address)  # requires stuctlog, for future
+        log = self._logger
+        log.info('new incoming connection')
 
-        self._logger.info('connection from {}'.format(address))
         socket.namespace = "system"
 
         while True:
             request = parser.read_request()
 
             if request is None:
-                self._logger.debug("connection lost or tcp test")
+                log.debug("connection lost or tcp test")
                 break
 
             if not request:  # empty list request
                 # self.response.error('Empty request body .. probably this is a (TCP port) checking query')
-                self._logger.debug("EMPTYLIST")
+                log.debug("wrong formatted request")
                 continue
 
             cmd = request[0]
@@ -49,25 +51,12 @@ class Handler(JSBASE):
 
             # special command to put the client on right namespace
             if redis_cmd == "select":
-                namespace = request[1].decode()
-                i = None
-                try:
-                    i = int(namespace)
-                except BaseException:
-                    pass
-
-                if i is not None:
-                    # means is selection of DB in redis directly because is int
-                    response.encode("OK")
-                    continue
-
-                socket.namespace = namespace
-                if socket.namespace not in j.servers.gedis.latest.namespaces:
-                    response.error("could not find namespace:%s" % socket.namespace)
-                    continue
-
-                self._logger.debug("NAMESPACE_%s_%s" % (address, socket.namespace))
-                response.encode("OK")
+                log.debug('start namespace selection')
+                socket.namespace, found = select_namespace(request)
+                if not found:
+                    response.error("could not find namespace")
+                log.debug("namespace selected", namespace=socket.namespace)
+                response.encode('OK')
                 continue
 
             if redis_cmd == "command":
@@ -78,67 +67,30 @@ class Handler(JSBASE):
                 response.encode("PONG")
                 continue
 
-            namespace, actor, command = self.command_split(redis_cmd, namespace=socket.namespace)
-            self._logger.debug("cmd:%s:%s:%s" % (namespace, actor, command))
+            namespace, actor, command = command_split(redis_cmd, namespace=socket.namespace)
+            log.debug("command received", namespace=namespace, actor=actor, command=command)
 
             cmd, err = self.command_obj_get(cmd=command, namespace=namespace, actor=actor)
             if err:
                 response.error(err)
-                self._logger.debug("error:%s" % err)
+                log.error("fail to get command", namespace=namespace, command=command)
                 continue
 
+            header = {}
             params = {}
-            content_type = 'auto'
-            response_type = 'auto'
             if cmd.schema_in:
-                if len(request) < 2:
-                    response.error("can not handle with request, not enough arguments")
+                try:
+                    header = read_header(request)
+                except ValueError:
+                    response.error("Invalid header was provided, "
+                                   "the header should be a json object with the key header, "
+                                   "e.g: {'content_type':'json', 'response_type':'capnp'})")
                     continue
-                header = None
-                # If request length is > 2 we will expect a header
-                if len(request) > 2:
-                    try:
-                        header = j.data.serializers.json.loads(request[2])
-                    except BaseException:
-                        response.error("Invalid header was provided, "
-                                       "the header should be a json object with the key header, "
-                                       "e.g: {'content_type':'json', 'response_type':'capnp'})")
-                        continue
-                if header:
-                    if 'content_type' in header:
-                        content_type = header['content_type']
-                    if 'response_type' in header:
-                        response_type = header['response_type']
-                if content_type.casefold() == 'auto':
-                    try:
-                        # Try capnp
-                        id, data = j.data.serializers.msgpack.loads(request[1])
-                        o = cmd.schema_in.get(capnpbin=data)
-                        if id:
-                            o.id = id
-                        content_type = 'capnp'
-                    except BaseException:
-                        # Try Json
-                        o = cmd.schema_in.get(data=j.data.serializers.json.loads(request[1]))
-                        content_type = 'json'
 
-                elif content_type.casefold() == 'json':
-                    try:
-                        o = cmd.schema_in.get(data=j.data.serializers.json.loads(request[1]))
-                    except BaseException:
-                        response.error("the content is not valid json while you provided content_type=json")
-                        continue
-                elif content_type.casefold() == 'capnp':
-                    try:
-                        id, data = j.data.serializers.msgpack.loads(request[1])
-                        o = cmd.schema_in.get(capnpbin=data)
-                        if id:
-                            o.id = id
-                    except BaseException:
-                        response.error("the content is not valid capnp while you provided content_type=capnp")
-                        continue
-                else:
-                    response.error("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+                try:
+                    input_args = read_input_args(request, header, cmd)
+                except ValueError as err:
+                    response.error(str(err))
                     continue
 
                 # FIXME: avoid using eval
@@ -146,13 +98,14 @@ class Handler(JSBASE):
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 
+
                 for key in method_arguments:
                     if key.find('=') != -1:
                         # with default
                         key, default = key.split('=')
-                        params[key] = getattr(o, key, default)
+                        params[key] = getattr(input_args, key, default)
                     else:
-                        params[key] = getattr(o, key)
+                        params[key] = getattr(input_args, key)
 
             else:
                 if len(request) > 1:
@@ -163,6 +116,7 @@ class Handler(JSBASE):
 
             result = None
             try:
+                print("parms cmd",params)
                 if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
@@ -170,46 +124,29 @@ class Handler(JSBASE):
                 else:
                     result = cmd.method(**params)
             except Exception as e:
-                self._logger.error("exception in redis server: %s" % str(e))
+                log.error("exception in redis server: %s" % str(e))
                 j.errorhandler.try_except_error_process(e, die=False)
                 msg = str(e)
                 msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
                 response.error(msg)
                 continue
 
-            if cmd.schema_out and hasattr(result, '_data'):
-                if response_type == 'capnp' or (response_type == 'auto' and (content_type in ['capnp', 'auto'])):
-                    result = result._data
+            def should_encode(item):
+                response_type = header.get('response_type', 'auto')
+                content_type = header.get('content_type', 'auto')
+                if cmd.schema_out and hasattr(item, '_data'):
+                    if response_type == 'capnp' or (response_type == 'auto' and (content_type in ['capnp', 'auto'])):
+                        item = item._data
+                return item
+
+            if isinstance(result, list):
+                result = [should_encode(r) for r in result]
+            else:
+                result = should_encode(result)
+
             response.encode(result)
 
-    def command_split(self, cmd, actor="system", namespace="system"):
-        self._logger.debug("cmd_start:%s:%s:%s" % (namespace, actor, cmd))
-        cmd_parts = cmd.split(".")
-        if len(cmd_parts) == 3:
-            namespace = cmd_parts[0]
-            actor = cmd_parts[1]
-            if "__" in actor:
-                actor = actor.split("__", 1)[1]
-            cmd = cmd_parts[2]
-
-        elif len(cmd_parts) == 2:
-            actor = cmd_parts[0]
-            if "__" in actor:
-                actor = actor.split("__", 1)[1]
-            cmd = cmd_parts[1]
-            if actor == "system":
-                namespace = "system"
-        elif len(cmd_parts) == 1:
-            namespace = "system"
-            actor = "system"
-            cmd = cmd_parts[0]
-        else:
-            raise RuntimeError("cmd not properly formatted")
-
-        return namespace, actor, cmd
-
     def command_obj_get(self, namespace, actor, cmd):
-        self._logger.debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
 
         key = "%s__%s" % (namespace, actor)
         key_cmd = "%s__%s" % (key, cmd)
@@ -218,6 +155,7 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd], ''
 
+        self._logger.debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
         if namespace == "system" and key not in self.classes:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor
@@ -250,6 +188,93 @@ class Handler(JSBASE):
 
         return self.cmds[key_cmd], ""
 
+
+def select_namespace(request):
+    namespace = request[1].decode()
+
+    try:
+        i = int(namespace)
+        # means is selection of DB in redis directly because is int
+        return (namespace, True)
+    except Exception:
+        pass
+
+    if namespace not in j.servers.gedis.latest.namespaces:
+        return (namespace, False)
+
+    return (namespace, True)
+
+
+def command_split(cmd, actor="system", namespace="system"):
+    cmd_parts = cmd.split(".")
+    if len(cmd_parts) == 3:
+        namespace = cmd_parts[0]
+        actor = cmd_parts[1]
+        if "__" in actor:
+            actor = actor.split("__", 1)[1]
+        cmd = cmd_parts[2]
+
+    elif len(cmd_parts) == 2:
+        actor = cmd_parts[0]
+        if "__" in actor:
+            actor = actor.split("__", 1)[1]
+        cmd = cmd_parts[1]
+        if actor == "system":
+            namespace = "system"
+    elif len(cmd_parts) == 1:
+        namespace = "system"
+        actor = "system"
+        cmd = cmd_parts[0]
+    else:
+        raise RuntimeError("cmd not properly formatted")
+
+    return namespace, actor, cmd
+
+
+def read_header(request):
+    if len(request) < 2:
+        raise ValueError("can not handle with request, not enough arguments")
+
+    # If request length is > 2 we will expect a header
+    if len(request) > 2:
+        return j.data.serializers.json.loads(request[2])
+    return {}
+
+
+def read_input_args(request, header, command):
+
+    content_type = header.get('content_type', 'auto').casefold()
+
+    if content_type == 'auto':
+        try:
+            # Try capnp
+            id, data = j.data.serializers.msgpack.loads(request[1])
+            args = command.schema_in.get(capnpbin=data)
+            if id:
+                args.id = id
+            content_type = 'capnp'
+        except Exception:
+            # Try Json
+            args = command.schema_in.get(data=j.data.serializers.json.loads(request[1]))
+            content_type = 'json'
+
+    elif content_type == 'json':
+        try:
+            args = command.schema_in.get(data=j.data.serializers.json.loads(request[1]))
+        except Exception:
+            raise ValueError("the content is not valid json while you provided content_type=json")
+    elif content_type == 'capnp':
+        try:
+            id, data = j.data.serializers.msgpack.loads(request[1])
+            args = command.schema_in.get(capnpbin=data)
+            if id:
+                args.id = id
+        except Exception:
+            raise ValueError("the content is not valid capnp while you provided content_type=capnp")
+    else:
+        raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+
+    return args
     # def handle_websocket(self,socket, namespace):
     #
     #     message = socket.receive()
