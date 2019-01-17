@@ -14,7 +14,7 @@ comment = ""
 code = ""
 schema_in = ""
 schema_out = ""
-args = ""
+args = (LS)
 
 @url = jumpscale.gedis.api
 @name = GedisServerSchema
