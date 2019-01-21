@@ -55,3 +55,7 @@ class ZOSNode(j.application.JSBaseConfigClass):
         return "zosnode:%-14s %-25s:%-4s" % (self.name, self.addr,self.port)
 
     __repr__ = __str__
+
+
+class ZOSNodes(j.application.JSBaseConfigsClass):
+    _CHILDCLASS = ZOSNode

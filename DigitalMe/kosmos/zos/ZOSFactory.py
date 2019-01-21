@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-# from .ZOSNode import ZOSNode
+from .ZOSNodes import ZOSNodes
 
 
 
@@ -8,24 +8,15 @@ class ZOSCmdFactory(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.kosmos.zos"
 
-    # ZOSNode = ZOSNode
-
-    def _init(self):
-        self.zosnodes={}
-
-    def get(self,name,**args):
-        if name not in self.zosnodes:
-            self.zosnodes[name]=ZOSNode(name=name)
-            self.zosnodes[name].data_update(**args)
-        return self.zosnodes[name]
+    _CHILDCLASSES = [ZOSNodes]
 
 
     def test(self):
         """
 
+        js_shell 'j.kosmos.zos.test()'
+
         :return:
         """
         pass
 
-        #TODO: deploy zos in virtualbox
-        #...
