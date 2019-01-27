@@ -18,5 +18,7 @@ class ZOSCmdFactory(j.application.JSFactoryBaseClass):
 
         :return:
         """
-        pass
+        # node = self.zosnodes.mynode
+
+        j.shell()
 

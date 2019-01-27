@@ -10,6 +10,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     ssh_client_instance = "" (S) #name of the ssh client instance (if already created), namne will be zos_container_$name
     flist = ""
     env = "" #k
+    ports = "" (dict)
     
     
     """
@@ -284,7 +285,8 @@ class ZOSContainer(j.application.JSBaseConfigClass):
                 return False
             raise
 
-    def stop_job(self, id, signal=signal.SIGTERM, timeout=30):
+    def stop_job(self, id, timeout=30):
+        signal=signal.SIGTERM
         is_running = self.is_job_running(id)
         if not is_running:
             return
