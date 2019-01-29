@@ -62,6 +62,20 @@ class actor(JSBASE):
         result.bar = x.foo
         return result
 
+    def schema_in_list_out(self, x, schema_out):
+        """
+        ```in
+        x = (O) !gedis.test.in
+        ```
+
+        ```out
+        schema_out = (LO) !gedis.test.out
+        ```
+        """
+        result = schema_out.new()
+        result.bar = x.foo
+        return [result, result]
+
     def args_in(self, foo, bar):
         """
         ```in

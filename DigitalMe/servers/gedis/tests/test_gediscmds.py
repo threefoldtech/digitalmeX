@@ -1,8 +1,7 @@
 import os
 
 import pytest
-from DigitalMe.servers.gedis.GedisCmds import (GedisCmds,
-                                               method_source_process)
+from DigitalMe.servers.gedis.GedisCmds import GedisCmds, method_source_process
 
 
 @pytest.mark.parametrize("input,code,comments,schema_in,schema_out,args", [
@@ -32,12 +31,12 @@ def test_method_source_process(input, code, comments, schema_in, schema_out, arg
 
 
 def test_GedisCmds_init():
-    path = os.path.join(os.path.dirname(__file__), 'actors/actor.py')
+    path = os.path.join(os.path.dirname(__file__), 'actors/simple.py')
     cmds = GedisCmds(server=FakeServer(), namespace="default", name="test", path=path, capnpbin=None)
     assert cmds.name == 'test'
     assert cmds.namespace == 'default'
     assert cmds.path == path
-    actual_commands = ['args_in', 'bar', 'echo', 'foo', 'ping', 'schema_in', 'schema_in_out', 'schema_out']
+    actual_commands = sorted(['ping', 'foo', 'bar', 'echo'])
     assert list(cmds.cmds.keys()) == actual_commands
     for cmd in actual_commands:
         assert cmds.cmd_exists(cmd)

@@ -47,56 +47,23 @@ class GedisClient(JSConfigBase):
         self.cmds_meta = {}
 
         self._connect()
-
-        test = self.redis.execute_command("ping")
-        if test != b'PONG':
-            raise RuntimeError('Can not ping server')
+        self.ping()
         self._connected = True
 
         self.redis.execute_command("select", self.namespace)
 
-        schema_urls = self.redis.execute_command("schema_urls")
-        self.schema_urls = j.data.serializers.msgpack.loads(schema_urls)
-
+        # download remote actors commands to generate client code
         cmds_meta = self.redis.execute_command("api_meta", self.namespace)
         cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
-
         for key, capnpbin in cmds_meta["cmds"].items():
             if "__model_" not in key:
                 self.cmds_meta[key] = j.servers.gedis._cmds_get(key, capnpbin).cmds
 
-    def generate(self):
-        self._models = Models()
-
-        # this will make sure we have all the local schemas
-        def do():
-            schemas_meta = self.redis.execute_command("core_schemas_get", self.namespace)
-            return schemas_meta
-
-        schemas_meta = self._cache.get("core_schemas_get", method=do, retry=4, die=True)
-
-        schemas_meta = j.data.serializers.msgpack.loads(schemas_meta)
-        for key, txt in schemas_meta.items():
-            if key not in j.data.schema.schemas:
-                schema = j.data.schema.get(txt)
-
-                args = sorted([p for p in schema.properties if p.index], key=lambda p: p.name)
-                find_args = ''.join(["{0}={1},".format(p.name, p.default_as_python_code) for p in args]).strip(',')
-                kwargs = ''.join(["{0}".format(p.name) for p in args]).strip(',')
-
-                tpath = "%s/templates/ModelBase.py" % (j.clients.gedis._dirpath)
-                model_class = j.tools.jinja2.code_python_render(obj_key="model", path=tpath,
-                                                                objForHash=schema.text,
-                                                                obj=schema, find_args=find_args, kwargs=kwargs)
-
-                model = model_class(client=self)
-                setattr(self._models, schema.url.replace(".", "_"), model)
-
-    @property
-    def models(self):
-        if self._models is None:
-            self.generate()
-        return self._models
+    def ping(self):
+        test = self.redis.execute_command("ping")
+        if test != b'PONG':
+            raise RuntimeError('Can not ping server')
+        return True
 
     @property
     def cmds(self):
@@ -112,7 +79,7 @@ class GedisClient(JSConfigBase):
 
                 name = "gedisclient_cmds_%s" % (cmds_name_lower)
 
-                tpath = "%s/templates/template.py" % (j.clients.gedis._dirpath)
+                tpath = "%s/templates/template.py.jinja" % (j.clients.gedis._dirpath)
                 cl = j.tools.jinja2.code_python_render(obj_key="CMDS", path=tpath,
                                                        overwrite=True, name=name,
                                                        objForHash=None, obj=cmds)

@@ -9,7 +9,6 @@ class GedisClientCmds:
 
     def __init__(self, client):
         self._client = client
-        self.models = client.models
         self.__dict__.update(client.cmds.__dict__)
 
     def __str__(self):
