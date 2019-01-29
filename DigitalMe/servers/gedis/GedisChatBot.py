@@ -60,7 +60,7 @@ class GedisChatBotFactory(JSBASE):
             dir_path = j.sal.fs.getDirName(chatflow)
             if dir_path not in sys.path:
                 sys.path.append(dir_path)
-            self.logger.info("chat:%s" % chatflow)
+            self._logger.info("chat:%s" % chatflow)
             module_name = j.sal.fs.getBaseName(chatflow)[:-3]
             if module_name.startswith("_"):
                 continue
