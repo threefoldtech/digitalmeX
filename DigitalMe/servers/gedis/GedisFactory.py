@@ -6,7 +6,7 @@ from .GedisServer import GedisServer
 from .GedisCmds import GedisCmds
 from .GedisChatBot import GedisChatBotFactory
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigFactory = j.application.JSBaseConfigsClass
 
 
 class GedisFactory(JSConfigFactory):
@@ -25,10 +25,10 @@ class GedisFactory(JSConfigFactory):
         return server.redis_server
 
     def configure(self, name="test", port=8889,
-                  host="localhost", ssl=False, password="", configureclient=False):
+                  host="127.0.0.1", ssl=False, password="", configureclient=False):
 
         data = {
-            "port": str(port),
+            "port": port,
             "host": host,
             "password_": password,
             "ssl": ssl,
