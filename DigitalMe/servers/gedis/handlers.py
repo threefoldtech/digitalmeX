@@ -94,7 +94,7 @@ class Handler(JSBASE):
                     continue
 
                 # FIXME: avoid using eval
-                method_arguments = eval(cmd.cmdobj.args)
+                method_arguments = cmd.cmdobj.args
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 

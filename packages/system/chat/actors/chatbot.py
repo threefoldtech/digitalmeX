@@ -51,3 +51,11 @@ class chatbot(JSBASE):
 
     def ping(self):
         return 'PONG' 
+
+    def session_new(self, topic):
+        """
+        ```in
+        topic = "" (S)
+        ```
+        """
+        return {'sessionid': j.servers.gedis.latest.chatbot.session_new(topic)}
