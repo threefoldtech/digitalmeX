@@ -5,7 +5,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
     @url = jumpscale.clients.zoscmd.zoscontainer.1
-    name = "" (S)
+    name* = "" (S)
     zos_node_instance = "" (S) #name to the instance of the ZOSNode
     ssh_client_instance = "" (S) #name of the ssh client instance (if already created), namne will be zos_container_$name
     flist = ""
@@ -583,3 +583,6 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     # @property
     # def mgmt_addr(self):
     #     return get_zt_ip(self.client.info.nic())
+
+class ZOSContainers(j.application.JSBaseConfigsClass):
+    _CHILDCLASS = ZOSContainer
