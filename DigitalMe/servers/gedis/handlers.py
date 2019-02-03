@@ -55,7 +55,7 @@ class Handler(JSBASE):
                 socket.namespace, found = select_namespace(request)
                 if not found:
                     response.error("could not find namespace")
-                log.debug("namespace selected", namespace=socket.namespace)
+                log.debug("namespace selected %s" % socket.namespace)
                 response.encode('OK')
                 continue
 
@@ -68,12 +68,12 @@ class Handler(JSBASE):
                 continue
 
             namespace, actor, command = command_split(redis_cmd, namespace=socket.namespace)
-            log.debug("command received", namespace=namespace, actor=actor, command=command)
+            log.debug("command received %s %s %s" % (namespace, actor, command))
 
             cmd, err = self.command_obj_get(cmd=command, namespace=namespace, actor=actor)
             if err:
                 response.error(err)
-                log.error("fail to get command", namespace=namespace, command=command)
+                log.error("fail to get command %s %s" % (namespace, command))
                 continue
 
             header = {}
@@ -94,7 +94,7 @@ class Handler(JSBASE):
                     continue
 
                 # FIXME: avoid using eval
-                method_arguments = eval(cmd.cmdobj.args)
+                method_arguments = cmd.cmdobj.args
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 

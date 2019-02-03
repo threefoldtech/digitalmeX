@@ -1,3 +1,5 @@
+
+import json
 from Jumpscale import j
 
 
@@ -29,7 +31,7 @@ class chatbot(JSBASE):
 
         """
         res = self.chatbot.session_work_get(sessionid)
-        return res
+        return json.dumps(res)
 
     def work_report(self, sessionid, result):
         """
@@ -50,4 +52,12 @@ class chatbot(JSBASE):
         pass
 
     def ping(self):
-        return 'PONG' 
+        return 'PONG'
+
+    def session_new(self, topic):
+        """
+        ```in
+        topic = "" (S)
+        ```
+        """
+        return json.dumps({'sessionid': j.servers.gedis.latest.chatbot.session_new(topic)})
