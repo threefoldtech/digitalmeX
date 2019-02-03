@@ -96,7 +96,7 @@ class GedisServer(JSBaseConfig):
         for model in models:
             model_name = "model_%s.py" % (model.schema.key)
             dest = j.sal.fs.joinPaths(self.code_generated_dir, model_name)
-            self._logger.info("generate model: %s at %s", model_name, dest)
+            self._log_info("generate model: %s at %s", model_name, dest)
             if reset or not j.sal.fs.exists(dest):
                 j.tools.jinja2.template_render(
                     path=j.sal.fs.joinPaths(j.servers.gedis._dirpath, "templates/actor_model_server.py"),
@@ -139,7 +139,7 @@ class GedisServer(JSBaseConfig):
         if not j.sal.fs.exists(path):
             raise ValueError("actor_add: cannot find actor at %s" % path)
 
-        self._logger.debug("actor_add:%s:%s", namespace, path)
+        self._log_debug("actor_add:%s:%s", namespace, path)
         name = actor_name(path, namespace)
         key = actor_key(name, namespace)
         self.cmds_meta[key] = GedisCmds(server=self, path=path, name=name, namespace=namespace)
@@ -258,9 +258,9 @@ class GedisServer(JSBaseConfig):
         path = os.path.dirname(self.code_generated_dir)
         res = j.sal.ssl.ca_cert_generate(path)
         if res:
-            self._logger.info("generated sslkeys for gedis in %s" % path)
+            self._log_info("generated sslkeys for gedis in %s" % path)
         else:
-            self._logger.info('using existing key and cerificate for gedis @ %s' % path)
+            self._log_info('using existing key and cerificate for gedis @ %s' % path)
         key = j.sal.fs.joinPaths(path, 'ca.key')
         cert = j.sal.fs.joinPaths(path, 'ca.crt')
         return key, cert
@@ -270,7 +270,7 @@ class GedisServer(JSBaseConfig):
         this method is only used when not used in digitalme
         """
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
-        self._logger.info("start Server on {0} - PORT: {1}".format(self.host, self.port))
+        self._log_info("start Server on {0} - PORT: {1}".format(self.host, self.port))
         handler = Handler(self)
         if self.ssl:
             self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
@@ -289,7 +289,7 @@ class GedisServer(JSBaseConfig):
                 spawn=Pool(),
                 handle=handler.handle_redis
             )
-        self._logger.info("%s RUNNING", str(self))
+        self._log_info("%s RUNNING", str(self))
         self.redis_server.serve_forever()
 
     def stop(self):
@@ -305,7 +305,7 @@ class GedisServer(JSBaseConfig):
         for h in self._sig_handler:
             h.cancel()
 
-        self._logger.info('stopping server')
+        self._log_info('stopping server')
         self.redis_server.stop()
 
     def __repr__(self):

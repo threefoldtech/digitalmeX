@@ -22,13 +22,13 @@ class Handler(JSBASE):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._logger.info('connection error', error=str(err), address=address)
+            self._log_info('connection error', error=str(err), address=address)
         finally:
             parser.on_disconnect()
-            self._logger.info('connection closed', address=address)
+            self._log_info('connection closed', address=address)
 
     def _handle_redis(self, socket, address, parser, response):
-        # log = self._logger.bind(address=address)  # requires stuctlog, for future
+        # log = self._log_bind(address=address)  # requires stuctlog, for future
         log = self._logger
         log.info('new incoming connection')
 
@@ -155,7 +155,7 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd], ''
 
-        self._logger.debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
+        self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
         if namespace == "system" and key not in self.classes:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor
@@ -334,9 +334,9 @@ def read_input_args(request, header, command):
     #         return result, None
     #
     #     except Exception as e:
-    #         self._logger.debug("exception in redis server")
+    #         self._log_debug("exception in redis server")
     #         eco = j.errorhandler.parsePythonExceptionObject(e)
     #         msg = str(eco)
     #         msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
-    #         self._logger.debug(msg)
+    #         self._log_debug(msg)
     #         return None, e.args[0]

@@ -82,7 +82,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     def start(self):
         if not self.is_running():
-            self._logger.debug("start %s", self)
+            self._log_debug("start %s", self)
             self._create_container()
             for process in self.init_processes:
                 cmd = "{} {}".format(process['name'], ' '.join(process.get('args', [])))
@@ -104,7 +104,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         """
         if not self.is_running():
             return
-        self._logger.debug("stop %s", self)
+        self._log_debug("stop %s", self)
 
         self.node.client.container.terminate(self.id)
         self._client = None
@@ -128,7 +128,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     @property
     def id(self):
-        self._logger.debug("get container id")
+        self._log_debug("get container id")
         info = self.info
         if info:
             return info['container']['id']
@@ -136,7 +136,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     @property
     def info(self):
-        self._logger.debug("get container info")
+        self._log_debug("get container info")
         for containerid, container in self.node.client.container.list().items():
             if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
@@ -238,7 +238,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         return buff.getvalue().decode()
 
     def _create_container(self, timeout=60):
-        self._logger.debug("send create container command to zero-os (%s)", self.flist)
+        self._log_debug("send create container command to zero-os (%s)", self.flist)
         tags = [self.name]
         if self.hostname and self.hostname != self.name:
             tags.append(self.hostname)
@@ -291,7 +291,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         if not is_running:
             return
 
-        self._logger.debug('stop job: %s', id)
+        self._log_debug('stop job: %s', id)
 
         self.client.job.kill(id)
 
@@ -465,7 +465,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #     return buff.getvalue().decode()
     #
     # def _create_container(self, timeout=60):
-    #     self._logger.debug("send create container command to zero-os (%s)", self.flist)
+    #     self._log_debug("send create container command to zero-os (%s)", self.flist)
     #     tags = [self.name]
     #     if self.hostname and self.hostname != self.name:
     #         tags.append(self.hostname)
@@ -514,7 +514,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #     if not is_running:
     #         return
     #
-    #     self._logger.debug('stop job: %s', id)
+    #     self._log_debug('stop job: %s', id)
     #
     #     self.client.job.kill(id)
     #

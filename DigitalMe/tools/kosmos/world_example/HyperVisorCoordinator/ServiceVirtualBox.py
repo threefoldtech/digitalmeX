@@ -16,7 +16,7 @@ class ServiceVirtualBox(ServiceBase):
 
     @action
     def task1(self,descr):
-        self._logger.debug("TASK1:%s"%descr)
+        self._log_debug("TASK1:%s"%descr)
         return "RETURN:%s"%descr
 
     def task2(self,id):

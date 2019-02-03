@@ -25,7 +25,7 @@ class KosmosUniverse(j.application.JSBaseClass):
     def __setattr__(self, key, value):
         if "data" in self.__dict__ and key in self.__class__._MODEL.schema.properties_list:
             # if value != self.data.__getattribute__(key):
-            self._logger.debug("SET:%s:%s"%(key,value))
+            self._log_debug("SET:%s:%s"%(key,value))
             self.__dict__["data"].__setattr__(key,value)
 
         self.__dict__[key]=value

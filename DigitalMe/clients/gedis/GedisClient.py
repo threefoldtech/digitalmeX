@@ -88,7 +88,7 @@ class GedisClient(JSConfigBase):
                     cmds_name_lower = cmds_name_lower.split("__", 1)[1]
 
                 setattr(self.cmds, cmds_name_lower, cl(client=self, cmds=cmds.cmds))
-                self._logger.debug("cmds:%s" % name)
+                self._log_debug("cmds:%s" % name)
         return self._cmds
 
     def _connect(self):
@@ -108,9 +108,9 @@ class GedisClient(JSConfigBase):
             if self.data.ssl:
                 if not self.data.sslkey:
                     ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self.code_generated_dir), 'ca.crt')
-                self._logger.info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
+                self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
             else:
-                self._logger.info("redisclient: %s:%s " % (addr, port))
+                self._log_info("redisclient: %s:%s " % (addr, port))
 
             self.redis = j.clients.redis.get(
                 ipaddr=addr,

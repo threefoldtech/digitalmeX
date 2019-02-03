@@ -261,7 +261,7 @@ class Router(j.application.JSBaseClass):
             # print msg
             pass
         else:
-            self._logger.log(msg, **kwargs)
+            self._log_log(msg, **kwargs)
 
     def _clean_logfile(self):
         out = open(self._console_logfile).read()

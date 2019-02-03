@@ -23,7 +23,7 @@ def main(self):
     res = j.sal.nettools.waitConnectionTest("localhost", int(gedis.port), timeoutTotal=1000)
     if res == False:
         raise RuntimeError("Could not start gedis server on port:%s" % int(gedis.port))
-    self._logger.info("gedis server '%s' started" % gedis.name)
+    self._log_info("gedis server '%s' started" % gedis.name)
     print("[*] testing echo")
 
     cl = gedis.client_get(namespace="gedis_examples")

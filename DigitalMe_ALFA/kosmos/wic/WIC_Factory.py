@@ -30,7 +30,7 @@ class WIC_Factory(j.application.JSBaseClass):
 
             e = j.tools.executor.getSSHBased(ipaddr, port=22, login="root", passwd="rooter", usecache=False)
 
-            self._logger.debug("##### START UPDATE PROCESS, THIS CAN TAKE 3 MIN")
+            self._log_debug("##### START UPDATE PROCESS, THIS CAN TAKE 3 MIN")
             cmd = "cd /tmp;wget http://downloads.openwrt.org/chaos_calmer/15.05.1/ar71xx/generic/openwrt-15.05.1-ar71xx-generic-gl-inet-6416A-v1-squashfs-factory.bin;sysupgrade openwrt-15.05.1-ar71xx-generic-gl-inet-6416A-v1-squashfs-factory.bin"
             res = e.sshclient.client.exec_command(cmd)
 
@@ -49,7 +49,7 @@ class WIC_Factory(j.application.JSBaseClass):
 
             e.sshclient.close()
 
-            self._logger.debug("##### WIC IS NOW REBOOTING")
+            self._log_debug("##### WIC IS NOW REBOOTING")
 
             t = j.data.time.getTimeEpoch()
             timeout = t + 180
@@ -62,7 +62,7 @@ class WIC_Factory(j.application.JSBaseClass):
             if state != "up":
                 raise RuntimeError("cannot update %s, reboot did not happen in 180 sec." % ipaddr)
 
-            self._logger.debug("##### WIC IS LIFE, UPDATE PACKAGES")
+            self._log_debug("##### WIC IS LIFE, UPDATE PACKAGES")
 
             time.sleep(5)
 
@@ -73,7 +73,7 @@ class WIC_Factory(j.application.JSBaseClass):
         def sw(ipaddr):
 
             e = j.tools.executor.getSSHBased(ipaddr, port=22, login="root", passwd="rooter", usecache=False)
-            self._logger.debug("%s:UPDATE OPKG" % ipaddr)
+            self._log_debug("%s:UPDATE OPKG" % ipaddr)
             e.sshclient.execute("opkg update")
             e.sshclient.execute("opkg install bash")
             e.sshclient.execute("opkg install fastd")
@@ -99,7 +99,7 @@ class WIC(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
         from IPython import embed
-        self._logger.debug("DEBUG NOW get prefab")
+        self._log_debug("DEBUG NOW get prefab")
         embed()
 
         self._prefab
