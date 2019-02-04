@@ -53,7 +53,7 @@ class ChangeWatchdog(FileSystemEventHandler, JSBASE):
     def __init__(self,client):
         JSBASE.__init__(self)
         self.client=client
-        self._logger_enable()
+
 
     def handler(self, event, action=""):
         

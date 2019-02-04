@@ -45,7 +45,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     @classmethod
     def from_containerinfo(cls, containerinfo, node, logger=None):
         logger = logger or default_logger
-        logger.debug("create container from info")
+        self._log_debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
         return cls(name=arguments['name'],

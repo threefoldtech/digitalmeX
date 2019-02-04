@@ -64,7 +64,7 @@ class MyJobs(JSBASE):
         self.mainloop = None
         self.dataloop = None
         self.workers_subprocess = True
-        self._logger_enable()
+
 
     def init(self,reset=False,start=True):
         """

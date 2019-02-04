@@ -13,7 +13,7 @@ class Handler(JSBASE):
         self.cmds = {}  # caching of commands
         self.classes = self.gedis_server.classes
         self.cmds_meta = self.gedis_server.cmds_meta
-        self._logger_enable()
+
 
     def handle_redis(self, socket, address):
         parser = RedisCommandParser(socket)

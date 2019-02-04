@@ -35,7 +35,7 @@ class Package(JSBASE):
         self.bcdb=bcdb
 
         # self._loaded = [] #key is processed by j.core.text.strip_to_ascii_dense
-        self._logger_enable()
+
 
         if path_config:
             self.toml_load(path_config)

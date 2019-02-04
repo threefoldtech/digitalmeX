@@ -37,7 +37,7 @@ class RedisCommandParser(PythonParser):
         try:
             return self.read_response()
         except ConnectionError as e:
-            logger.error('Connection err %s' % e.args)
+            self._log_error('Connection err %s' % e.args)
 
     def request_to_dict(self, request):
         # request.pop(0) #first one is command it self
