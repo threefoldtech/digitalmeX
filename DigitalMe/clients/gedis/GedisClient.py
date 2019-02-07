@@ -22,7 +22,7 @@ class GedisClient(JSConfigBase):
     @url = jumpscale.gedis.client
     name* = "main"
     host = "127.0.0.1" (S)
-    port = 9900 (ipport)
+    port = 9901 (ipport)
     namespace = "default" (S)
     password_ = "" (S)
     ssl = False (B)

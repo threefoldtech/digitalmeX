@@ -22,15 +22,16 @@ class Handler(JSBASE):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._log_info('connection error', error=str(err), address=address)
+            # self._log_info('connection error', error=str(err), address=address)
+            print("connection error")
         finally:
             parser.on_disconnect()
-            self._log_info('connection closed', address=address)
+            # self._log_info('connection closed', address=address)
 
     def _handle_redis(self, socket, address, parser, response):
         # log = self._log_bind(address=address)  # requires stuctlog, for future
-        log = self._logger
-        log.info('new incoming connection')
+        # log = self._logger
+        # log.info('new incoming connection')
 
         socket.namespace = "system"
 
@@ -38,12 +39,12 @@ class Handler(JSBASE):
             request = parser.read_request()
 
             if request is None:
-                log.debug("connection lost or tcp test")
+                # log.debug("connection lost or tcp test")
                 break
 
             if not request:  # empty list request
                 # self.response.error('Empty request body .. probably this is a (TCP port) checking query')
-                log.debug("wrong formatted request")
+                # log.debug("wrong formatted request")
                 continue
 
             cmd = request[0]
@@ -51,11 +52,11 @@ class Handler(JSBASE):
 
             # special command to put the client on right namespace
             if redis_cmd == "select":
-                log.debug('start namespace selection')
+                # log.debug('start namespace selection')
                 socket.namespace, found = select_namespace(request)
                 if not found:
                     response.error("could not find namespace")
-                log.debug("namespace selected %s" % socket.namespace)
+                # log.debug("namespace selected %s" % socket.namespace)
                 response.encode('OK')
                 continue
 
@@ -67,13 +68,17 @@ class Handler(JSBASE):
                 response.encode("PONG")
                 continue
 
+            if redis_cmd == "auth":
+                response.encode("OK")
+                continue
+
             namespace, actor, command = command_split(redis_cmd, namespace=socket.namespace)
-            log.debug("command received %s %s %s" % (namespace, actor, command))
+            # log.debug("command received %s %s %s" % (namespace, actor, command))
 
             cmd, err = self.command_obj_get(cmd=command, namespace=namespace, actor=actor)
             if err:
                 response.error(err)
-                log.error("fail to get command %s %s" % (namespace, command))
+                # log.error("fail to get command %s %s" % (namespace, command))
                 continue
 
             header = {}
@@ -124,7 +129,7 @@ class Handler(JSBASE):
                 else:
                     result = cmd.method(**params)
             except Exception as e:
-                log.error("exception in redis server: %s" % str(e))
+                # log.error("exception in redis server: %s" % str(e))
                 j.errorhandler.try_except_error_process(e, die=False)
                 msg = str(e)
                 msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
@@ -155,7 +160,7 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd], ''
 
-        self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
+        # self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
         if namespace == "system" and key not in self.classes:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GedisClient import GedisClient
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSBaseConfigsClass
 
 
 class GedisClientCmds:
@@ -25,7 +25,7 @@ class GedisClientCmds:
     __repr__ = __str__
 
 
-class GedisClientFactory(JSConfigBase):
+class GedisClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.gedis"
     _CHILDCLASS = GedisClient
 
@@ -34,13 +34,6 @@ class GedisClientFactory(JSConfigBase):
         self._template_code_client = None
         self._code_model_template = None
 
-    def get(self, name='main', configureonly=False, **kwargs):
-        client = JSConfigBase.get(self, name=name, **kwargs)
-        if configureonly:
-            return
-
-        if client._connected:
-            return GedisClientCmds(client)
 
     def configure(self, name="main", host="localhost", port=5000, secret="", namespace="default",
                   ssl=False, ssl_cert_file="", reset=False,):

@@ -42,11 +42,7 @@ class gedis_examples(JSBASE):
         ```
 
         """
-        w = schema_out.new()
-
-        w.ipaddr = wallet['ipaddr']
-        w.addr = wallet['addr']
-        w.jwt = wallet['jwt']
+        w = wallet
         return w
 
     def example3(self,a, b, c, schema_out):
@@ -81,8 +77,8 @@ class gedis_examples(JSBASE):
         ```
         """
         w = schema_out.new()
-        w.result.ipaddr = wallet['ipaddr']
-        w.result.addr = wallet['addr']
-        w.result.jwt = wallet['jwt']
+        w.result.ipaddr = wallet.ipaddr
+        w.result.addr = wallet.addr
+        w.result.jwt = wallet.jwt
         w.custom = "custom"
         return w
