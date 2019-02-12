@@ -8,8 +8,8 @@ class ChatApp extends lapis.Application
     [index: "/session/:topic"]: =>
         req = @req.parsed_url
         scheme = "ws"
-        if req.scheme == "https"
+        if req.scheme == "https" or @req.headers['x-forwarded-proto'] == "https"
             scheme = "wss"
-        @url = scheme .. "://" .. req.host .. ":" .. req.port
+        @url = scheme .. "://" .. req.host
         @topic = @params.topic
         render: "chat.index"
