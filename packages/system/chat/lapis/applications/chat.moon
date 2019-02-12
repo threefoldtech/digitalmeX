@@ -11,5 +11,7 @@ class ChatApp extends lapis.Application
         if req.scheme == "https" or @req.headers['x-forwarded-proto'] == "https"
             scheme = "wss"
         @url = scheme .. "://" .. req.host
+        if req.port
+            @url = @url .. ":" .. req.port
         @topic = @params.topic
         render: "chat.index"
