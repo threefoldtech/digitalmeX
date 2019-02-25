@@ -5,7 +5,7 @@
 ```bash
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/applications
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/applications
 ```
 
 2- setup and start gedis server in tmux
