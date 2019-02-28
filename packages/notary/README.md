@@ -4,13 +4,13 @@
 
 server = j.servers.gedis.configure(host="0.0.0.0", port=8888)
 
-server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/Notary/actors/notary_actor.py') 
+server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py') 
 
 server.start()                                            
 ```
 ## using Tmux
 ```
-cd /sandbox/code/github/threefoldtech/digitalmeX/Notary/
+cd /sandbox/code/github/threefoldtech/digitalmeX/packages/notary
 
 moonc . &&lapis server
 ```
