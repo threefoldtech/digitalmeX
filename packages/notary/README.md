@@ -2,11 +2,14 @@
 ## in kosmos run the following: 
 ```python
 
+zdb_cl = j.clients.zdb.start_test_instance()
+zdb_cl = zdb_cl.namespace_new("notary_namespace", secret="1234")
+bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name="notary_bcdb")
+bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models")
 server = j.servers.gedis.configure(host="0.0.0.0", port=8888)
-
-server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py') 
-
-server.start()                                            
+server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py')
+server.models_add(models=bcdb.models.values())
+server.start()                                          
 ```
 ## using Tmux
 ```
@@ -28,5 +31,5 @@ http://localhost:8080/get?key="test"
 
 ## to delete 
 ```
-http://localhost:8080/delete?robot_id="123",key="test",key_signature="Notary_test"
+http://localhost:8080/delete?robot_id="123"&key="test"&content_signature="Notary_test"
 ```

@@ -51,7 +51,7 @@ class GedisCmds(JSBASE):
             kobj = klass()
             if hasattr(kobj, "schema"):
                 # means is a generated actor which exposes a model (schema)
-                key = "%s__model_%s" % (self.namespace, kobj.schema.name)
+                key = "%s__model_%s" % (self.namespace, kobj.schema.url)
             else:
                 key = "%s__%s" % (self.namespace, cname.replace(".", "_"))
 
