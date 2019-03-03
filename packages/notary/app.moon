@@ -41,7 +41,7 @@ class extends lapis.Application
     client["gedis"] = redis.command("default.notary_actor.delete")
 
     args = {
-      "robot_id": @params.robot_id,
+      "threebot_id": @params.threebot_id,
       "key": @params.key,
       "content_signature": @params.content_signature
     }

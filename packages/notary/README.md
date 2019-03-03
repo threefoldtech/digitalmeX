@@ -22,7 +22,7 @@ moonc . &&lapis server
 
 ## to register
 ```
-curl -d '{"robot_id":"123", "key":"test", "content":"Notary", "content_signature":"Notary_test"}' -H "Content-Type: application/json" -X POST http://localhost:8080/register
+curl -d '{"robot_id":"123", "key":"test", "content":"Notary", "content_signature":"{{CONTENT_SIGNATURE}}"}' -H "Content-Type: application/json" -X POST http://localhost:8080/register
 ```
 ## to get 
 ```
@@ -31,5 +31,5 @@ http://localhost:8080/get?key="test"
 
 ## to delete 
 ```
-http://localhost:8080/delete?robot_id="123"&key="test"&content_signature="Notary_test"
+http://localhost:8080/delete?robot_id="123"&key="test"&content_signature={{CONTENT_SIGNATURE}}
 ```

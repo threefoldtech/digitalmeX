@@ -38,7 +38,7 @@ do
       local client = redis.connect(config.gedis_host, config.gedis_port)
       client["gedis"] = redis.command("default.notary_actor.delete")
       local args = {
-        ["robot_id"] = self.params.robot_id,
+        ["threebot_id"] = self.params.threebot_id,
         ["key"] = self.params.key,
         ["content_signature"] = self.params.content_signature
       }

@@ -1,8 +1,6 @@
 # notary_model
 @url = threefold.grid.notary
-name* = "" 
-comment = ""
-robot_id* = "" (S)   
+threebot_id* = "" (S)   
 key* = (S)      
 content =  (S)           
 content_signature = (S)                
