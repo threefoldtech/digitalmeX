@@ -29,6 +29,7 @@ class notary_actor(JSBASE):
         out = schema_out.new()
         bcdb = self.bcdb
         model = bcdb.models.get("threefold.grid.notary")
+        # TODO: check that signature is inline with 3Bot ID provided, meaning the Notary verifies that the 3bot with the ID sent has indeed created the info
         model_obj = model.new()
         model_obj.threebot_id = threebot_id
         model_obj.key = key
@@ -56,26 +57,4 @@ class notary_actor(JSBASE):
                 return model
 
         out.message = "this key doesn't exist"
-        return out
-
-    def delete(self, threebot_id, key, content_signature, schema_out):
-        """
-        ```in
-        threebot_id = "" (S)
-        key = "" (S)
-        content_signature = "" (S)
-        ```
-        ```out
-        message = "" (S)
-        ```
-       """
-        out = schema_out.new()
-        bcdb = self.bcdb
-        for model in bcdb.get_all():
-            if model.key == key and model.threebot_id == threebot_id and model.content_signature == content_signature:
-                model.delete()
-                model.save()
-                out.message = "True"
-                return out
-        out.message = "False"
         return out

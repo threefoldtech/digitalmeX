@@ -45,18 +45,3 @@ gedis_client.cmds.notary_actor.get("test")
 ```
 http://localhost:8080/get?key="test"
 ```
-
-
-
-## to delete 
-
-### using gedis
-
-```
-gedis_client = j.clients.gedis.get("notary", port=8888) 
-gedis_client.cmds.notary_actor.delete("123","test","{{CONTENT_SIGNATURE}}") 
-```
-### from browser
-```
-http://localhost:8080/delete?robot_id="123"&key="test"&content_signature={{CONTENT_SIGNATURE}}
-```
