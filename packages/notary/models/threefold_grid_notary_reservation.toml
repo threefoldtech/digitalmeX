@@ -1,0 +1,6 @@
+# notary_model
+@url = threefold.grid.notary.reservation
+hash* = "" (S)
+threebot_id = "" (S)
+content =  (S)
+content_signature = (S)
