@@ -1,7 +1,7 @@
 
 import json
 from Jumpscale import j
-
+from pyblake2 import blake2b
 
 JSBASE = j.application.JSBaseClass
 
@@ -37,8 +37,8 @@ class notary_actor(JSBASE):
         model_obj.content_signature = content_signature
         model_obj.save()
 
-        out.message = "your register info is threebot_id = {} , key = {}, content = {} ,content_signature ={}".format(
-            threebot_id, key, content, content_signature)
+        content_hash = blake2b(str(model_obj).encode(), digest_size=10).hexdigest()
+        out.message = "Hash of the content is {}".format(content_hash)
         return out
 
     def get(self, key, schema_out):
@@ -54,7 +54,9 @@ class notary_actor(JSBASE):
         bcdb = self.bcdb
         for model in bcdb.get_all():
             if model.key == key:
-                return model
+                out.message = "key:{} , content:{} , threebot_id:{} , content_signature:{}".format(
+                    model.key, model.content, model.threebot_id, model.content_signature)
+                return out
 
         out.message = "this key doesn't exist"
-        return out
+        raise Exception(out.message)
