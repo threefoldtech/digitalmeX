@@ -1,5 +1,6 @@
 # notary_model
 @url = threefold.grid.notary
+name* = "notary" (S)
 threebot_id* = "" (S)   
 key* = (S)      
 content =  (S)           
