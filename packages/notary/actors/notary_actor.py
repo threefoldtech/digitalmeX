@@ -28,7 +28,7 @@ class notary_actor(JSBASE):
         """
         record = self.tfchain.threebot.record_get(bot_id)
         encoded_key = record.public_key.hash
-        return nacl.signature.VerifyKey(
+        return nacl.signing.VerifyKey(
             str(encoded_key),
             encoder=nacl.encoding.HexEncoder)
 
@@ -70,7 +70,12 @@ class notary_actor(JSBASE):
         ```
         """
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
-        return model.get(hash=hash)
+        for x in model.get_all():
+            if x.hash == hash:
+                return x
+
+        raise KeyError("reservation not found")
+        # return model.get(hash=hash) # https://github.com/threefoldtech/digitalmeX/issues/28
 
 
 def _hash_content(threebot_id, content):
