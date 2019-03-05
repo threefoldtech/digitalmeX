@@ -16,6 +16,16 @@ class notary_actor(JSBASE):
         return "welcome to https://github.com/threefoldtech/home/issues/135"
 
     def _bot_verify_key(self, bot_id):
+        """
+        retrieve the verify key of the threebot identified by bot_id
+        from tfchain
+
+        :param bot_id: threebot identification, can be one of the name or the unique integer
+                        of a threebot
+        :type bot_id: string
+        :return: verify key we can use to verify message signed by the threebot
+        :rtype: nacl.singing.VerfiyKey
+        """
         record = self.tfchain.threebot.record_get(bot_id)
         encoded_key = record.public_key.hash
         return nacl.signature.VerifyKey(
@@ -34,7 +44,7 @@ class notary_actor(JSBASE):
         ```
         """
         verify_key = self._bot_verify_key(threebot_id)
-        _verify_signature(content_signature, verify_key)
+        _verify_signature(content, content_signature, verify_key)
 
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
 
@@ -65,8 +75,27 @@ class notary_actor(JSBASE):
 
 
 def _hash_content(content):
+    """
+    return the 32 bytes blake2 hash  of content
+
+    :param content: content to hash
+    :type content: bytes
+    :return: hex encoded blake2 hash
+    :rtype: string
+    """
     return j.data.blake2_string(content, size=32)
 
 
-def _verify_signature(signature, verify_key):
-    verify_key.verify(signature)
+def _verify_signature(smessage, signature, verify_key):
+    """
+    verify the signature for the signed message is valid
+
+    :param smessage: the signed message
+    :type smessage: bytes
+    :param signature: the signature of smessage
+    :type signature: bytes
+    :param verify_key: the verify key
+    :type verify_key: nacl.signing.VerifyKey
+    :raises nacl.exceptions.BadSignature: raised if the verification of the signature failed
+    """
+    verify_key.verify(smessage, signature)
