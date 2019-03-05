@@ -15,7 +15,6 @@ def main(self):
     email = "" (S)              # Email address
     username = "" (S)           # User name
     """
-    j.data.schema.get(schema_text)
 
     init_script = """
 # loading the schema used for testing in the server process

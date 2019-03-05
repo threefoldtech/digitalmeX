@@ -52,6 +52,12 @@ class GedisClient(JSConfigBase):
 
         self.redis.execute_command("select", self.namespace)
 
+        # Load all schemas from the server
+        schemas_data = self.redis.execute_command("core_schemas_get", self.namespace)
+        schemas_data = j.data.serializers.msgpack.loads(schemas_data)
+        for schema_text in schemas_data.values():
+            j.data.schema.get(schema_text)
+
         # download remote actors commands to generate client code
         cmds_meta = self.redis.execute_command("api_meta", self.namespace)
         cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
