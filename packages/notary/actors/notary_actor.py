@@ -2,7 +2,7 @@ import json
 from Jumpscale import j
 import nacl
 from pyblake2 import blake2b
-
+from io import BytesIO
 
 JSBASE = j.application.JSBaseClass
 
@@ -46,10 +46,9 @@ class notary_actor(JSBASE):
         verify_key = self._bot_verify_key(threebot_id)
         _verify_signature(content, content_signature, verify_key)
 
+        content_hash = _hash_content(threebot_id, content)
+
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
-
-        content_hash = _hash_content(content)
-
         model_obj = model.new()
         model_obj.hash = content_hash
         model_obj.threebot_id = threebot_id
@@ -74,16 +73,34 @@ class notary_actor(JSBASE):
         return model.get(hash=hash)
 
 
-def _hash_content(content):
+def _hash_content(threebot_id, content):
     """
-    return the 32 bytes blake2 hash  of content
+    return the 32 bytes blake2 hash of
+    the threebot_id + encrypted reservation content
 
     :param content: content to hash
     :type content: bytes
     :return: hex encoded blake2 hash
     :rtype: string
     """
-    return j.data.blake2_string(content, size=32)
+    if not isinstance(threebot_id, int):
+        raise TypeError("threebot_id must be an int. The unique identifier of the theebot, not its same")
+    if threebot_id <= 0:
+        raise TypeError("threebot_id cannot be negative")
+
+    buff = BytesIO()
+
+    bi = _int_to_bytes(threebot_id)
+    buff.write(bi)
+
+    if isinstance(content, str):
+        content = content.encode('utf-8')
+    buff.write(content)
+    return j.data.hash.blake2_string(buff.getvalue(), digest_size=32)
+
+
+def _int_to_bytes(i):
+    return i.to_bytes(64, byteorder='big')
 
 
 def _verify_signature(smessage, signature, verify_key):
