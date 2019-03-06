@@ -130,9 +130,12 @@ class Handler(JSBASE):
                     result = cmd.method(**params)
             except Exception as e:
                 # log.error("exception in redis server: %s" % str(e))
-                # j.errorhandler.try_except_error_process(e, die=False)
-                # msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
-                response.error(e)
+                j.errorhandler.try_except_error_process(e, die=False)
+                msg = str(e)
+                # According to redis protocol documentation error response must be simple strings which means it can't
+                # contain new lines so we will replace newlines with ' - '
+                msg = msg.replace('\n', ' - ')
+                response.error(msg)
                 continue
 
             def should_encode(item):
