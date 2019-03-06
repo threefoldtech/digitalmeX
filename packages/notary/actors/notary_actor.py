@@ -30,7 +30,7 @@ class notary_actor(JSBASE):
         encoded_key = record.public_key.hash
         return nacl.signing.VerifyKey(
             str(encoded_key),
-            encoder=nacl.encoding.HexEncoder)
+            encoder=nacl.encoding.HexEncoder), record.identifier
 
     def register(self, threebot_id, content, content_signature, schema_out):
         """
@@ -43,10 +43,10 @@ class notary_actor(JSBASE):
         hash = "" (S)
         ```
         """
-        verify_key = self._bot_verify_key(threebot_id)
+        verify_key, threebot_identifier = self._bot_verify_key(threebot_id)
         _verify_signature(content, content_signature, verify_key)
 
-        content_hash = _hash_content(threebot_id, content)
+        content_hash = _hash_content(threebot_identifier, content)
 
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
         model_obj = model.new()
@@ -70,12 +70,13 @@ class notary_actor(JSBASE):
         ```
         """
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
-        for x in model.get_all():
-            if x.hash == hash:
-                return x
+        result = model.get_by_hash(hash)
+        if not result:
+            raise KeyError("reservation not found")
+        if len(result) > 1:
+            raise RuntimeError('found 2 reservation with that hash, this should never happens')
 
-        raise KeyError("reservation not found")
-        # return model.get(hash=hash) # https://github.com/threefoldtech/digitalmeX/issues/28
+        return result[0]
 
 
 def _hash_content(threebot_id, content):
@@ -101,7 +102,7 @@ def _hash_content(threebot_id, content):
     if isinstance(content, str):
         content = content.encode('utf-8')
     buff.write(content)
-    return j.data.hash.blake2_string(buff.getvalue(), digest_size=32)
+    return j.data.hash.blake2_string(buff.getvalue(), 32)
 
 
 def _int_to_bytes(i):

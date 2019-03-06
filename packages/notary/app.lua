@@ -26,7 +26,7 @@ do
       local client = redis.connect(config.gedis_host, config.gedis_port)
       client["gedis"] = redis.command("default.notary_actor.get")
       local args = {
-        ["key"] = self.params.key
+        ["hash"] = self.params.hash
       }
       local header = {
         ["response_type"] = "json"
