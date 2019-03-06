@@ -130,10 +130,9 @@ class Handler(JSBASE):
                     result = cmd.method(**params)
             except Exception as e:
                 # log.error("exception in redis server: %s" % str(e))
-                j.errorhandler.try_except_error_process(e, die=False)
-                msg = str(e)
-                msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
-                response.error(msg)
+                # j.errorhandler.try_except_error_process(e, die=False)
+                # msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
+                response.error(e)
                 continue
 
             def should_encode(item):
