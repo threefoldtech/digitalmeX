@@ -69,3 +69,17 @@ qres = model.index.select(model.index.name == "foo")
 # if you want to get the full model you need to get it fom the model using the ID
 queried_object = model.get(qres[0].id)
 ```
+## add models from path 
+
+```
+# Get DB client (we will use zdb test server to start and get zdb client)
+db_cl = j.clients.zdb.testdb_server_start_client_get(reset=True)
+
+# Get BCDB databse object
+bcdb = j.data.bcdb.get(db_cl,namespace="test",reset=True)
+
+#by default add models and load it to search stored information using the index defined in the schema
+bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models") 
+
+
+```
