@@ -28,7 +28,7 @@ class extends lapis.Application
     client["gedis"] = redis.command("default.notary_actor.get")
 
     args = {
-      "key": @params.key
+      "hash": @params.hash
     }
     header = {
       "response_type": "json"

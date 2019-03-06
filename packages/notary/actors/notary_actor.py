@@ -36,7 +36,7 @@ class notary_actor(JSBASE):
         """
         ```in
         threebot_id = "" (S)
-        content = "" (bytes)
+        content = (bytes)
         content_signature = (bytes)
         ```
         ```out
