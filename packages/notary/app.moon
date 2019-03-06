@@ -19,7 +19,11 @@ class extends lapis.Application
     header = {
       "response_type": "json"
     }
-    client.gedis(client, util.to_json(data), util.to_json(header))
+    response = {
+      "json": util.from_json(client.gedis(client, util.to_json(data), util.to_json(header))),
+      "status": 200
+    }
+    return response
     
 
   "/get": =>
@@ -33,4 +37,8 @@ class extends lapis.Application
     header = {
       "response_type": "json"
     }
-    return client.gedis(client, util.to_json(args), util.to_json(header))
+    response = {
+      "json": util.from_json(client.gedis(client, util.to_json(args), util.to_json(header))),
+      "status": 200
+    }
+    return response
