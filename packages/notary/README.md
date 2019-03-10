@@ -1,6 +1,7 @@
 # How to run Notary 
 ## in kosmos run the following: 
 ```python
+j.builder.runtimes.lua.lua_rocks_install() 
 j.builder.db.zdb.start() 
 zdb_cl = j.clients.zdb.client_admin_get()  
 zdb_cl = zdb_cl.namespace_new("notary_namespace", secret="1234")
@@ -27,21 +28,21 @@ moonc . &&lapis server
 
 ```
 gedis_client = j.clients.gedis.get("notary", port=8888) 
-gedis_client.cmds.notary_actor.register("123","test","Notary","{{CONTENT_SIGNATURE}}") 
+gedis_client.cmds.notary_actor.register("123", "aa==","{{CONTENT_SIGNATURE}}") 
 ```
 ### using curl 
 ```
-curl -d '{"robot_id":"123", "key":"test", "content":"Notary", "content_signature":"{{CONTENT_SIGNATURE}}"}' -H "Content-Type: application/json" -X POST http://localhost:8080/register
+curl -d '{"threebot_id":"123","content":"aa==", "content_signature":"{{CONTENT_SIGNATURE}}"}' -H "Content-Type: application/json" -X POST http://localhost:8080/register
 ```
 ## to get 
 ### using gedis
 
 ```
 gedis_client = j.clients.gedis.get("notary", port=8888) 
-gedis_client.cmds.notary_actor.get("test") 
+gedis_client.cmds.notary_actor.get("21491a8b3d97ad5b705e3be26e7") 
 ```
 
 ### from browser
 ```
-http://localhost:8080/get?key="test"
+http://localhost:8080/get?hash="21491a8b3d97ad5b705e3be26e7"
 ```
