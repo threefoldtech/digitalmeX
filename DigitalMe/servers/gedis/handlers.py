@@ -132,7 +132,9 @@ class Handler(JSBASE):
                 # log.error("exception in redis server: %s" % str(e))
                 j.errorhandler.try_except_error_process(e, die=False)
                 msg = str(e)
-                msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
+                # According to redis protocol documentation error response must be simple strings which means it can't
+                # contain new lines so we will replace newlines with ' - '
+                msg = msg.replace('\n', ' - ')
                 response.error(msg)
                 continue
 

@@ -26,21 +26,7 @@ do
       local client = redis.connect(config.gedis_host, config.gedis_port)
       client["gedis"] = redis.command("default.notary_actor.get")
       local args = {
-        ["key"] = self.params.key
-      }
-      local header = {
-        ["response_type"] = "json"
-      }
-      return client.gedis(client, util.to_json(args), util.to_json(header))
-    end,
-    ["/delete"] = function(self)
-      ngx.req.read_body()
-      local client = redis.connect(config.gedis_host, config.gedis_port)
-      client["gedis"] = redis.command("default.notary_actor.delete")
-      local args = {
-        ["robot_id"] = self.params.id,
-        ["key"] = self.params.key,
-        ["key_signature"] = self.params.key_signature
+        ["hash"] = self.params.hash
       }
       local header = {
         ["response_type"] = "json"

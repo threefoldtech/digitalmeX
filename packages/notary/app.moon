@@ -19,7 +19,11 @@ class extends lapis.Application
     header = {
       "response_type": "json"
     }
-    client.gedis(client, util.to_json(data), util.to_json(header))
+    response = {
+      "json": util.from_json(client.gedis(client, util.to_json(data), util.to_json(header))),
+      "status": 200
+    }
+    return response
     
 
   "/get": =>
@@ -28,24 +32,13 @@ class extends lapis.Application
     client["gedis"] = redis.command("default.notary_actor.get")
 
     args = {
-      "key": @params.key
+      "hash": @params.hash
     }
     header = {
       "response_type": "json"
     }
-    return client.gedis(client, util.to_json(args), util.to_json(header))
-
-  "/delete": =>
-    ngx.req.read_body()
-    client = redis.connect(config.gedis_host, config.gedis_port)
-    client["gedis"] = redis.command("default.notary_actor.delete")
-
-    args = {
-      "robot_id": @params.id,
-      "key": @params.key,
-      "key_signature": @params.key_signature
+    response = {
+      "json": util.from_json(client.gedis(client, util.to_json(args), util.to_json(header))),
+      "status": 200
     }
-    header = {
-      "response_type": "json"
-    }
-    return client.gedis(client, util.to_json(args), util.to_json(header))
+    return response
