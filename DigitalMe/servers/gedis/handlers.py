@@ -14,7 +14,6 @@ class Handler(JSBASE):
         self.classes = self.gedis_server.classes
         self.cmds_meta = self.gedis_server.cmds_meta
 
-
     def handle_redis(self, socket, address):
         parser = RedisCommandParser(socket)
         response = RedisResponseWriter(socket)
@@ -103,7 +102,6 @@ class Handler(JSBASE):
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 
-
                 for key in method_arguments:
                     if key.find('=') != -1:
                         # with default
@@ -121,7 +119,7 @@ class Handler(JSBASE):
 
             result = None
             try:
-                print("parms cmd",params)
+                print("parms cmd", params)
                 if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
@@ -144,6 +142,9 @@ class Handler(JSBASE):
                 if cmd.schema_out and hasattr(item, '_data'):
                     if response_type == 'capnp' or (response_type == 'auto' and (content_type in ['capnp', 'auto'])):
                         item = item._data
+                if cmd.schema_out and hasattr(item, '_msgpack'):
+                    if response_type == 'msgpack' or (response_type == 'auto' and (content_type in ['msgpack', 'auto'])):
+                        item = item._msgpack
                 return item
 
             if isinstance(result, list):
