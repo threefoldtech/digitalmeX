@@ -20,7 +20,7 @@ def chat(bot):
     static_location = bot.string_ask("Add path to the static files")
     views_location = bot.string_ask("Add path to the views part of the repo")
     
-    flist_link = "https://hub.grid.tf/tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist.md"
+    flist_link = "https://hub.grid.tf/tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"
     ip_node = os.environ.get('IP_NODE')
     ip_gateway = os.environ.get('IP_GATEWAY')
     port_gateway = os.environ.get('PORT_GATEWAY')
@@ -52,7 +52,7 @@ def chat(bot):
     deploy_cmds_2 = """
     ln -s {{code_location}}/{{app_file_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/applications
     ln -s {{code_location}}/{{views_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-    ln -s {{code_location}}{{static_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/static
+    ln -s {{code_location}}/{{static_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/static
     js_shell \"j.tools.markdowndocs.webserver()\"
     """
     cont.bash(deploy_cmds_2)
