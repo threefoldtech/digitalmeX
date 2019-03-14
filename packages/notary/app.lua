@@ -2,36 +2,59 @@ local lapis = require("lapis")
 local redis = require('redis')
 local config = require("lapis.config").get()
 local util = require("lapis.util")
+local msgpack = require("MessagePack")
+local encoding = require("lapis.util.encoding")
+local capture_errors_json, yield_error, assert_error
+do
+  local _obj_0 = require("lapis.application")
+  capture_errors_json, yield_error, assert_error = _obj_0.capture_errors_json, _obj_0.yield_error, _obj_0.assert_error
+end
 do
   local _class_0
   local _parent_0 = lapis.Application
   local _base_0 = {
     ["/"] = function(self)
       local client = redis.connect(config.gedis_host, config.gedis_port)
-      client["gedis"] = redis.command("default.notary_actor.start_page")
-      return client.gedis(client)
+      return redis.command("default.notary_actor.start_page")(client)
     end,
     ["/register"] = function(self)
       ngx.req.read_body()
       local data = ngx.req.get_body_data()
       local client = redis.connect(config.gedis_host, config.gedis_port)
-      client["gedis"] = redis.command("default.notary_actor.register")
       local header = {
-        ["response_type"] = "json"
+        ["response_type"] = "msgpack"
       }
-      return client.gedis(client, util.to_json(data), util.to_json(header))
+      local resp = redis.command("default.notary_actor.register")(client, util.to_json(data), util.to_json(header))
+      local decoded = mp.unpack(resp)
+      header = {
+        ["response_type"] = "msgpack"
+      }
+      local response = {
+        ["json"] = decoded,
+        ["status"] = 201
+      }
+      return response
     end,
     ["/get"] = function(self)
       ngx.req.read_body()
       local client = redis.connect(config.gedis_host, config.gedis_port)
-      client["gedis"] = redis.command("default.notary_actor.get")
       local args = {
         ["hash"] = self.params.hash
       }
       local header = {
-        ["response_type"] = "json"
+        ["response_type"] = "msgpack"
       }
-      return client.gedis(client, util.to_json(args), util.to_json(header))
+      local resp = redis.command("default.notary_actor.get")(client, util.to_json(args), util.to_json(header))
+      print(resp)
+      local decoded = msgpack.unpack(resp)
+      decoded.id = nil
+      decoded.content = encoding.encode_base64(decoded.content)
+      decoded.content_signature = encoding.encode_base64(decoded.content_signature)
+      local response = {
+        ["json"] = decoded,
+        ["status"] = 200
+      }
+      return response
     end
   }
   _base_0.__index = _base_0
