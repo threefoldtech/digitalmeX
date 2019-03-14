@@ -34,12 +34,11 @@ class GedisClientFactory(j.application.JSBaseConfigsClass):
         self._template_code_client = None
         self._code_model_template = None
 
-
     def configure(self, name="main", host="localhost", port=5000, secret="", namespace="default",
                   ssl=False, ssl_cert_file="", reset=False,):
         data = {
             "host": host,
-            "port": str(port),
+            "port": port,
             "namespace": namespace,
             "adminsecret_": secret,
             "ssl": ssl,
