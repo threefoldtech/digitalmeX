@@ -14,8 +14,9 @@ do
   local _parent_0 = lapis.Application
   local _base_0 = {
     ["/"] = function(self)
-      local client = redis.connect(config.gedis_host, config.gedis_port)
-      return redis.command("default.notary_actor.start_page")(client)
+      return {
+        render = "index"
+      }
     end,
     ["/register"] = function(self)
       ngx.req.read_body()
@@ -85,6 +86,8 @@ do
     end
   })
   _base_0.__class = _class_0
+  local self = _class_0
+  self:enable("etlua")
   if _parent_0.__inherited then
     _parent_0.__inherited(_parent_0, _class_0)
   end

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Threefold notary">
+    <meta name="author" content="Threefoldtech">
+
+    <title>Threefold notary</title>
+</head>
+
+<body class="text-center">
+    <div>
+        <header>
+            <div>
+                <h3>Threefold Notary</h3>
+            </div>
+        </header>
+
+        <main role="main">
+            <h1>You have reach the threefold notary</h1>
+            <p>If you are looking for documentation how to reserve capacity on the threefold grid, go to <a
+                    href="https://threefoldfoundation.github.io/info_grid/#/developers/README">our wiki</a></p>
+        </main>
+
+        <footer>
+            <div>
+                <p>TODO add social link and link to our other website...</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
