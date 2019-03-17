@@ -97,13 +97,13 @@ class Community(JSBASE):
             dpath = j.sal.fs.getDirName(classpath)
             if dpath not in sys.path:
                 sys.path.append(dpath)
-            self._logger.info("dna:%s"%classpath)
+            self._log_info("dna:%s"%classpath)
             modulename=j.sal.fs.getBaseName(classpath)[:-3]
 
             try:
-                self._logger.info("import module:%s"%modulename)
+                self._log_info("import module:%s"%modulename)
                 module = import_module(modulename)
-                self._logger.debug("ok")
+                self._log_debug("ok")
             except Exception as e:
                 self.error_raise("could not import module:%s"%modulename,e)
 
@@ -182,7 +182,7 @@ class Community(JSBASE):
     #             server.start()
     #             started.append(server)
     #             name = getattr(server, 'name', None) or server.__class__.__name__ or 'Server'
-    #             self._logger.info('%s started on %s', name, server.address)
+    #             self._log_info('%s started on %s', name, server.address)
     #     except:
     #         self.stop(started)
     #         raise

@@ -5,11 +5,12 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
     @url = jumpscale.clients.zoscmd.zoscontainer.1
-    name = "" (S)
+    name* = "" (S)
     zos_node_instance = "" (S) #name to the instance of the ZOSNode
     ssh_client_instance = "" (S) #name of the ssh client instance (if already created), namne will be zos_container_$name
     flist = ""
     env = "" #k
+    ports = "" (dict)
     
     
     """
@@ -44,7 +45,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     @classmethod
     def from_containerinfo(cls, containerinfo, node, logger=None):
         logger = logger or default_logger
-        logger.debug("create container from info")
+        self._log_debug("create container from info")
 
         arguments = containerinfo['container']['arguments']
         return cls(name=arguments['name'],
@@ -81,7 +82,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     def start(self):
         if not self.is_running():
-            self._logger.debug("start %s", self)
+            self._log_debug("start %s", self)
             self._create_container()
             for process in self.init_processes:
                 cmd = "{} {}".format(process['name'], ' '.join(process.get('args', [])))
@@ -103,7 +104,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         """
         if not self.is_running():
             return
-        self._logger.debug("stop %s", self)
+        self._log_debug("stop %s", self)
 
         self.node.client.container.terminate(self.id)
         self._client = None
@@ -127,7 +128,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     @property
     def id(self):
-        self._logger.debug("get container id")
+        self._log_debug("get container id")
         info = self.info
         if info:
             return info['container']['id']
@@ -135,7 +136,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
     @property
     def info(self):
-        self._logger.debug("get container info")
+        self._log_debug("get container info")
         for containerid, container in self.node.client.container.list().items():
             if self.name == container['container']['arguments']['name']:
                 containerid = int(containerid)
@@ -237,7 +238,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         return buff.getvalue().decode()
 
     def _create_container(self, timeout=60):
-        self._logger.debug("send create container command to zero-os (%s)", self.flist)
+        self._log_debug("send create container command to zero-os (%s)", self.flist)
         tags = [self.name]
         if self.hostname and self.hostname != self.name:
             tags.append(self.hostname)
@@ -284,12 +285,13 @@ class ZOSContainer(j.application.JSBaseConfigClass):
                 return False
             raise
 
-    def stop_job(self, id, signal=signal.SIGTERM, timeout=30):
+    def stop_job(self, id, timeout=30):
+        signal=signal.SIGTERM
         is_running = self.is_job_running(id)
         if not is_running:
             return
 
-        self._logger.debug('stop job: %s', id)
+        self._log_debug('stop job: %s', id)
 
         self.client.job.kill(id)
 
@@ -463,7 +465,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #     return buff.getvalue().decode()
     #
     # def _create_container(self, timeout=60):
-    #     self._logger.debug("send create container command to zero-os (%s)", self.flist)
+    #     self._log_debug("send create container command to zero-os (%s)", self.flist)
     #     tags = [self.name]
     #     if self.hostname and self.hostname != self.name:
     #         tags.append(self.hostname)
@@ -512,7 +514,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #     if not is_running:
     #         return
     #
-    #     self._logger.debug('stop job: %s', id)
+    #     self._log_debug('stop job: %s', id)
     #
     #     self.client.job.kill(id)
     #
@@ -581,3 +583,6 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     # @property
     # def mgmt_addr(self):
     #     return get_zt_ip(self.client.info.nic())
+
+class ZOSContainers(j.application.JSBaseConfigsClass):
+    _CHILDCLASS = ZOSContainer

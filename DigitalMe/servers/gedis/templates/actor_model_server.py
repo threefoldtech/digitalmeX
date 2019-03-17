@@ -52,7 +52,7 @@ class model_{{schema.key}}(JSBASE):
             import ast
             only_fields = ast.literal_eval(only_fields.decode())
         return self.model.find(hook=self.hook_get, capnp=True, total_items_in_page=total_items_in_page,
-                               page_number=page_number, only_fields=only_fields, {{kwargs}})
+                               page_number=page_number, only_fields=only_fields)
 
     def new(self):
         return self.model.new()

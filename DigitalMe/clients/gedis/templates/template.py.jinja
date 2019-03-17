@@ -49,7 +49,7 @@ class CMDS():
         res = self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}",j.data.serializers.msgpack.dumps([id if not callable(id) else None, args._data]))
         {% else %}
 
-        {% set args = cmd.cmdobj.args.split(',') if cmd.cmdobj.args else [] %}
+        {% set args = cmd.cmdobj.args if cmd.cmdobj.args else [] %}
 
         {% if args|length == 0 %}
         res =  self._redis.execute_command("{{obj.cmds_name_lower}}.{{name}}")

@@ -51,7 +51,7 @@ class GedisCmds(JSBASE):
             kobj = klass()
             if hasattr(kobj, "schema"):
                 # means is a generated actor which exposes a model (schema)
-                key = "%s__model_%s" % (self.namespace, kobj.schema.name)
+                key = "%s__model_%s" % (self.namespace, kobj.schema.url)
             else:
                 key = "%s__%s" % (self.namespace, cname.replace(".", "_"))
 
@@ -82,9 +82,9 @@ class GedisCmds(JSBASE):
     @property
     def cmds(self):
         if self._cmds == {}:
-            self._logger.debug('Populating commands for namespace(%s)', self.data.namespace)
+            self._log_debug('Populating commands for namespace(%s)', self.data.namespace)
             for cmd in self.data.cmds:
-                self._logger.debug("\tpopulate: %s", cmd.name)
+                self._log_debug("\tpopulate: %s", cmd.name)
                 self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
         return self._cmds
 

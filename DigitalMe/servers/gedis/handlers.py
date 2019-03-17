@@ -13,7 +13,6 @@ class Handler(JSBASE):
         self.cmds = {}  # caching of commands
         self.classes = self.gedis_server.classes
         self.cmds_meta = self.gedis_server.cmds_meta
-        self._logger_enable()
 
     def handle_redis(self, socket, address):
         parser = RedisCommandParser(socket)
@@ -22,15 +21,16 @@ class Handler(JSBASE):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._logger.info('connection error', error=str(err), address=address)
+            # self._log_info('connection error', error=str(err), address=address)
+            print("connection error")
         finally:
             parser.on_disconnect()
-            self._logger.info('connection closed', address=address)
+            # self._log_info('connection closed', address=address)
 
     def _handle_redis(self, socket, address, parser, response):
-        # log = self._logger.bind(address=address)  # requires stuctlog, for future
-        log = self._logger
-        log.info('new incoming connection')
+        # log = self._log_bind(address=address)  # requires stuctlog, for future
+        # log = self._logger
+        # log.info('new incoming connection')
 
         socket.namespace = "system"
 
@@ -38,12 +38,12 @@ class Handler(JSBASE):
             request = parser.read_request()
 
             if request is None:
-                log.debug("connection lost or tcp test")
+                # log.debug("connection lost or tcp test")
                 break
 
             if not request:  # empty list request
                 # self.response.error('Empty request body .. probably this is a (TCP port) checking query')
-                log.debug("wrong formatted request")
+                # log.debug("wrong formatted request")
                 continue
 
             cmd = request[0]
@@ -51,11 +51,11 @@ class Handler(JSBASE):
 
             # special command to put the client on right namespace
             if redis_cmd == "select":
-                log.debug('start namespace selection')
+                # log.debug('start namespace selection')
                 socket.namespace, found = select_namespace(request)
                 if not found:
                     response.error("could not find namespace")
-                log.debug("namespace selected %s" % socket.namespace)
+                # log.debug("namespace selected %s" % socket.namespace)
                 response.encode('OK')
                 continue
 
@@ -67,13 +67,17 @@ class Handler(JSBASE):
                 response.encode("PONG")
                 continue
 
+            if redis_cmd == "auth":
+                response.encode("OK")
+                continue
+
             namespace, actor, command = command_split(redis_cmd, namespace=socket.namespace)
-            log.debug("command received %s %s %s" % (namespace, actor, command))
+            # log.debug("command received %s %s %s" % (namespace, actor, command))
 
             cmd, err = self.command_obj_get(cmd=command, namespace=namespace, actor=actor)
             if err:
                 response.error(err)
-                log.error("fail to get command %s %s" % (namespace, command))
+                # log.error("fail to get command %s %s" % (namespace, command))
                 continue
 
             header = {}
@@ -98,7 +102,6 @@ class Handler(JSBASE):
                 if 'schema_out' in method_arguments:
                     method_arguments.remove('schema_out')
 
-
                 for key in method_arguments:
                     if key.find('=') != -1:
                         # with default
@@ -116,7 +119,7 @@ class Handler(JSBASE):
 
             result = None
             try:
-                print("parms cmd",params)
+                print("parms cmd", params)
                 if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
@@ -124,10 +127,12 @@ class Handler(JSBASE):
                 else:
                     result = cmd.method(**params)
             except Exception as e:
-                log.error("exception in redis server: %s" % str(e))
+                # log.error("exception in redis server: %s" % str(e))
                 j.errorhandler.try_except_error_process(e, die=False)
                 msg = str(e)
-                msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
+                # According to redis protocol documentation error response must be simple strings which means it can't
+                # contain new lines so we will replace newlines with ' - '
+                msg = msg.replace('\n', ' - ')
                 response.error(msg)
                 continue
 
@@ -137,6 +142,9 @@ class Handler(JSBASE):
                 if cmd.schema_out and hasattr(item, '_data'):
                     if response_type == 'capnp' or (response_type == 'auto' and (content_type in ['capnp', 'auto'])):
                         item = item._data
+                if cmd.schema_out and hasattr(item, '_msgpack'):
+                    if response_type == 'msgpack' or (response_type == 'auto' and (content_type in ['msgpack', 'auto'])):
+                        item = item._msgpack
                 return item
 
             if isinstance(result, list):
@@ -155,7 +163,7 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd], ''
 
-        self._logger.debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
+        # self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
         if namespace == "system" and key not in self.classes:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor
@@ -334,9 +342,9 @@ def read_input_args(request, header, command):
     #         return result, None
     #
     #     except Exception as e:
-    #         self._logger.debug("exception in redis server")
+    #         self._log_debug("exception in redis server")
     #         eco = j.errorhandler.parsePythonExceptionObject(e)
     #         msg = str(eco)
     #         msg += "\nCODE:%s:%s\n" % (cmd.namespace, cmd.name)
-    #         self._logger.debug(msg)
+    #         self._log_debug(msg)
     #         return None, e.args[0]

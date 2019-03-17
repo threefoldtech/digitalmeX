@@ -52,7 +52,7 @@ class DNSServer(DatagramServer, JSBASE):
 
 
     def handle(self, data, address):
-        # self._logger.debug('%s: got %r' % (address[0], data))
+        # self._log_debug('%s: got %r' % (address[0], data))
         if data==b"PING":
             self.sendback(b"PONG", address)
         else:
@@ -66,7 +66,7 @@ class DNSServer(DatagramServer, JSBASE):
         try:
             self.socket.sendto(data, address)
         except Exception as e:
-            self._logger.error("error in communication:%s"%e)
+            self._log_error("error in communication:%s"%e)
 
 
     def resolve(self,qname,type="A"):
@@ -78,15 +78,15 @@ class DNSServer(DatagramServer, JSBASE):
                     resp = j.tools.dnstools.default.resolver.query(name,type)
                 except Exception as e:
                     if "NoAnswer" in str(e):
-                        self._logger.warning("did not find:%s"%qname)
+                        self._log_warning("did not find:%s"%qname)
                         return []
-                    self._logger.error("could not resolve:%s (%s)"%(e,qname))
+                    self._log_error("could not resolve:%s (%s)"%(e,qname))
                     return []
                 for rr in resp:
                     if type == "A":
                         res.append( rr.address)
                     elif type == "AAAA":
-                        self._logger.debug("AAAA")
+                        self._log_debug("AAAA")
                         res.append( rr.address)
                     else:
                         res.append(str(rr.target))
@@ -107,7 +107,7 @@ class DNSServer(DatagramServer, JSBASE):
         
         request = dnslib.DNSRecord.parse(data)
 
-        self._logger.debug ("request:%s"%request)
+        self._log_debug ("request:%s"%request)
 
         reply = dnslib.DNSRecord(dnslib.DNSHeader(id=request.header.id, qr=1, aa=1, ra=1), q=request.q)
 
@@ -121,10 +121,10 @@ class DNSServer(DatagramServer, JSBASE):
         if qt in ["A","MX","NS","AAAA"]:
             for item in addrs:
                 reply.add_answer(dnslib.RR(rname=qname, rtype=self.rtypes[qt], rclass=1, ttl=self.TTL, rdata=self.rdatatypes[qt](item)))
-                self._logger.debug("DNS reply:%s:%s"%(qt,reply))
+                self._log_debug("DNS reply:%s:%s"%(qt,reply))
         else:
             #TODO:*1 add the other record types e.g. SOA & txt & ...
-            self._logger.error("did not find type:\n%s"%request)
+            self._log_error("did not find type:\n%s"%request)
         
 
         return reply.pack()

@@ -15,6 +15,7 @@ class GedisCmd(JSBASE):
         self.data = cmd._data
         self.namespace = namespace
         self.name = cmd.name
+        self.comment = ""
 
         self.schema_in = _load_schema(self.namespace, cmd.name, cmd.schema_in)
         self.schema_out = _load_schema(self.namespace, cmd.name, cmd.schema_out)
@@ -35,13 +36,14 @@ class GedisCmd(JSBASE):
 
     @property
     def args_client(self):
-        arguments = [a.strip() for a in self.cmdobj.args.split(',')]
+        arguments = [a.strip() for a in self.cmdobj.args]
 
         if self.schema_in is None:
-            if self.cmdobj.args.strip() == "":
+
+            if not self.cmdobj.args:
                 return ""
 
-            args = eval(self.cmdobj.args)
+            args = self.cmdobj.args
 
             to_exclude = ['schema_out', ':']
             for item in to_exclude:

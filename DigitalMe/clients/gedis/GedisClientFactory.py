@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GedisClient import GedisClient
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSBaseConfigsClass
 
 
 class GedisClientCmds:
