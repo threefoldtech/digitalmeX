@@ -36,8 +36,15 @@ def chat(bot):
     # Get zos client instance and create a new container
     zos_node = j.clients.zos.get(name="zos_client_instance", host=ip_node, password=jwt)
     
+    code_location = j.clients.git.getContentPathFromURLorPath(website_repo)
     port = zos_node.socat.reserve(1)[0]
-    cont_id = zos_node.container.create(flist_link,nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": farm_zerotier_id}],name=name,hostname=name,port={port:8080},tags=[name]).get() # port: {host:container}
+    src1 = code_location+app_file_location
+    dest1 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon'
+    src2 = code_location+views_location
+    dest2 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/views'
+    src3 = code_location+static_location
+    dest3 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/static'
+    cont_id = zos_node.container.create(flist_link,nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": farm_zerotier_id}],name=name,hostname=name,port={port:8080},tags=[name],env={'src1':src1,'dest1':dest1,'src2':src2,'dest2':dest2,'src3':src3,'dest3':dest3}).get() # port: {host:container}
 
     output = """Port to be used: {{port}}, temp ContainerId: {{cont_id}}"""
     render_output= j.tools.jinja2.template_render(text=j.core.text.strip(output),**locals())
@@ -49,13 +56,6 @@ def chat(bot):
     deploy_cmds = """js_shell \"docsite = j.tools.markdowndocs.load({{website_repo}}, name={{domain_name}});docsite.write()\"
     """
     cont.bash(deploy_cmds)
-    deploy_cmds_2 = """
-    ln -s {{code_location}}/{{app_file_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/applications
-    ln -s {{code_location}}/{{views_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-    ln -s {{code_location}}/{{static_location}} /sandbox/code/github/threefoldfoundation/lapis-wiki/static
-    js_shell \"j.tools.markdowndocs.webserver()\"
-    """
-    cont.bash(deploy_cmds_2)
     
     # TODO Register the website to the webgateway
 
