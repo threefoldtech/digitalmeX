@@ -1,5 +1,5 @@
 from Jumpscale import j
-import os
+import os,requests
 
 def chat(bot):
     """
@@ -25,6 +25,7 @@ def chat(bot):
     ip_gateway = os.environ.get('IP_GATEWAY')
     port_gateway = os.environ.get('PORT_GATEWAY')
     god_token = os.environ.get('GOD_TOKEN')
+    webgateway_service_name = os.environ.get('WEBGATEWAY_SERV_NAME')
     R = """ip:{{ip_gateway}} , port:{{port_gateway}}, token:{{god_token}}"""
     R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
     bot.md_show(R2)
@@ -57,7 +58,33 @@ def chat(bot):
     """
     cont.bash(deploy_cmds)
     
-    # TODO Register the website to the webgateway
+    # Register the website to the webgateway
+    create_serv_data = {
+        "template": "github.com/threefoldtech/0-templates/reverse_proxy/0.0.1",
+        "name": "register_%s" %name,
+        "data":{'webGateway': webgateway_service_name,
+                'domain': domain_name,
+                'servers': ['{0}:{1}'.format(ip_node,port)]}
+    }
+    create_serv_endpoint = "{0}:{1}/services".format(ip_gateway,port_gateway)
+    req_create_serv = requests.post(create_serv_endpoint, data=create_serv_data ,headers={'Content-Type': 'application/json'})
 
+    R = """Create service request status: {{req_create_serv.status_code}} \n {{req_create_serv.json()}}"""
+    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
+    bot.md_show(R2)
 
-    bot.redirect("https://threefold.me")
+    json_req_create_serv = req_create_serv.json()
+    guid = json_req_create_serv.guid
+    secret = json_req_create_serv.secret
+    install_serv_data = {'action_name':'install'}
+    install_serv_endpoint = "{0}:{1}/services/{2}/task_list".format(ip_gateway,port_gateway,guid)
+    install_serv_headers = {
+        'Content-Type': 'application/json',
+        'ZrobotSecret': secret
+    }
+    req_install_serv = requests.post(install_serv_endpoint, data=install_serv_data ,headers=install_serv_headers)
+    print('Install service request status', req_install_serv.status_code)
+
+    R = """Install service request status: {{req_install_serv.status_code}} \n {{req_install_serv.json()}}"""
+    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
+    bot.md_show(R2)
