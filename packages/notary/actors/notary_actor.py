@@ -1,8 +1,8 @@
-import json
-from Jumpscale import j
-import nacl
-from pyblake2 import blake2b
 from io import BytesIO
+
+import nacl
+from Jumpscale import j
+from pyblake2 import blake2b
 
 JSBASE = j.application.JSBaseClass
 
@@ -11,9 +11,6 @@ class notary_actor(JSBASE):
     def __init__(self):
         self.bcdb = j.data.bcdb.bcdb_instances["notary_bcdb"]
         self.tfchain = j.clients.tfchain.new('notary', network_type='TEST')
-
-    def start_page(self):
-        return "welcome to https://github.com/threefoldtech/home/issues/135"
 
     def _bot_verify_key(self, bot_id):
         """

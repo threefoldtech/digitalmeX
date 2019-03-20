@@ -1,0 +1,71 @@
+.all {
+    background: #0c2e73 url(/static/threefold/img/tf-bg.jpg) no-repeat 40% 50%;
+    background-size: cover;
+    height: 100vh;
+}
+
+.navbar-brand {
+    padding-top: .5125rem;
+}
+
+h1 {
+    font-size: 35px;
+    line-height: 1.25;
+    margin-bottom: 20px;
+    font-family: "Barlow Condensed", sans-serif;
+}
+
+.layout-intro {
+    display: flex;
+    align-items: center;
+    min-height: 94vh;
+}
+
+.layout-intro a {
+    color: #1247b3
+}
+
+.layout-intro a:hover {
+    background-color: #e6eeff;
+    color: #05f;
+}
+
+.btn {
+    text-align: center;
+    text-decoration: none;
+    background-image: none;
+    margin: 0;
+    outline: 0;
+    border: 0;
+    border-radius: 25px;
+    padding: 8px 20px;
+}
+
+.btn-block {
+    display: inline-block;
+    width: auto;
+}
+
+.footer-socials {
+    list-style: none;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    margin-left: -15px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-flow: row wrap;
+    flex-flow: row wrap;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.footer-socials a:hover {
+    background-color: transparent
+}
+
+.footer-socials li {
+    margin-right: 25px;
+}
