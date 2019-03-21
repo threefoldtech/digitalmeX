@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Threefold notary">
+    <meta name="author" content="Threefoldtech">
+    <link href="/static/threefold/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/threefold/css/all.min.css" rel="stylesheet">
+    <link href="/static/threefold/css/custom.css" rel="stylesheet">
+
+    <title>Threefold notary</title>
+</head>
+
+<body>
+    <div class="all text-white">
+        <div class="container">
+
+            <nav class="navbar navbar-light">
+                <a class="navbar-brand text-uppercase text-white" href="/">Threefold Notary</a>
+            </nav>
+
+            <div class="layout-intro">
+                <div class="row align-items-lg-end">
+                    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+                        <h1 class="mt-0 text-uppercase font-weight-bold">you have reached the ThreeFold Notary</h1>
+
+                        <div class="lead intro-lead">
+                            <p>To read more about capacity reservation and usage, check</p>
+                        </div>
+
+                        <div class="mt-3h">
+                            <a href="https://wiki.grid.tf/" target="_blank" class="btn btn-block btn-sm-inline btn-white text-capitalize bg-white font-weight-bold">our wiki</a>
+
+                            <ul class="footer-socials">
+                                <li>
+                                    <a href="https://www.facebook.com/ThreeFoldCommunity" target="_blank" alt="TFT Facebook">
+                                        <i class="fab fa-2x fa-facebook-f text-white"></i>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="https://twitter.com/threefold_fdn" target="_blank" alt="TFT Twitter">
+                                        <i class="fab fa-2x fa-twitter text-white"></i>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="https://www.youtube.com/threefoldfoundation" target="_blank" alt="TFT Channel">
+                                        <i class="fab fa-2x fa-youtube text-white"></i>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="https://t.me/threefoldtoken_chat" target="_blank" alt="TFT Chat">
+                                        <i class="fab fa-2x fa-telegram-plane text-white"></i>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="https://medium.com/threefold/" target="_blank" alt="TFT Medium">
+                                        <i class="fab fa-2x fa-medium-m text-white"></i>
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a href="https://www.reddit.com/r/ThreeFoldToken/" target="_blank" alt="TFT Reddit">
+                                        <i class="fab fa-2x fa-reddit-alien text-white"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/threefold/js/jquery-3.3.1.min.js" type="text/javascript"></script>
+    <script src="/static/threefold/js/bootstrap.min.js" type="text/javascript"></script>
+</body>
+
+</html>

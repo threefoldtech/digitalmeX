@@ -8,9 +8,9 @@ import capture_errors_json, yield_error, assert_error from require "lapis.applic
 
 
 class extends lapis.Application
+  @enable "etlua"
   "/": =>
-    client = redis.connect(config.gedis_host, config.gedis_port)
-    redis.command("default.notary_actor.start_page")(client)
+    render: "index"
 
   "/register": =>
     ngx.req.read_body()
