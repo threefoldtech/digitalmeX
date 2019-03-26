@@ -36,7 +36,7 @@ class JSAPIServer():
         if not websocket:
             return []
         addr = '{0}:{1}'.format(environ['REMOTE_ADDR'],environ['REMOTE_PORT'])
-        handler = WebsocketRequestHandler(self.instance, self.cmds, self.classes, self.cmds_meta)
+        handler = WebsocketRequestHandler(self.instance, self.cmds, self.actors, self.cmds_meta)
         handler.handle(websocket, addr)
         return []
 

@@ -11,7 +11,7 @@ class Handler(JSBASE):
         JSBASE.__init__(self)
         self.gedis_server = gedis_server
         self.cmds = {}  # caching of commands
-        self.classes = self.gedis_server.classes
+        self.actors = self.gedis_server.actors
         self.cmds_meta = self.gedis_server.cmds_meta
 
     def handle_redis(self, socket, address):
@@ -32,8 +32,6 @@ class Handler(JSBASE):
         # log = self._logger
         # log.info('new incoming connection')
 
-        socket.namespace = "system"
-
         while True:
             request = parser.read_request()
 
@@ -49,15 +47,15 @@ class Handler(JSBASE):
             cmd = request[0]
             redis_cmd = cmd.decode("utf-8").lower()
 
-            # special command to put the client on right namespace
-            if redis_cmd == "select":
-                # log.debug('start namespace selection')
-                socket.namespace, found = select_namespace(request)
-                if not found:
-                    response.error("could not find namespace")
-                # log.debug("namespace selected %s" % socket.namespace)
-                response.encode('OK')
-                continue
+            # # special command to put the client on right namespaced
+            # if redis_cmd == "select":
+            #     # log.debug('start namespace selection')
+            #     socket.namespace, found = select_namespace(request)
+            #     if not found:
+            #         response.error("could not find namespace")
+            #     # log.debug("namespace selected %s" % socket.namespace)
+            #     response.encode('OK')
+            #     continue
 
             if redis_cmd == "command":
                 response.encode("OK")
@@ -71,8 +69,8 @@ class Handler(JSBASE):
                 response.encode("OK")
                 continue
 
-            namespace, actor, command = command_split(redis_cmd, namespace=socket.namespace)
-            # log.debug("command received %s %s %s" % (namespace, actor, command))
+            namespace, actor, command = command_split(redis_cmd)
+            self._log_debug("command received %s %s %s" % (namespace, actor, command))
 
             cmd, err = self.command_obj_get(cmd=command, namespace=namespace, actor=actor)
             if err:
@@ -97,10 +95,10 @@ class Handler(JSBASE):
                     response.error(str(err))
                     continue
 
-                # FIXME: avoid using eval
                 method_arguments = cmd.cmdobj.args
                 if 'schema_out' in method_arguments:
-                    method_arguments.remove('schema_out')
+                    raise RuntimeError("should not have this")
+                    # method_arguments.remove('schema_out')
 
                 for key in method_arguments:
                     if key.find('=') != -1:
@@ -114,12 +112,13 @@ class Handler(JSBASE):
                 if len(request) > 1:
                     params = request[1:]
 
+            #makes sure we understand which schema to use to return result from method
             if cmd.schema_out:
                 params["schema_out"] = cmd.schema_out
 
             result = None
             try:
-                print("parms cmd", params)
+                print("params cmd", params)
                 if params == {}:
                     result = cmd.method()
                 elif j.data.types.list.check(params):
@@ -127,12 +126,16 @@ class Handler(JSBASE):
                 else:
                     result = cmd.method(**params)
             except Exception as e:
+                j.shell()
+                w
                 # log.error("exception in redis server: %s" % str(e))
                 j.errorhandler.try_except_error_process(e, die=False)
                 msg = str(e)
                 # According to redis protocol documentation error response must be simple strings which means it can't
                 # contain new lines so we will replace newlines with ' - '
-                msg = msg.replace('\n', ' - ')
+                if "\n" in msg:
+                    msg = msg.split("\n",1)[0]
+                # msg = msg.replace('\n', ' - ')
                 response.error(msg)
                 continue
 
@@ -163,16 +166,16 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd], ''
 
-        # self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
-        if namespace == "system" and key not in self.classes:
+        self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
+        if namespace == "system" and key not in self.actors:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor
-        if namespace == "default" and key not in self.classes:
+        if namespace == "default" and key not in self.actors:
             # we will now check if the info is in system namespace
             key = "system__%s" % actor
 
-        if key not in self.classes:
-            return None, "Cannot find cmd with key:%s in classes" % key
+        if key not in self.actors:
+            return None, "Cannot find cmd with key:%s in actors" % key
 
         if key not in self.cmds_meta:
             return None, "Cannot find cmd with key:%s in cmds_meta" % key
@@ -186,7 +189,7 @@ class Handler(JSBASE):
         cmd_obj = meta.cmds[cmd]
 
         try:
-            cl = self.classes[key]
+            cl = self.actors[key]
             cmd_method = getattr(cl, cmd)
         except Exception as e:
             return None, "Could not execute code of method '%s' in namespace '%s'\n%s" % (key, namespace, e)
@@ -283,6 +286,7 @@ def read_input_args(request, header, command):
         raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
     return args
+
     # def handle_websocket(self,socket, namespace):
     #
     #     message = socket.receive()

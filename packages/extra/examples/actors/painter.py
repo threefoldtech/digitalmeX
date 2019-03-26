@@ -4,32 +4,36 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-class gedis_examples(JSBASE):
+schema_text = """
+    @url = jumpscale.kds
+    jwt = "" (S)                # JWT Token
+    addr* = ""                   # Address
+    ipaddr = (ipaddr)           # IP Address
+    email = "" (S)              # Email address
+    username = "" (S)           # User name
     """
-    """
-    def __init__(self):
-        JSBASE.__init__(self)
 
+schema_text2 = """
+    @url = jumpscale.example.wallet
+    jwt = "" (S)                # JWT Token
+    addr* = ""                   # Address
+    ipaddr = (ipaddr)           # IP Address
+    email = "" (S)              # Email address
+    username = "" (S)           # User name
+    """
+
+j.data.schema.get(schema_text)
+j.data.schema.get(schema_text2)
+
+
+
+class painter(JSBASE):
+    """
+    """
 
     def echo(self, msg):
         return msg
 
-    # this way is not supported anymore, I will leave it here just as a reference
-    # def example1(self,wallet, schema_out):
-    #     """
-    #     ```in
-    #     !jumpscale.example.wallet
-    #     ```
-    #
-    #     ```out
-    #     !jumpscale.example.wallet
-    #     ```
-    #     """
-    #     w = schema_out.new()
-    #     w.ipaddr = wallet.ipaddr
-    #     w.addr = wallet.addr
-    #     w.jwt = wallet.jwt
-    #     return w
 
     def example2(self,wallet, schema_out):
         """

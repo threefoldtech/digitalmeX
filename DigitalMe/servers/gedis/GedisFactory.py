@@ -51,7 +51,7 @@ class GedisFactory(JSConfigFactory):
     def test(self, name="basic"):
         """
         it's run all tests
-        js_shell 'j.clients.redis.test()'
+        kosmos 'j.servers.gedis.test()'
 
         """
         self._test_run(name=name)

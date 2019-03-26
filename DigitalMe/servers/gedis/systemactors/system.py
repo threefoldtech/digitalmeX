@@ -15,18 +15,18 @@ class system(JSBASE):
     def ping_bool(self):
         return True
 
-    def core_schemas_get(self, namespace):
-        """
-        return all core schemas as understood by the server, is as text, can be processed by j.data.schema
-        """
-        namespace = namespace.decode()
-        res = {}
-        for key, item in j.data.schema.schemas.items():
-            # TODO: should prob limit to namespace
-            res[key] = item.text
-        return j.data.serializers.msgpack.dumps(res)
+    # def core_schemas_get(self, namespace):
+    #     """
+    #     return all core schemas as understood by the server, is as text, can be processed by j.data.schema
+    #     """
+    #     namespace = namespace.decode()
+    #     res = {}
+    #     for key, item in j.data.schema.schemas.items():
+    #         # TODO: should prob limit to namespace
+    #         res[key] = item.text
+    #     return j.data.serializers.msgpack.dumps(res)
 
-    def api_meta(self, namespace):
+    def api_meta_get(self, namespace):
         """
         return the api meta information
 
@@ -108,7 +108,7 @@ class system(JSBASE):
                     namespace = j.servers.gedis.latest.instance + '.' + actor_name
                     if namespace in j.servers.gedis.latest.cmds_meta:
                         del (j.servers.gedis.latest.cmds_meta[namespace])
-                        del (j.servers.gedis.latest.classes[namespace])
+                        del (j.servers.gedis.latest.actors[namespace])
                         for cmd in list(j.servers.gedis.latest.cmds.keys()):
                             if actor_name in cmd:
                                 del (j.servers.gedis.latest.cmds[cmd])

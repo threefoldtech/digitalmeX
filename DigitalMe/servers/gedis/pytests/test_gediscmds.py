@@ -44,4 +44,4 @@ def test_GedisCmds_init():
 
 class FakeServer:
     def __init__(self):
-        self.classes = {}
+        self.actors = {}

@@ -23,19 +23,19 @@ def waiter(job):
 
 class GedisServer(JSBaseConfig):
     _SCHEMATEXT = """
-    @url = jumpscale.gedis.server
-    name* = "main" (S)
-    host = "0.0.0.0" (ipaddress)
-    port = 9900 (ipport)
-    ssl = False (B)
-    password_ = "" (S)
-    """
+        @url = jumpscale.gedis.server
+        name* = "main" (S)
+        host = "0.0.0.0" (ipaddress)
+        port = 9900 (ipport)
+        ssl = False (B)
+        password_ = "" (S)
+        """
 
     def _init(self):
         self._sig_handler = []
 
         self.cmds_meta = {}  # is the metadata of the actor
-        self.classes = {}  # the code as set by the gediscmds class = actor cmds
+        self.actors = {}  # the code as set by the gediscmds class = actor cmds
         self.schema_urls = []  # used at python client side
 
         self.ssl_priv_key_path = None
@@ -52,7 +52,6 @@ class GedisServer(JSBaseConfig):
         self.chatbot = GedisChatBotFactory()
 
         self.namespaces = ["system", "default"]
-
 
 
         # hook to allow external servers to find this gedis
@@ -76,36 +75,36 @@ class GedisServer(JSBaseConfig):
             self._sig_handler.append(gevent.signal(sig, self.stop))
 
     ########################POPULATION OF SERVER#########################
-
-    def models_add(self, models, namespace="default"):
-        """
-        :param models:  e.g. bcdb.models.values() or bcdb itself
-        :param namespace:
-        :return:
-        """
-        if namespace not in self.namespaces:
-            self.namespaces.append(namespace)
-
-        reset = True  # FIXME: this mean we always reset, why ?
-
-        # FIXME: what is models is not a list or have no models attribute ?
-        if not j.data.types.list.check(models):
-            if hasattr(models, "models"):
-                models = models.models.values()
-
-        for model in models:
-            model_name = "model_%s.py" % (model.schema.key)
-            dest = j.sal.fs.joinPaths(self.code_generated_dir, model_name)
-            self._log_info("generate model: %s at %s", model_name, dest)
-            if reset or not j.sal.fs.exists(dest):
-                j.tools.jinja2.template_render(
-                    path=j.sal.fs.joinPaths(j.servers.gedis._dirpath, "templates/actor_model_server.py"),
-                    dest=dest,
-                    bcdb=model.bcdb,
-                    schema=model.schema,
-                    model=model)
-                self.actor_add(path=dest, namespace=namespace)
-            self.schema_urls.append(model.schema.url)
+    #
+    # def models_add(self, models, namespace="default"):
+    #     """
+    #     :param models:  e.g. bcdb.models.values() or bcdb itself
+    #     :param namespace:
+    #     :return:
+    #     """
+    #     if namespace not in self.namespaces:
+    #         self.namespaces.append(namespace)
+    #
+    #     reset = True  # FIXME: this mean we always reset, why ?
+    #
+    #     # FIXME: what is models is not a list or have no models attribute ?
+    #     if not j.data.types.list.check(models):
+    #         if hasattr(models, "models"):
+    #             models = models.models.values()
+    #
+    #     for model in models:
+    #         model_name = "model_%s.py" % (model.schema.key)
+    #         dest = j.sal.fs.joinPaths(self.code_generated_dir, model_name)
+    #         self._log_info("generate model: %s at %s", model_name, dest)
+    #         if reset or not j.sal.fs.exists(dest):
+    #             j.tools.jinja2.template_render(
+    #                 path=j.sal.fs.joinPaths(j.servers.gedis._dirpath, "templates/actor_model_server.py"),
+    #                 dest=dest,
+    #                 bcdb=model.bcdb,
+    #                 schema=model.schema,
+    #                 model=model)
+    #             self.actor_add(path=dest, namespace=namespace)
+    #         self.schema_urls.append(model.schema.url)
 
     def actors_add(self, path, namespace="default"):
         """
@@ -156,7 +155,6 @@ class GedisServer(JSBaseConfig):
         :return: list of actors
         :rtype: list
         """
-        # TODO: unittest
         res = []
         for key, cmds in self.cmds_meta.items():
             if not namespace or key.startswith("%s__" % namespace):
@@ -183,7 +181,6 @@ class GedisServer(JSBaseConfig):
         :return: dict of actor and they commands
         :rtype: dict
         """
-        # TODO: unittest
         actors = self.actors_list(namespace)
         res = {}
         for actor in actors:
@@ -271,6 +268,7 @@ class GedisServer(JSBaseConfig):
         """
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
         self._log_info("start Server on {0} - PORT: {1}".format(self.host, self.port))
+
         handler = Handler(self)
         if self.ssl:
             self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()

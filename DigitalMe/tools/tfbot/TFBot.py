@@ -6,7 +6,7 @@ import locale
 
 JSBASE = j.application.JSBaseClass
 
-class TBot(JSBASE):
+class TFBot(JSBASE):
 
     def __init__(self, zoscontainer):
         JSBASE.__init__(self)
