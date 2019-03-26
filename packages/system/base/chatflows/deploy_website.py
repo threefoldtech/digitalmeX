@@ -3,46 +3,47 @@ import os,requests,json
 
 def chat(bot):
     """
-    to call http://localhost:5050/chat/session/deploy_website
+    to call http://localhost:8080/session/deploy_website
     """
     res={}
-    # domain_name - which the bot will configure the webgateway to expose
-    domain_name = bot.string_ask("Register a domain name then provide the domain name:")
-    name = 'web_%s' %domain_name
-    website_repo = bot.string_ask("What is the link to the website repo?")
-    jwt = bot.string_ask("What is your JWT token?")
-    farm_zerotier_id = bot.string_ask("What is the farm zerotier id?")
-
-    app_file_location = bot.string_ask("Add path to the application file (Extension .moon) inside the repo ")
-    static_location = bot.string_ask("Add path to the static files")
-    views_location = bot.string_ask("Add path to the views part of the repo")
-    
-    flist_link = "https://hub.grid.tf/tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"
     ip_node = os.environ.get('IP_NODE')
     ip_gateway = os.environ.get('IP_GATEWAY')
     port_gateway = os.environ.get('PORT_GATEWAY')
     webgateway_service_name = os.environ.get('WEBGATEWAY_SERV_NAME')
 
+    # domain_name - which the bot will configure the webgateway to expose
+    domain_name = bot.string_ask("Register a domain name then provide the domain name:")
+    name = 'web_%s' %domain_name
+    repo_url = bot.string_ask("What is the link to the website repo? (using https://github.com/)")
+    repo_branch = bot.string_ask("What is the branch to be used in github?")
+    jwt = bot.string_ask("What is your JWT token?")
+    farm_zerotier_id = bot.string_ask("What is the farm zerotier id?")
+    server_type = bot.single_choice("What will the website run on ", ['Caddy', 'ngnix_lapis'])
+
     # Get zos client instance and create a new container
     zos_node = j.clients.zos.get(name="zos_client_instance", host=ip_node, password=jwt)
-    
-    code_location = j.clients.git.getContentPathFromURLorPath(website_repo)
     port = zos_node.socat.reserve(1)[0]
-    src1 = code_location+app_file_location
-    dest1 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon'
-    src2 = code_location+views_location
-    dest2 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/views'
-    src3 = code_location+static_location
-    dest3 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/static'
-    cont_id = zos_node.container.create(flist_link,nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": farm_zerotier_id}],name=name,hostname=name,port={port:8080},tags=[name],env={'src1':src1,'dest1':dest1,'src2':src2,'dest2':dest2,'src3':src3,'dest3':dest3}).get() # port: {host:container}
 
-    cont = zos_node.container.client(cont_id)
+    # Create the new container with Caddy or ngnix flist
+    if server_type == 'Caddy':
+        port_caddy = int(bot.int_ask("What port will Caddy run on?"))
+        flist_link = "https://hub.grid.tf/nashaatp/generic_caddy.flist"
+        cont_id = zos_node.container.create(flist_link,nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": farm_zerotier_id}],name=name,hostname=name,port={port:port_caddy},tags=[name],env={'REPO_URL':repo_url, 'REPO_BRANCH':repo_branch}).get() # port: {host:container}
 
-    # Deploy website from website_repo on the container created
-    code_location = j.clients.git.getContentPathFromURLorPath(website_repo)
-    deploy_cmds = """js_shell \"docsite = j.tools.markdowndocs.load({{website_repo}}, name={{domain_name}});docsite.write()\"
-    """
-    cont.bash(deploy_cmds)
+    elif server_type == 'ngnix_lapis':
+        app_file_location = bot.string_ask("Add path to the application file (Extension .moon) inside the repo ")
+        static_location = bot.string_ask("Add path to the static files")
+        views_location = bot.string_ask("Add path to the views part of the repo")
+
+        flist_link = "https://hub.grid.tf/tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"
+        code_location = '/sandbox/%s' %j.clients.git.parseUrl(repo_url)[3]  
+        src1 = code_location+app_file_location
+        dest1 = '/sandbox/codels /github/threefoldfoundation/lapis-wiki/app.moon'
+        src2 = code_location+views_location
+        dest2 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/views'
+        src3 = code_location+static_location
+        dest3 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/static'
+        cont_id = zos_node.container.create(flist_link,nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": farm_zerotier_id}],name=name,hostname=name,port={port:8080},tags=[name],env={'REPO_URL':repo_url, 'REPO_BRANCH':repo_branch, 'src1':src1,'dest1':dest1,'src2':src2,'dest2':dest2,'src3':src3,'dest3':dest3}).get() # port: {host:container}
 
     output = """Website loaded on new container {{cont_id}}"""
     render_output= j.tools.jinja2.template_render(text=j.core.text.strip(output),**locals())
