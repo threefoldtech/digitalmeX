@@ -38,7 +38,7 @@ def chat(bot):
         flist_link = "https://hub.grid.tf/tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"
         code_location = '/sandbox/%s' %j.clients.git.parseUrl(repo_url)[3]  
         src1 = code_location+app_file_location
-        dest1 = '/sandbox/codels /github/threefoldfoundation/lapis-wiki/app.moon'
+        dest1 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon'
         src2 = code_location+views_location
         dest2 = '/sandbox/code/github/threefoldfoundation/lapis-wiki/views'
         src3 = code_location+static_location
