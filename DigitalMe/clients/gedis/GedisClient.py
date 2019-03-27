@@ -27,21 +27,20 @@ class GedisClient(JSConfigBase):
 
     def _init(self):
         # j.clients.gedis.latest = self
-        self._namespace= self.data.namespace
+        self._namespace = self.data.namespace
 
         self._code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
         j.sal.fs.createDir(self._code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self._code_generated_dir, '__init__.py'))
         self._reset()
 
-    def _update_trigger(self,key,val):
+    def _update_trigger(self, key, val):
         self._reset()
 
     def _reset(self):
         self._redis_ = None  # connection to server
         # self._models = None
         self._actors = None
-
 
     def ping(self):
         test = self._redis.execute_command("ping")
@@ -56,23 +55,19 @@ class GedisClient(JSConfigBase):
             assert self.ping()
             self._actorsmeta = {}
             # self._redis.execute_command("select", self.namespace)
-            self._actors = GedisClientActors()
-
+            self._client_actors = GedisClientActors()
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
-            if cmds_meta["cmds"]=={}:
-                raise RuntimeError("did not find any actors in namespace:%s"%self.namespace)
+            if cmds_meta["cmds"] == {}:
+                raise RuntimeError("did not find any actors in namespace:%s" % self.namespace)
             for key, capnpbin in cmds_meta["cmds"].items():
                 if "__model_" in key:
                     raise RuntimeError("aa")
                 actor_name = key.split("__")[1]
                 self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, capnpbin)
 
-
-            #at this point the schema's are loaded only for the namespace identified (is all part of metadata)
-            from pudb import set_trace; set_trace()
+            # at this point the schema's are loaded only for the namespace identified (is all part of metadata)
             for actorname, actormeta in self._actorsmeta.items():
-
                 tpath = "%s/templates/GedisClientGenerated.py" % (j.clients.gedis._dirpath)
 
                 cl = j.tools.jinja2.code_python_render(obj_key="GedisClientGenerated", path=tpath,
@@ -80,11 +75,11 @@ class GedisClient(JSConfigBase):
                                                        objForHash=None, obj=actormeta)
 
                 o = cl(client=self)
-                setattr(self._actors, actorname, o)
+                setattr(self._client_actors, actorname, o)
                 self._log_debug("cmds:%s" % name)
-
             j.shell()
 
+        self._actors = self._client_actors
         return self._actors
 
     @property

@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-serverscript='''
+serverscript = '''
 
 # starting the server
 gedis = j.servers.gedis.configure(name="test", port=8888, host="127.0.0.1", ssl=False, password="123456")
@@ -18,9 +18,10 @@ def main(self):
 
     # j.servers.zdb.start_test_instance()
     #
-    # # Load schema used for testing to the client process
-    # cmd=j.tools.startupcmd.get("gedistest", serverscript, cmd_stop='', path='/tmp', timeout=30, env={}, ports=[8888], process_strings=[], interpreter='jumpscale', daemon=True)
-    # cmd.start()
+    # Load schema used for testing to the client process
+    cmd = j.tools.startupcmd.get("gedis_test", serverscript, cmd_stop='', path='/tmp', timeout=30,
+                                 env={}, ports=[8888], process_strings=[], interpreter='jumpscale', daemon=True)
+    cmd.start()
     #
     # res = j.sal.nettools.waitConnectionTest("localhost", 8888, timeoutTotal=30)
     # if res == False:
@@ -28,11 +29,9 @@ def main(self):
     # self._log_info("gedis server '%s' started" % 8888)
     # print("[*] testing echo")
 
-    cl = j.clients.gedis.get("test", port=8888, namespace='ibiza')
+    cl = j.clients.gedis.get("gedis_test", port=8888, namespace='ibiza')
 
     cl.actors
-
-    j.shell()
 
     assert cl.actors.painter.echo("s") == b"s"
     print("- done")
@@ -75,8 +74,6 @@ def main(self):
 
     assert cl.cmds.gedis_examples.echo("s") == b"s"
 
-
     print("[5] Done")
 
     print("**DONE**")
-

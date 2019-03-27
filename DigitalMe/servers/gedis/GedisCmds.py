@@ -40,7 +40,7 @@ class GedisCmds(JSBASE):
         self.path = path
         self.server = server
 
-        self.schema =  j.data.schema.get(SCHEMA)
+        self.schema = j.data.schema.get(SCHEMA)
         # self.schema = j.data.schema.get(url="jumpscale.gedis.api")
 
         self._cmds = {}
@@ -50,11 +50,11 @@ class GedisCmds(JSBASE):
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
             klass = j.tools.codeloader.load(obj_key=cname, path=path, reload=False)
-            kobj = klass()  #this is the actor obj
+            kobj = klass()  # this is the actor obj
 
             key = "%s__%s" % (namespace, cname.replace(".", "_"))
 
-            self.server.actors[key] = kobj  #as used in gedis server (when serving the commands)
+            self.server.actors[key] = kobj  # as used in gedis server (when serving the commands)
 
             self.data = self.schema.new()
             self.data.name = name
@@ -71,8 +71,7 @@ class GedisCmds(JSBASE):
                     cmd = self.data.cmds.new()
                     cmd.name = member_name
                     code = inspect.getsource(item)
-                    self._method_source_process(cmd,code)
-
+                    self._method_source_process(cmd, code)
 
     @property
     def name(self):
@@ -88,7 +87,7 @@ class GedisCmds(JSBASE):
             self._log_debug('Populating commands for namespace(%s)', self.data.namespace)
             for s in self.data.schemas:
                 if not s.url in j.data.schema.schemas:
-                    j.data.schema.get(s.content,url=s.url)
+                    j.data.schema.get(s.content, url=s.url)
             for cmd in self.data.cmds:
                 self._log_debug("\tpopulate: %s", cmd.name)
                 self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
@@ -102,9 +101,7 @@ class GedisCmds(JSBASE):
 
     __str__ = __repr__
 
-
-
-    def _method_source_process(self,cmd,txt):
+    def _method_source_process(self, cmd, txt):
         """
         return code, comment, schema_in, schema_out, args
         """
@@ -165,45 +162,43 @@ class GedisCmds(JSBASE):
                 continue
             raise RuntimeError()
 
-
         # cmd.code = j.core.text.strip(code)
         cmd.comment = j.core.text.strip(comment)
-        cmd.schema_in = self._schema_process(cmd,schema_in)
-        cmd.schema_out = self._schema_process(cmd,schema_in)
+        cmd.schema_in = self._schema_process(cmd, schema_in)
+        cmd.schema_out = self._schema_process(cmd, schema_in)
         cmd.args = args
 
         return cmd
 
-    def _schema_get(self,url):
+    def _schema_get(self, url):
         url = url.lower().strip("!").strip()
         for s in self.data.schemas:
             if s.url == url:
-                return s.url,s.content
-        return None,None
+                return s.url, s.content
+        return None, None
 
-
-    def _schema_url_add(self,url,content):
+    def _schema_url_add(self, url, content):
         """
         see if url is already in data object if yes then add it
         :param url:
         :param content:
         :return:
         """
-        url=url.strip()
+        url = url.strip()
         if "#" in url:
-            url = url.split("#",1)[0].strip()
+            url = url.split("#", 1)[0].strip()
         if "!" in url:
             raise RuntimeError("cannot have ! in url")
-        url2,content2= self._schema_get(url)
+        url2, content2 = self._schema_get(url)
         if not url2:
-            #means we did not find it yet
+            # means we did not find it yet
             s = self.data.schemas.new()
             s.url = url
             s.content = content
 
-    def _schema_process(self,cmd,txt):
+    def _schema_process(self, cmd, txt):
         txt = j.core.tools.text_strip(txt)
-        if txt.strip()=="":
+        if txt.strip() == "":
             return ""
         url = ""
         for line in txt.split("\n"):
@@ -214,15 +209,15 @@ class GedisCmds(JSBASE):
                 if url is not "":
                     raise RuntimeError("cannot only be 1")
                 url = line_strip.strip("!")
-            elif line_strip.find("!")!=-1:
-                url2 = line_strip.split("!",1)[1]
+            elif line_strip.find("!") != -1:
+                url2 = line_strip.split("!", 1)[1]
                 s2 = j.data.schema.get(url=url2)
-                self._schema_url_add(url2,s2.text)
-            if url=="":
+                self._schema_url_add(url2, s2.text)
+            if url == "":
                 md5 = j.data.hash.md5_string(txt.strip())
-                url = "actors.%s.%s.%s.%s"%(self.data.namespace,self.data.name,cmd.name,md5)
+                url = "actors.%s.%s.%s.%s" % (self.data.namespace, self.data.name, cmd.name, md5)
 
             if url not in j.data.schema.schemas:
-                j.data.schema.get(txt,url=url)  #will add the schema with right url
-            self._schema_url_add(url,txt)
+                j.data.schema.get(txt, url=url)  # will add the schema with right url
+            self._schema_url_add(url, txt)
             return url

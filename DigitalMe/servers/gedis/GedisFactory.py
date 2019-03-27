@@ -47,7 +47,6 @@ class GedisFactory(JSConfigFactory):
         namespace, name = key.split("__")
         return GedisCmds(namespace=namespace, name=name, capnpbin=capnpbin)
 
-
     def test(self, name="basic"):
         """
         it's run all tests

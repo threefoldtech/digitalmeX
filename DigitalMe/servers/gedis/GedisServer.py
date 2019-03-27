@@ -53,7 +53,6 @@ class GedisServer(JSBaseConfig):
 
         self.namespaces = ["system", "default"]
 
-
         # hook to allow external servers to find this gedis
         j.servers.gedis.latest = self
 
