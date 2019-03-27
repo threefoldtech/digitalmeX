@@ -7,7 +7,7 @@ from redis.connection import ConnectionError
 JSConfigBase = j.application.JSBaseConfigClass
 
 
-class GeventClientActors():
+class GedisClientActors():
     def __init__(self):
         pass
 
@@ -51,10 +51,12 @@ class GedisClient(JSConfigBase):
 
     @property
     def actors(self):
+
         if self._actors is None:
             assert self.ping()
             self._actorsmeta = {}
             # self._redis.execute_command("select", self.namespace)
+            self._actors = GedisClientActors()
 
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
@@ -68,7 +70,7 @@ class GedisClient(JSConfigBase):
 
 
             #at this point the schema's are loaded only for the namespace identified (is all part of metadata)
-
+            from pudb import set_trace; set_trace()
             for actorname, actormeta in self._actorsmeta.items():
 
                 tpath = "%s/templates/GedisClientGenerated.py" % (j.clients.gedis._dirpath)
@@ -77,11 +79,12 @@ class GedisClient(JSConfigBase):
                                                        overwrite=True, name=actorname,
                                                        objForHash=None, obj=actormeta)
 
-                j.shell()
-                w
-
-                setattr(self._actors, cmds_name_lower, cl(client=self, cmds=cmds.cmds))
+                o = cl(client=self)
+                setattr(self._actors, actorname, o)
                 self._log_debug("cmds:%s" % name)
+
+            j.shell()
+
         return self._actors
 
     @property

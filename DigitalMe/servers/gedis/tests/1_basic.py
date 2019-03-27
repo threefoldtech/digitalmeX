@@ -30,7 +30,11 @@ def main(self):
 
     cl = j.clients.gedis.get("test", port=8888, namespace='ibiza')
 
-    assert cl.actors.ibiza.echo("s") == b"s"
+    cl.actors
+
+    j.shell()
+
+    assert cl.actors.painter.echo("s") == b"s"
     print("- done")
     # print("[*] testing set with schemas")
     # # print("[1] schema_in as schema url")
