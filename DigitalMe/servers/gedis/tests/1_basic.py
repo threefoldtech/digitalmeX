@@ -29,16 +29,16 @@ def main(self):
     # self._log_info("gedis server '%s' started" % 8888)
     # print("[*] testing echo")
 
-    cl = j.clients.gedis.get("gedis_test", port=8888, namespace='ibiza')
+    client = j.clients.gedis.get("gedis_test", port=8888, namespace='ibiza')
 
-    cl.actors
+    client.actors
 
-    assert cl.actors.painter.echo("s") == b"s"
+    assert client.actors.painter.echo("s") == b"s"
     print("- done")
     # print("[*] testing set with schemas")
     # # print("[1] schema_in as schema url")
     # #
-    # # wallet_out1 = cl.gedis_examples.example1(addr="testaddr")
+    # # wallet_out1 = client.gedis_examples.example1(addr="testaddr")
     # # assert wallet_out1.addr == "testaddr"
     # # print("[1] Done")
     print("[2] schema_in as inline schema with url")
@@ -46,33 +46,33 @@ def main(self):
     wallet_in = wallet_schema.new()
     wallet_in.addr = "testaddr"
     wallet_in.jwt = "testjwt"
-    wallet_out = cl.cmds.gedis_examples.example2(wallet_in)
+    wallet_out = client.cmds.gedis_examples.example2(wallet_in)
 
     assert wallet_in.addr == wallet_out.addr
     assert wallet_in.jwt == wallet_out.jwt
     print("[2] Done")
 
     print("[3] inline schema in and inline schema out")
-    res = cl.cmds.gedis_examples.example3(a='a', b=True, c=2)
+    res = client.cmds.gedis_examples.example3(a='a', b=True, c=2)
     assert res.a == 'a'
     assert res.b is True
     assert res.c == 2
 
     print("[3] Done")
     print("[4] inline schema for schema out with url")
-    res = cl.cmds.gedis_examples.example4(wallet_in)
+    res = client.cmds.gedis_examples.example4(wallet_in)
     assert res.result.addr == wallet_in.addr
     assert res.custom == "custom"
     print("[4] Done")
 
     print("[5] testing ping")
-    s = j.clients.gedis.get("system", port=cl.port, namespace="system", secret="123456")
+    s = j.clients.gedis.get("system", port=client.port, namespace="system", secret="123456")
 
     j.shell()
 
     assert s.cmds.system.ping().lower() == b"pong"
 
-    assert cl.cmds.gedis_examples.echo("s") == b"s"
+    assert client.cmds.gedis_examples.echo("s") == b"s"
 
     print("[5] Done")
 

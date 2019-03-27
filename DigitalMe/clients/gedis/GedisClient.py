@@ -32,6 +32,7 @@ class GedisClient(JSConfigBase):
         self._code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
         j.sal.fs.createDir(self._code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self._code_generated_dir, '__init__.py'))
+        self._redis_ = None
         self._reset()
 
     def _update_trigger(self, key, val):
@@ -56,6 +57,7 @@ class GedisClient(JSConfigBase):
             self._actorsmeta = {}
             # self._redis.execute_command("select", self.namespace)
             self._client_actors = GedisClientActors()
+
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
             if cmds_meta["cmds"] == {}:
@@ -76,8 +78,7 @@ class GedisClient(JSConfigBase):
 
                 o = cl(client=self)
                 setattr(self._client_actors, actorname, o)
-                self._log_debug("cmds:%s" % name)
-            j.shell()
+                self._log_debug("cmds:%s" % actorname)
 
         self._actors = self._client_actors
         return self._actors
@@ -120,17 +121,13 @@ class GedisClient(JSConfigBase):
     #         return self.__getattribute__(name)
     #     return self.cmds.__getattribute__(name)
 
-
-
-    def _methods(self,prefix=""):
+    def _methods(self, prefix=""):
         if prefix.startswith("_"):
-            return JSConfigBase._methods(self,prefix=prefix)
-
-        res = self._cmds._methods
+            return JSConfigBase._methods(self, prefix=prefix)
+        res = self.cmds._methods
 
         for i in ["ping"]:
             if i not in res:
                 res.append(i)
 
         return res
-

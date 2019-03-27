@@ -10,27 +10,22 @@ class GedisClientGenerated():
     def __init__(self,client):
         # JSBASE.__init__(self)
         self._client = client
-        self._redis = client.redis
+        self._redis = client._redis
 
     {# generate the actions #}
     {% for name,cmd in obj.cmds.items() %}
 
-
     def {{name}}(self{{cmd.args_client}}):
-
         {% if cmd.comment != "" %}
         '''
 {{cmd.comment_indent2}}
         '''
         {% endif %}
-
         cmd_name = "{{obj.namespace.lower()}}.{{obj.name.lower()}}.{{name}}" #what to use when calling redis
-
         {% if cmd.schema_in != None %}
         #schema in exists
         schema_in = j.data.schemas.get("{{cmd.schema_in.url}}")
         args = schema_in.new()
-
 
         {% for prop in cmd.schema_in.properties %}
         args.{{prop.name}} = {{prop.name}}
