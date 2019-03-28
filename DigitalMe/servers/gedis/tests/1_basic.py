@@ -46,21 +46,21 @@ def main(self):
     wallet_in = wallet_schema.new()
     wallet_in.addr = "testaddr"
     wallet_in.jwt = "testjwt"
-    wallet_out = client.cmds.gedis_examples.example2(wallet_in)
+    wallet_out = client.gedis_examples.example2(wallet_in)
 
     assert wallet_in.addr == wallet_out.addr
     assert wallet_in.jwt == wallet_out.jwt
     print("[2] Done")
 
     print("[3] inline schema in and inline schema out")
-    res = client.cmds.gedis_examples.example3(a='a', b=True, c=2)
+    res = client.gedis_examples.example3(a='a', b=True, c=2)
     assert res.a == 'a'
     assert res.b is True
     assert res.c == 2
 
     print("[3] Done")
     print("[4] inline schema for schema out with url")
-    res = client.cmds.gedis_examples.example4(wallet_in)
+    res = client.gedis_examples.example4(wallet_in)
     assert res.result.addr == wallet_in.addr
     assert res.custom == "custom"
     print("[4] Done")
@@ -70,9 +70,9 @@ def main(self):
 
     j.shell()
 
-    assert s.cmds.system.ping().lower() == b"pong"
+    assert s.system.ping().lower() == b"pong"
 
-    assert client.cmds.gedis_examples.echo("s") == b"s"
+    assert client.gedis_examples.echo("s") == b"s"
 
     print("[5] Done")
 

@@ -21,10 +21,8 @@ schema_text2 = """
     email = "" (S)              # Email address
     username = "" (S)           # User name
     """
-
 j.data.schema.get(schema_text)
 j.data.schema.get(schema_text2)
-
 
 
 class painter(JSBASE):
@@ -34,8 +32,7 @@ class painter(JSBASE):
     def echo(self, msg):
         return msg
 
-
-    def example2(self,wallet, schema_out):
+    def example2(self, wallet, schema_out):
         """
         ```in
         wallet = (O) !jumpscale.example.wallet
@@ -49,7 +46,7 @@ class painter(JSBASE):
         w = wallet
         return w
 
-    def example3(self,a, b, c, schema_out):
+    def example3(self, a, b, c, schema_out):
         """
         ```in
         a = (S)
