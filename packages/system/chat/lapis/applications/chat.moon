@@ -6,7 +6,7 @@ class ChatApp extends lapis.Application
     @enable "etlua"
 
     [root: "/"]: =>
-        redirect_to: "/session/deploy_website"
+        render: "chat.home"
 
     [index: "/session/:topic"]: =>
         req = @req.parsed_url
