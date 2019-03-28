@@ -166,8 +166,9 @@ class GedisCmds(JSBASE):
         cmd.comment = j.core.text.strip(comment)
         cmd.schema_in = self._schema_process(cmd, schema_in)
         cmd.schema_out = self._schema_process(cmd, schema_in)
+        if "schema_out" in args:
+            args.pop(args.index("schema_out"))
         cmd.args = args
-
         return cmd
 
     def _schema_get(self, url):

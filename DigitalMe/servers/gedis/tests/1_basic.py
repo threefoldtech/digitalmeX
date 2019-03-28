@@ -38,7 +38,7 @@ def main(self):
     # print("[*] testing set with schemas")
     # # print("[1] schema_in as schema url")
     # #
-    # # wallet_out1 = client.gedis_examples.example1(addr="testaddr")
+    # # wallet_out1 = client.actors.painter.example1(addr="testaddr")
     # # assert wallet_out1.addr == "testaddr"
     # # print("[1] Done")
     print("[2] schema_in as inline schema with url")
@@ -46,21 +46,22 @@ def main(self):
     wallet_in = wallet_schema.new()
     wallet_in.addr = "testaddr"
     wallet_in.jwt = "testjwt"
-    wallet_out = client.gedis_examples.example2(wallet_in)
+
+    wallet_out = client.actors.painter.example2(wallet_in)
 
     assert wallet_in.addr == wallet_out.addr
     assert wallet_in.jwt == wallet_out.jwt
     print("[2] Done")
 
     print("[3] inline schema in and inline schema out")
-    res = client.gedis_examples.example3(a='a', b=True, c=2)
+    res = client.actors.painter.example3(a='a', b=True, c=2)
     assert res.a == 'a'
     assert res.b is True
     assert res.c == 2
 
     print("[3] Done")
     print("[4] inline schema for schema out with url")
-    res = client.gedis_examples.example4(wallet_in)
+    res = client.actors.painter.example4(wallet_in)
     assert res.result.addr == wallet_in.addr
     assert res.custom == "custom"
     print("[4] Done")
@@ -72,7 +73,7 @@ def main(self):
 
     assert s.system.ping().lower() == b"pong"
 
-    assert client.gedis_examples.echo("s") == b"s"
+    assert client.actors.painter.echo("s") == b"s"
 
     print("[5] Done")
 
