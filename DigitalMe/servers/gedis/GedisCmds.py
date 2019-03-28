@@ -84,7 +84,7 @@ class GedisCmds(JSBASE):
     @property
     def cmds(self):
         if self._cmds == {}:
-            self._log_debug('Populating commands for namespace(%s)', self.data.namespace)
+            self._log_debug('Populating commands for namespace(%s)', self.data.name)
             for s in self.data.schemas:
                 if not s.url in j.data.schema.schemas:
                     j.data.schema.get(s.content, url=s.url)
