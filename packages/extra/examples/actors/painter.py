@@ -35,6 +35,15 @@ class painter(JSBASE):
     def count(self, a,b):
         return int(a)+int(b)
 
+    def example1(self, addr, schema_out):
+        """
+        ```out
+        !jumpscale.example.wallet
+        ```
+        """
+        w = schema_out.new()
+        w.addr = addr
+        return w
 
     def example2(self, wallet, schema_out):
         """

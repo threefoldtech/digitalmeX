@@ -47,6 +47,7 @@ class GedisClientGenerated():
         {% endif %} #end of test if is schema_in based or not
 
         {% if cmd.schema_out != None %}
+        # print("{{cmd.schema_out.url}}")
         schema_out = j.data.schema.get(url="{{cmd.schema_out.url}}")
         if isinstance(res, list):
             res2 = list(map(lambda x: schema_out.get(capnpbin=x), res))

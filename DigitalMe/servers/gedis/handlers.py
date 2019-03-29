@@ -115,35 +115,28 @@ class Handler(JSBASE):
 
         #cmd is cmd metadata + cmd.method is what needs to be executed
         cmd = self._cmd_obj_get(cmd=command, namespace=namespace, actor=actor)
-
+        params_list = []
+        params_dict = {}
         if cmd.schema_in:
-
-            params = self._read_input_args_schema(content_type, request, cmd)
-
+            params_dict = self._read_input_args_schema(content_type, request, cmd)
         else:
-            params = {}
             if len(request) > 1:
-                params = request[1:]
+                params_list = request[1:]
 
             #the params are binary values now, no conversion happened
 
         #at this stage the input is in params as a dict
 
         #makes sure we understand which schema to use to return result from method
+
         if cmd.schema_out:
-            params["schema_out"] = cmd.schema_out
+            params_dict["schema_out"] = cmd.schema_out
 
         #now execute the method() of the cmd
         result = None
 
-        print("params cmd", params)
-        if params == {}:
-            result = cmd.method()
-        elif j.data.types.list.check(params):
-            result = cmd.method(*params)
-        else:
-            result = cmd.method(**params)
-
+        print("params cmd", params_list,  params_dict)
+        result = cmd.method(*params_list,**params_dict)
         if isinstance(result, list):
             result = [self._result_encode(cmd,response_type,r) for r in result]
         else:
@@ -288,8 +281,8 @@ class Handler(JSBASE):
         return namespace, actor, cmd
 
     def _read_header(self,request):
-        if len(request) < 2:
-            raise ValueError("can not handle with request, not enough arguments")
+        # if len(request) < 2:
+        #     raise ValueError("can not handle with request, not enough arguments")
 
         # If request length is > 2 we will expect a header
         if len(request) > 2:

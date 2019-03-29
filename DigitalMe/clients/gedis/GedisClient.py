@@ -66,6 +66,7 @@ class GedisClient(JSConfigBase):
                     raise RuntimeError("aa")
                 actor_name = key.split("__")[1]
                 self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, capnpbin)
+                a=self._actorsmeta[actor_name]
 
             # at this point the schema's are loaded only for the namespace identified (is all part of metadata)
             for actorname, actormeta in self._actorsmeta.items():

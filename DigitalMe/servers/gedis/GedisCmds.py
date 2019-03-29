@@ -16,8 +16,8 @@ schemas = (LO) !jumpscale.gedis.schema
 @url = jumpscale.gedis.cmd
 name = ""
 comment = ""
-schema_in = ""
-schema_out = ""
+schema_in_url = ""
+schema_out_url = ""
 args = (ls)
 
 @url = jumpscale.gedis.schema
@@ -47,6 +47,7 @@ class GedisCmds(JSBASE):
 
         if capnpbin:
             self.data = self.schema.get(capnpbin=capnpbin)
+            self.cmds
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
             klass = j.tools.codeloader.load(obj_key=cname, path=path, reload=False)
@@ -86,11 +87,15 @@ class GedisCmds(JSBASE):
         if self._cmds == {}:
             self._log_debug('Populating commands for namespace(%s)', self.data.name)
             for s in self.data.schemas:
+                if s.content.strip().startswith("!"):
+                    j.shell()
                 if not s.url in j.data.schema.schemas:
-                    j.data.schema.get(s.content, url=s.url)
+                    if not s.content.strip().startswith("!"):
+                        j.data.schema.get(s.content, url=s.url)
             for cmd in self.data.cmds:
                 self._log_debug("\tpopulate: %s", cmd.name)
                 self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
+
         return self._cmds
 
     def cmd_exists(self, name):
@@ -164,8 +169,13 @@ class GedisCmds(JSBASE):
 
         # cmd.code = j.core.text.strip(code)
         cmd.comment = j.core.text.strip(comment)
-        cmd.schema_in = self._schema_process(cmd, schema_in)
-        cmd.schema_out = self._schema_process(cmd, schema_in)
+        s = self._schema_process(cmd, schema_in)
+        if s:
+            cmd.schema_in_url = s.url
+        s = self._schema_process(cmd, schema_out)
+        if s:
+            cmd.schema_out_url = s.url
+
         if "schema_out" in args:
             args.pop(args.index("schema_out"))
         cmd.args = args
@@ -198,27 +208,28 @@ class GedisCmds(JSBASE):
             s.content = content
 
     def _schema_process(self, cmd, txt):
-        txt = j.core.tools.text_strip(txt)
-        if txt.strip() == "":
-            return ""
-        url = ""
-        for line in txt.split("\n"):
-            line_strip = line.strip()
-            if line_strip == "":
-                continue
-            if line_strip.startswith("!"):
-                if url is not "":
-                    raise RuntimeError("cannot only be 1")
-                url = line_strip.strip("!")
-            elif line_strip.find("!") != -1:
-                url2 = line_strip.split("!", 1)[1]
-                s2 = j.data.schema.get(url=url2)
-                self._schema_url_add(url2, s2.text)
-            if url == "":
+        txt = j.core.tools.text_strip(txt).strip()
+        if txt.strip()=="":
+            return None
+        if not txt.strip().startswith("!"):
+            if txt.find("@url")==-1:
                 md5 = j.data.hash.md5_string(txt.strip())
                 url = "actors.%s.%s.%s.%s" % (self.data.namespace, self.data.name, cmd.name, md5)
+                schema=j.data.schema.get(schema_text=txt,url=url)
+            else:
+                schema=j.data.schema.get(schema_text=txt)
+        else:
+            url = txt.strip().lstrip("!")
+            schema=j.data.schema.get(url=url)
 
-            if url not in j.data.schema.schemas:
-                j.data.schema.get(txt, url=url)  # will add the schema with right url
-            self._schema_url_add(url, txt)
-            return url
+        self._schema_url_add(schema.url, schema.text) #make sure we remember if needed
+
+
+        for line in txt.split("\n"):
+            line_strip = line.strip()
+            if line_strip.find("!") != -1:
+                url2 = line_strip.split("!", 1)[1]
+                s2 = j.data.schema.get(url=url2)
+                self._schema_url_add(s2.url, s2.text)
+
+        return schema
