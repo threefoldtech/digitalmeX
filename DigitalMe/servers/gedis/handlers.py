@@ -194,15 +194,13 @@ class Handler(JSBASE):
         else:
             raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
-        j.shell()
-
         method_arguments = command.cmdobj.args
         if 'schema_out' in method_arguments:
             raise RuntimeError("schema_out should not be in arguments of method")
 
         params = {}
 
-        for key in method_arguments:
+        for key in command.schema_in.propertynames:
             params[key] = getattr(args, key)
 
         return params
@@ -300,12 +298,18 @@ class Handler(JSBASE):
 
     def _result_encode(self,cmd, response_type, item):
 
-        if cmd.schema_out:
+        if cmd.schema_out is not None:
             if response_type == 'msgpack':
-                item = item._msgpack
+                return item._msgpack
             elif response_type == 'capnp' or response_type == 'auto':
-                item = item._data
+                return item._data
             else:
                 raise j.exceptions.Input("cannot find required encoding type for return")
         else:
+
+            if isinstance(item,j.data.schema.DataObjBase):
+                if response_type == "json":
+                    return item_json
+                else:
+                    return item._data
             return item

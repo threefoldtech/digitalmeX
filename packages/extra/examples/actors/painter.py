@@ -47,7 +47,6 @@ class painter(JSBASE):
         ```
 
         """
-        j.shell()
         w = wallet
         return w
 
