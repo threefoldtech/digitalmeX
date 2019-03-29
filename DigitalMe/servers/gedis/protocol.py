@@ -1,11 +1,8 @@
 from io import BytesIO
-from logging import getLogger
 
 from Jumpscale import j
 from redis.connection import Encoder, PythonParser, SocketBuffer
 from redis.exceptions import ConnectionError
-
-logger = getLogger(__name__)
 
 
 class RedisCommandParser(PythonParser):
@@ -34,10 +31,7 @@ class RedisCommandParser(PythonParser):
 
     def read_request(self):
         # rename the function to map more with server side
-        try:
-            return self.read_response()
-        except ConnectionError as e:
-            logger.error('Connection err %s' % e.args)
+        return self.read_response()
 
     def request_to_dict(self, request):
         # request.pop(0) #first one is command it self

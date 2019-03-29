@@ -7,9 +7,8 @@ from redis.connection import ConnectionError
 JSConfigBase = j.application.JSBaseConfigClass
 
 
-class GedisClientActors():
-    def __init__(self):
-        pass
+class GedisClientActors(j.application.JSBaseClass):
+    pass
 
 
 class GedisClient(JSConfigBase):
@@ -56,7 +55,7 @@ class GedisClient(JSConfigBase):
             assert self.ping()
             self._actorsmeta = {}
             # self._redis.execute_command("select", self.namespace)
-            self._client_actors = GedisClientActors()
+            self._actors = GedisClientActors()
 
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
@@ -77,10 +76,9 @@ class GedisClient(JSConfigBase):
                                                        objForHash=None, obj=actormeta)
 
                 o = cl(client=self)
-                setattr(self._client_actors, actorname, o)
+                setattr(self._actors, actorname, o)
                 self._log_debug("cmds:%s" % actorname)
 
-        self._actors = self._client_actors
         return self._actors
 
     @property
@@ -124,8 +122,7 @@ class GedisClient(JSConfigBase):
     def _methods(self, prefix=""):
         if prefix.startswith("_"):
             return JSConfigBase._methods(self, prefix=prefix)
-        res = self.cmds._methods
-
+        res = self.actors._methods()
         for i in ["ping"]:
             if i not in res:
                 res.append(i)

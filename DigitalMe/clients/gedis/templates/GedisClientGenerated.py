@@ -31,7 +31,8 @@ class GedisClientGenerated():
         args.{{prop.name}} = {{prop.name}}
         {% endfor %}
 
-        res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id if not callable(id) else None, args._data]))
+        id2 = id if not callable(id) else None #if id specified will put in id2 otherwise will be None
+        res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id2, args._data]))
 
         {% else %}  #is for non schema based
 
@@ -48,13 +49,14 @@ class GedisClientGenerated():
         {% if cmd.schema_out != None %}
         schema_out = j.data.schema.get(url="{{cmd.schema_out.url}}")
         if isinstance(res, list):
-            res = list(map(lambda x: schema_out.get(capnpbin=x), res))
+            res2 = list(map(lambda x: schema_out.get(capnpbin=x), res))
         else:
-            res = schema_out.get(capnpbin=res)
+            res2 = schema_out.get(capnpbin=res)
         {% else %}
+        res2 = res
         {% endif %}
 
-        return res
+        return res2
 
 
     {% endfor %}

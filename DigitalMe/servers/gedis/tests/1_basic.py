@@ -19,9 +19,9 @@ def main(self):
     # j.servers.zdb.start_test_instance()
     #
     # Load schema used for testing to the client process
-    cmd = j.tools.startupcmd.get("gedis_test", serverscript, cmd_stop='', path='/tmp', timeout=30,
-                                 env={}, ports=[8888], process_strings=[], interpreter='jumpscale', daemon=True)
-    cmd.start()
+    # cmd = j.tools.startupcmd.get("gedis_test", serverscript, cmd_stop='', path='/tmp', timeout=30,
+    #                              env={}, ports=[8888], process_strings=[], interpreter='jumpscale', daemon=True)
+    # cmd.start()
     #
     # res = j.sal.nettools.waitConnectionTest("localhost", 8888, timeoutTotal=30)
     # if res == False:
@@ -33,7 +33,7 @@ def main(self):
 
     client.actors
 
-    assert client.actors.painter.echo("s") == b"s"
+    # assert client.actors.painter.echo("s") == b"s"
     print("- done")
     # print("[*] testing set with schemas")
     # # print("[1] schema_in as schema url")
@@ -41,6 +41,7 @@ def main(self):
     # # wallet_out1 = client.actors.painter.example1(addr="testaddr")
     # # assert wallet_out1.addr == "testaddr"
     # # print("[1] Done")
+
     print("[2] schema_in as inline schema with url")
     wallet_schema = j.data.schema.get(url="jumpscale.example.wallet")
     wallet_in = wallet_schema.new()

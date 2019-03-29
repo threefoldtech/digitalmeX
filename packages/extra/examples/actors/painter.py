@@ -32,6 +32,10 @@ class painter(JSBASE):
     def echo(self, msg):
         return msg
 
+    def count(self, a,b):
+        return int(a)+int(b)
+
+
     def example2(self, wallet, schema_out):
         """
         ```in
@@ -43,6 +47,7 @@ class painter(JSBASE):
         ```
 
         """
+        j.shell()
         w = wallet
         return w
 
