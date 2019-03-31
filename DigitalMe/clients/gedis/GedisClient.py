@@ -10,6 +10,10 @@ JSConfigBase = j.application.JSBaseConfigClass
 class GedisClientActors(j.application.JSBaseClass):
     pass
 
+class GedisClientSchemas(j.application.JSBaseClass):
+    pass
+
+
 
 class GedisClient(JSConfigBase):
     _SCHEMATEXT = """
@@ -56,6 +60,7 @@ class GedisClient(JSConfigBase):
             self._actorsmeta = {}
             # self._redis.execute_command("select", self.namespace)
             self._actors = GedisClientActors()
+            self.schemas = GedisClientSchemas()
 
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
@@ -79,6 +84,18 @@ class GedisClient(JSConfigBase):
                 o = cl(client=self)
                 setattr(self._actors, actorname, o)
                 self._log_debug("cmds:%s" % actorname)
+
+                def process_url(url):
+                    url=url.replace(".","_")
+                    if url.startswith("actors_"):
+                        url= "_".join(url.split("_")[2:])
+                    return url
+
+                for name, cmd in actormeta.cmds.items():
+                    if cmd.schema_in and not cmd.schema_in.url.startswith("actors."):
+                        setattr(self.schemas,process_url(cmd.schema_in.url) ,cmd.schema_in )
+                    if cmd.schema_out and not cmd.schema_out.url.startswith("actors."):
+                        setattr(self.schemas,process_url(cmd.schema_out.url) ,cmd.schema_out )
 
         return self._actors
 

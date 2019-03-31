@@ -29,6 +29,7 @@ def main(self):
             raise RuntimeError("Could not start gedis server on port:%s" % 8888)
         self._log_info("gedis server '%s' started" % 8888)
 
+    start()
 
     print("[*] testing echo")
     client = j.clients.gedis.get("gedis_test", port=8888, namespace='ibiza')
@@ -76,6 +77,7 @@ def main(self):
     assert s.actors.system.ping().lower() == b"pong"
 
     assert client.actors.painter.echo("s") == b"s"
+
 
     print("[5] Done")
 

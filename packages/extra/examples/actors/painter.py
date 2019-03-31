@@ -75,7 +75,7 @@ class painter(JSBASE):
         """
         w = schema_out.new()
         w.a = a
-        w.b = b
+        w.b = not b
         w.c = c
         return w
 

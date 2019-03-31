@@ -29,22 +29,3 @@ class GedisClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.gedis"
     _CHILDCLASS = GedisClient
 
-    # def _init(self):
-    #     self._template_engine = None
-    #     self._template_code_client = None
-    #     self._code_model_template = None
-
-    # def configure(self, namespace="default", host="localhost", port=5000, secret="", ssl=False, ssl_cert_file=""):
-    #     data = {
-    #         "host": host,
-    #         "port": port,
-    #         "namespace": namespace,
-    #         "adminsecret_": secret,
-    #         "ssl": ssl,
-    #         'sslkey': ssl_cert_file,
-    #     }
-    #     return j.application.JSBaseConfigsClass.get(self,name=name, **data).cmds
-    #
-    #     return self.get(namespace=namespace, host=host, port=port, secret=secret,ssl=ssl, ssl_cert_file=ssl_cert_file)
-    #
-    # def get(self, name):
