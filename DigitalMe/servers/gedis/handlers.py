@@ -1,5 +1,6 @@
 from Jumpscale import j
 from redis.exceptions import ConnectionError
+import nacl
 
 from .protocol import RedisCommandParser, RedisResponseWriter
 
@@ -17,6 +18,7 @@ class Handler(JSBASE):
         self.cmds = {}  # caching of commands
         self.actors = self.gedis_server.actors
         self.cmds_meta = self.gedis_server.cmds_meta
+        self.session = Session()
 
 
     def handle_redis(self, socket, address):
@@ -49,8 +51,6 @@ class Handler(JSBASE):
         """
 
         self._log_info("new incoming connection",context="%s:%s"%address)
-        session = Session()
-
         while True:
 
             request = parser.read_request()
@@ -63,12 +63,12 @@ class Handler(JSBASE):
                 return
 
             #FOR DEBUG PURPOSES
-            r = self._handle_request(session, request,address)
-            response.encode(r)
-            continue
+            # r = self._handle_request(session, request,address)
+            # response.encode(r)
+            # continue
 
             try:
-                r = self._handle_request(session, request,address)
+                r = self._handle_request(request,address)
                 response.encode(r)
             except Exception as e:
                 # j.errorhandler.try_except_error_process(e, die=False)
@@ -80,9 +80,7 @@ class Handler(JSBASE):
                 msg = "error: %s: %s"%(redis_cmd,str(e)).split("\n",1)[0]
                 response.error(msg)
 
-
-
-    def _handle_request(self,session, request,address):
+    def _handle_request(self, request,address):
         """
         deal with 1 specific request
         :param request: 
@@ -99,10 +97,10 @@ class Handler(JSBASE):
             return "PONG"
 
         elif redis_cmd == "auth":
-            dmid,epoch,signature = request[1].decode("utf-8").split(",")
-            #epoch has been given by remote client and has been signed by private key of the client
-            #this allows us to verify the client, so we can check that his dmid is really from who we think it is
-            return "OK"
+            dm_id, epoch, *signed_message = request[1].decode("utf-8").split(",")
+            # Signed message may contains ","
+            signed_message = ",".join(signed_message)
+            return self.dm_verify(dm_id, epoch, signed_message)
 
         #header is {'content_type':'json', 'response_type':'capnp'} or {} if no header
         header = self._read_header(request)
@@ -306,3 +304,29 @@ class Handler(JSBASE):
                 else:
                     return item._data
             return item
+
+    def dm_verify(self, dm_id, epoch, signed_message):
+        """
+        retrieve the verify key of the threebot identified by bot_id
+        from tfchain
+
+        :param dm_id: threebot identification, can be one of the name or the unique integer
+                        of a threebot
+        :type dm_id: string
+        :param epoch: the epoch param that is signed
+        :type epoch: str
+        :param signed_message: the epoch param signed by the private key
+        :type signed_message: str
+        :return: True if the verification succeeded
+        :rtype: bool
+        :raises: PermissionError in case of wrong message
+        """
+        tfchain = j.clients.tfchain.new('3bot', network_type='TEST')
+        record = tfchain.threebot.record_get(dm_id)
+        verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
+        if verify_key.verify(signed_message) != epoch:
+            raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
+
+        self.session.dmid = dm_id
+        self.session.admin = True
+        return True
