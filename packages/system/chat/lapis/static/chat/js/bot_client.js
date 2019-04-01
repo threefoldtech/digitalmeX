@@ -6,10 +6,17 @@ let EXEC_OBJ = {
 }
 
 var stringContentGenerate = function (message, kwargs){
+    let contents = ``
+    if(typeof kwargs['default'] == 'undefined'){
+        contents =  `<input type="text" class="form-control" id="value">`
+    }
+    else{
+        contents =  `<input type="text" class="form-control" id="value" value="${kwargs["default"]}"`
+    }
     return `
     <h4>${message}</h4>
     <div class="form-group">
-		<input type="text" class="form-control" id="value">
+        ${contents}
     </div>`
 }
 
