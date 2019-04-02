@@ -71,7 +71,7 @@
         NAN = 0 / 0;
   
     /** Used as references for the maximum length and index of an array. */
-    var MAX_ARRAY_LENGTH = 4294967295,
+    var MAX_ARRAY_LENGTH = 2147483647,
         MAX_ARRAY_INDEX = MAX_ARRAY_LENGTH - 1,
         HALF_MAX_ARRAY_LENGTH = MAX_ARRAY_LENGTH >>> 1;
   
@@ -12421,7 +12421,7 @@
        * // => 0
        *
        * _.toLength(Infinity);
-       * // => 4294967295
+       * // => 2147483647
        *
        * _.toLength('3.2');
        * // => 3
@@ -17103,4 +17103,3 @@
       root._ = _;
     }
   }.call(this));
-  

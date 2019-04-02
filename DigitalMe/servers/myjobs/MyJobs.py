@@ -197,7 +197,7 @@ class MyJobs(JSBASE):
                     # j.shell()
                     continue
 
-                job_running = w.current_job != 4294967295
+                job_running = w.current_job != 2147483647
 
                 if job_running:
                     job = self.model_job.get(w.current_job)
@@ -236,7 +236,7 @@ class MyJobs(JSBASE):
                     if w ==None:
                         continue
 
-                    job_running = w.current_job != 4294967295
+                    job_running = w.current_job != 2147483647
                     self._log_debug("job running:%s (%s)"%(w.id,job_running))
 
                     if w.halt==False and not job_running and self.queue.qsize()==0:
@@ -375,7 +375,7 @@ class MyJobs(JSBASE):
 
             w = self.model_worker.get(wid)
 
-            job_running = w.current_job != 4294967295
+            job_running = w.current_job != 2147483647
 
             if not graceful or not job_running:
                 gproc.kill()

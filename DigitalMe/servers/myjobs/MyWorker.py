@@ -48,7 +48,7 @@ def myworker(id=999999,onetime=False,showout=False):
         print(3)
         w = model_worker.get(id)
 
-    w.current_job = 4294967295  # means nil
+    w.current_job = 2147483647  # means nil
     w.halt = False
     w.running = True
     return_worker_obj(w)
@@ -63,7 +63,7 @@ def myworker(id=999999,onetime=False,showout=False):
             if w == None:
                 # raise RuntimeError("worker should always be there")
                 return
-            w.current_job = 4294967295  # means nil
+            w.current_job = 2147483647  # means nil
             return_worker_obj(w)
             if w.halt:
                 # model_worker.
@@ -156,7 +156,7 @@ def myworker(id=999999,onetime=False,showout=False):
 
                 return_job_obj(job)
 
-                w.current_job = 4294967295
+                w.current_job = 2147483647
                 return_worker_obj(w)
 
         if onetime:
