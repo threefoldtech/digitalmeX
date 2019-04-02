@@ -1,5 +1,6 @@
 import imp
 import os
+import nacl
 
 from Jumpscale import j
 from redis.connection import ConnectionError
@@ -51,6 +52,16 @@ class GedisClient(JSConfigBase):
         if test != b'PONG':
             return False
         return True
+
+    def auth(self, bot_id):
+        nacl_cl = j.data.nacl.get()
+        nacl_cl._load_privatekey()
+        signing_key = nacl.signing.SigningKey(nacl_cl.privkey.encode())
+        epoch = str(j.data.time.epoch)
+        signed_message = signing_key.sign(epoch.encode())
+        cmd = 'auth {},{},{}'.format(bot_id, epoch, signed_message)
+        res = self._redis.execute_command(cmd)
+        return res
 
     @property
     def actors(self):

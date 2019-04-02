@@ -102,3 +102,12 @@ function validate_max(value,validator){
     }
     return null;
 }
+
+function validate_github_url_https(value){
+    //Validate github repo url is https format
+    var url_format = /^https\:\/\/github\.com\/\S+\/\S+/;
+    if(!url_format.test(value)){
+        return "This field should be in the following format : https://github.com/Owner/repo_name";
+    }
+    return null;
+}
