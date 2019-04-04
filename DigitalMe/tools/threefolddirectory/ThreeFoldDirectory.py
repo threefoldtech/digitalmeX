@@ -53,7 +53,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         """
         farmers = j.clients.threefold_directory.farmers
         for farmer in farmers:
-            if "name" not in farmer: #TODO: is this correct
+            if not farmer.get("name"):
                 continue
             obj = self.farmer_get(farmer["name"])
             for wallet_addr in farmer['wallet_addresses']:
@@ -105,7 +105,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
                     o.sysadmin_ipaddr = ipaddr
                     o.node_zerotier_id = node.address
                     o.save()
-                o.check(reset=reset)
+                o.check(jwt=self.jwt, reset=reset)
 
     def tfdir_scan(self, reset=False):
         for node in j.clients.threefold_directory.capacity:

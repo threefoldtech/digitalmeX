@@ -105,16 +105,15 @@ class Node(j.application.JSBaseConfigClass):
                     error = str(e)
         return error
 
-    def check(self, reset=False):
+    def check(self, jwt=None, reset=False):
         """
         will do ping test, zero-os test, ...
 
         :param reset: reset saved node info
         """
-
         if self.update > j.data.time.epoch - 3600 and not reset:
             print("NOT NEEDED TO UPDATE:")
-            print(o)
+            print(self.node_zos_id)
             return
 
         self.sysadmin = False
@@ -134,7 +133,7 @@ class Node(j.application.JSBaseConfigClass):
         # ZOSCLIENT
         zos = None
         try:
-            zos = j.clients.zos.get(data={"password_": self.jwt, "host": ipaddr},
+            zos = j.clients.zos.get(data={"password_": jwt, "host": ipaddr},
                                     instance="sysadmin_%s" % ipaddr)
         except Exception as e:
             if "Connection refused" in str(e):
@@ -159,7 +158,8 @@ class Node(j.application.JSBaseConfigClass):
             self.sysadmin = True
             self.node_zos_id = zos.name  # zos.client.infself.os()['hostid']
 
-        dir_item = self._tf_dir_node_find(ipaddr, self.node_zos_id)
+        # dir_item = self._tf_dir_node_find(ipaddr, self.node_zos_id)
+        dir_item = None
         self.sysadmin_up_ping = sysadmin_ping
         self.sysadmin_up_zos = zos_ping
         if self.error is not "zerotier lost the connection to the node":
