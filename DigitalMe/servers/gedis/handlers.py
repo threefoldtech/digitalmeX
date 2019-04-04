@@ -97,9 +97,7 @@ class Handler(JSBASE):
             return "PONG"
 
         elif redis_cmd == "auth":
-            dm_id, epoch, *signed_message = request[1].decode("utf-8").split(",")
-            # Signed message may contains ","
-            signed_message = ",".join(signed_message)
+            dm_id, epoch, signed_message = request[1:]
             return self.dm_verify(dm_id, epoch, signed_message)
 
         #header is {'content_type':'json', 'response_type':'capnp'} or {} if no header
