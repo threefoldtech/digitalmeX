@@ -10,7 +10,7 @@ class Node(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = threefold.grid.node
         
-        name = ""
+        name* = ""
         
         node_zos_id* = ""               #zero os id of the host
         node_zerotier_id* = ""          #zerotier id
@@ -40,7 +40,7 @@ class Node(j.application.JSBaseConfigClass):
         
         error = ""                      #there is an error on this node
         
-        farmer_id = (I)
+        farmer_id = (S)
         farmer = false (B)
         update = (D)
         
@@ -105,12 +105,14 @@ class Node(j.application.JSBaseConfigClass):
                     error = str(e)
         return error
 
-    def check(self, jwt=None, reset=False):
+    def check(self, dir_item=None, jwt=None, reset=False):
         """
         will do ping test, zero-os test, ...
 
         :param reset: reset saved node info
         """
+
+        raise NotImplemented()
         if self.update > j.data.time.epoch - 3600 and not reset:
             print("NOT NEEDED TO UPDATE:")
             print(self.node_zos_id)
@@ -158,15 +160,34 @@ class Node(j.application.JSBaseConfigClass):
             self.sysadmin = True
             self.node_zos_id = zos.name  # zos.client.infself.os()['hostid']
 
-        # dir_item = self._tf_dir_node_find(ipaddr, self.node_zos_id)
+        dir_item = self._tf_dir_node_find(ipaddr, self.node_zos_id)
         dir_item = None
         self.sysadmin_up_ping = sysadmin_ping
         self.sysadmin_up_zos = zos_ping
         if self.error is not "zerotier lost the connection to the node":
             self.error = error
 
-        if dir_item is not None:
 
+        robot = self.robot_get(o)
+        if False and robot:
+            if len(robot.templates.uids.keys()) > 0:
+                self.noderobot = True
+                self.noderobot_up_last = j.data.time.epoch
+                self.state = "OK"
+
+        self.tfdir_up_last = ""
+        self.tf_dir_found = bool(dir_item)
+
+        self.update = j.data.time.epoch  # last time this check was done
+
+        self.save()
+        print(self)
+
+    def from_dir(self, dir_item):
+        if dir_item is not None:
+            self.farmer_id = dir_item["farmer_id"]
+            self.node_zos_id = dir_item["node_id"]
+            self.node_robot = dir_item['robot_address']
             if dir_item["reserved_resources"]:
                 self.capacity_reserved.cru = dir_item["reserved_resources"]["cru"]
                 self.capacity_reserved.hru = dir_item["reserved_resources"]["hru"]
@@ -191,32 +212,17 @@ class Node(j.application.JSBaseConfigClass):
 
             self.noderobot_ipaddr = dir_item["robot_address"]
 
-            farmer = self.farmer_get_from_dir(dir_item["farmer_id"], return_none_if_not_exist=True)
-            if farmer:
-                self.farmer_id = farmer.id
-                self.farmer = True
-
-            if "location" in dir_item:
+            if dir_item.get("location"):
                 self.location.city = dir_item["location"]["city"]
                 self.location.continent = dir_item["location"]["continent"]
                 self.location.country = dir_item["location"]["country"]
                 self.location.latitude = dir_item["location"]["latitude"]
                 self.location.longitude = dir_item["location"]["longitude"]
 
-        robot = self.robot_get(o)
-        if False and robot:
-            if len(robot.templates.uids.keys()) > 0:
-                self.noderobot = True
-                self.noderobot_up_last = j.data.time.epoch
-                self.state = "OK"
+            self.tfdir_found = True
+            self.tfdir_up_last = dir_item["updated"]
+            self.save()
 
-        self.tfdir_up_last = ""
-        self.tf_dir_found = bool(dir_item)
-
-        self.update = j.data.time.epoch  # last time this check was done
-
-        self.save()
-        print(self)
 
 class Nodes(j.application.JSBaseConfigsClass):
     """

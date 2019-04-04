@@ -105,19 +105,17 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
                     o.sysadmin_ipaddr = ipaddr
                     o.node_zerotier_id = node.address
                     o.save()
-                o.check(jwt=self.jwt, reset=reset)
+                o.check(jwt=o.jwt, reset=reset)
 
     def tfdir_scan(self, reset=False):
         for node in j.clients.threefold_directory.capacity:
-            name = name="id_%s"%node["node_id"]
-            o=self.node_get(node_zos_id=node["node_id"],die=False)  #TODO:*1 is this the correct identifier?
-            if not o:
-                node2={} #TODO: need to be changed, probably lots can be taken over from dict
-                j.shell()
-                self.nodes.new(name,**node2)
-                #TODO:1 populate the object
-                o.save()
-            o.check(reset=reset)
+            data = self.nodes.findData(node_zos_id=node["node_id"])
+            if len(data) > 1:
+                raise RuntimeError("Found more than one node with the same node_id : {}".format(node["node_id"]))
+            elif len(data) == 0:
+                name = "tf_{}".format(node["node_id"])
+                o = self.nodes.new(name=name, node_zos_id=node["node_id"])
+                o.from_dir(node)
 
     def scan(self):
         '''
@@ -125,7 +123,6 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         '''
         self.farmers_load()
         self.tfdir_scan()
-        self.zerotier_scan()
 
 
 
