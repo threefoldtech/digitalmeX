@@ -86,9 +86,13 @@ class Request:
     def __init__(self, socket):
         self._socket = socket
         self._parser = RedisCommandParser(socket)
-        self._request = self._parser.read_request()
-        if not self._request:
+        self._request_ = self._parser.read_request()
+
+    @property
+    def _request(self):
+        if not self._request_:
             raise ValueError("wrong formatted request")
+        return self._request_
 
     @property
     def command(self):
@@ -155,7 +159,9 @@ class GedisSocket:
     """
     GedisSocket encapsulate the raw tcp socket
     when you want to read the next request on the socket,
-    call the `read` method, it will return a Request and ReponseWriter object
+    call the `read` method, it will return a Request object
+    when you want to write back to the client
+    call get_writer to get ReponseWriter
     """
 
     def __init__(self, socket):
@@ -166,14 +172,16 @@ class GedisSocket:
         """
         call this method when you want to process the next request
 
-        :return: return a tuple of Request and ReponseWriter object
+        :return: return a Request
         :rtype: tuple
         """
 
         request = Request(self._socket)
-        response_writer = ResponseWriter(self._socket)
         self._parser = request._parser
-        return request, response_writer
+        return request
+
+    def get_writer(self):
+        return ResponseWriter(self._socket)
 
     def on_disconnect(self):
         """
@@ -220,13 +228,12 @@ class Handler(JSBASE):
         self._log_info("new incoming connection", context="%s:%s" % address)
         while True:
             try:
-                request, response_writer = gedis_socket.read()
+                request = gedis_socket.read()
                 result = self._handle_request(request, address)
-                response_writer.write(result)
+                gedis_socket.get_writer().write(result)
             except Exception as e:
-                msg = "error: %s: %s" % (request.command, str(e))
-                self._log_error(msg, context="address: %s" % address)
-                response_writer.error(msg)
+                self._log_error(str(e))
+                gedis_socket.get_writer().error(str(e))
                 return
 
     def _handle_request(self, request, address):

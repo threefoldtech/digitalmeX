@@ -84,3 +84,6 @@ class actor(JSBASE):
         ```
         """
         return "%s %s" % (foo, bar)
+
+    def raise_error(self):
+        raise RuntimeError('woopsy daisy')

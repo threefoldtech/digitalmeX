@@ -5,6 +5,7 @@ from multiprocessing import Process
 import gevent
 import pytest
 from Jumpscale import j
+import redis
 
 from .actors.actor import SCHEMA_IN, SCHEMA_OUT
 
@@ -70,6 +71,12 @@ class TestSimpleEcho:
             client.actors.actor.args_in({'foo'}, 'hello')
 
         assert b'hello 1' == client.actors.actor.args_in('hello', 1)
+
+    def test_error(self):
+        client = self.server.client_get()
+
+        with pytest.raises(redis.exceptions.ResponseError):
+            client.actors.actor.raise_error()
 
 
 def wait_start_server(addr, port):
