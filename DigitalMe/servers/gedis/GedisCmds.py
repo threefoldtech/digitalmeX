@@ -209,21 +209,20 @@ class GedisCmds(JSBASE):
 
     def _schema_process(self, cmd, txt):
         txt = j.core.tools.text_strip(txt).strip()
-        if txt.strip()=="":
+        if txt.strip() == "":
             return None
         if not txt.strip().startswith("!"):
-            if txt.find("@url")==-1:
+            if txt.find("@url") == -1:
                 md5 = j.data.hash.md5_string(txt.strip())
                 url = "actors.%s.%s.%s.%s" % (self.data.namespace, self.data.name, cmd.name, md5)
-                schema=j.data.schema.get(schema_text=txt,url=url)
+                schema = j.data.schema.get(schema_text=txt, url=url)
             else:
-                schema=j.data.schema.get(schema_text=txt)
+                schema = j.data.schema.get(schema_text=txt)
         else:
             url = txt.strip().lstrip("!")
-            schema=j.data.schema.get(url=url)
+            schema = j.data.schema.get(url=url)
 
-        self._schema_url_add(schema.url, schema.text) #make sure we remember if needed
-
+        self._schema_url_add(schema.url, schema.text)  # make sure we remember if needed
 
         for line in txt.split("\n"):
             line_strip = line.strip()

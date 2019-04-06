@@ -59,7 +59,7 @@ class GedisClient(JSConfigBase):
         signing_key = nacl.signing.SigningKey(nacl_cl.privkey.encode())
         epoch = str(j.data.time.epoch)
         signed_message = signing_key.sign(epoch.encode())
-        cmd = 'auth {},{},{}'.format(bot_id, epoch, signed_message)
+        cmd = 'auth {} {} {}'.format(bot_id, epoch, signed_message)
         res = self._redis.execute_command(cmd)
         return res
 

@@ -6,10 +6,190 @@ from .protocol import RedisCommandParser, RedisResponseWriter
 
 JSBASE = j.application.JSBaseClass
 
+
 class Session():
     def __init__(self):
-        self.dmid = None # is the digital me id e.g. kristof.ibiza
+        self.dmid = None  # is the digital me id e.g. kristof.ibiza
         self.admin = False
+
+
+def _command_split(cmd, actor="system", namespace="system"):
+    """
+    :param cmd: command is in form x.x.x split in parts
+    :param actor: is the default actor
+    :param namespace: is the default namespace
+    :return: (namespace, actor, cmd)
+    """
+    cmd_parts = cmd.split(".")
+    if len(cmd_parts) == 3:
+        namespace = cmd_parts[0]
+        actor = cmd_parts[1]
+        if "__" in actor:
+            actor = actor.split("__", 1)[1]
+        cmd = cmd_parts[2]
+
+    elif len(cmd_parts) == 2:
+        actor = cmd_parts[0]
+        if "__" in actor:
+            actor = actor.split("__", 1)[1]
+        cmd = cmd_parts[1]
+        if actor == "system":
+            namespace = "system"
+    elif len(cmd_parts) == 1:
+        namespace = "system"
+        actor = "system"
+        cmd = cmd_parts[0]
+    else:
+        raise RuntimeError("cmd not properly formatted")
+
+    return namespace, actor, cmd
+
+
+class Command:
+    """
+    command is an object representing a string gedis command
+    it has 3 part
+    - namespace
+    - actor
+    - command name
+    """
+
+    def __init__(self, command):
+        self._namespace, self._actor, self._command = _command_split(command)
+
+    @property
+    def namespace(self):
+        return self._namespace
+
+    @property
+    def actor(self):
+        return self._actor
+
+    @property
+    def command(self):
+        return self._command
+
+    def __str__(self):
+        return self.command
+
+    def __repr__(self):
+        return self.command
+
+
+class Request:
+    """
+    Request is an helper object that
+    encapsulate a raw gedis command and expose some property
+    for easy access of the different part of the request
+    """
+
+    def __init__(self, socket):
+        self._socket = socket
+        self._parser = RedisCommandParser(socket)
+        self._request_ = self._parser.read_request()
+
+    @property
+    def _request(self):
+        if not self._request_:
+            raise ValueError("wrong formatted request")
+        return self._request_
+
+    @property
+    def command(self):
+        """
+        return a Command object
+        """
+        return Command(self._request[0].decode())
+
+    @property
+    def arguments(self):
+        """
+        :return: the list of arguments of any or an emtpy list
+        :rtype: list
+        """
+        if len(self._request) > 1:
+            return self._request[1:]
+        return []
+
+    @property
+    def headers(self):
+        """
+        :return: return the headers of the request or an emtpy dict
+        :rtype: dict
+        """
+        if len(self._request) > 2:
+            return j.data.serializers.json.loads(self._request[2])
+        return {}
+
+    @property
+    def content_type(self):
+        """
+        :return: read the content type of the request form the headers
+        :rtype: string
+        """
+        return self.headers.get('content_type', 'auto').casefold()
+
+    @property
+    def response_type(self):
+        """
+        :return: read the response type from the headers
+        :rtype: string
+        """
+        return self.headers.get('response_type', 'auto').casefold()
+
+
+class ResponseWriter:
+    """
+    ResponseWriter is an object that expose methods
+    to write data back to the client
+    """
+
+    def __init__(self, socket):
+        self._socket = socket
+        self._writer = RedisResponseWriter(socket)
+
+    def write(self, value):
+        self._writer.encode(value)
+
+    def error(self, value):
+        self._writer.error(value)
+
+
+class GedisSocket:
+    """
+    GedisSocket encapsulate the raw tcp socket
+    when you want to read the next request on the socket,
+    call the `read` method, it will return a Request object
+    when you want to write back to the client
+    call get_writer to get ReponseWriter
+    """
+
+    def __init__(self, socket):
+        self._socket = socket
+        self._parser = None
+
+    def read(self):
+        """
+        call this method when you want to process the next request
+
+        :return: return a Request
+        :rtype: tuple
+        """
+
+        request = Request(self._socket)
+        self._parser = request._parser
+        return request
+
+    def get_writer(self):
+        return ResponseWriter(self._socket)
+
+    def on_disconnect(self):
+        """
+        make sur to always call this method before closing the socket
+        """
+        if self._parser:
+            self._parser.on_disconnect()
+
 
 class Handler(JSBASE):
     def __init__(self, gedis_server):
@@ -20,27 +200,23 @@ class Handler(JSBASE):
         self.cmds_meta = self.gedis_server.cmds_meta
         self.session = Session()
 
-
     def handle_redis(self, socket, address):
 
-        ##BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
+        # BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
         # w=self.t
         # raise RuntimeError("d")
 
-
-        parser = RedisCommandParser(socket)
-        response = RedisResponseWriter(socket)
+        gedis_socket = GedisSocket(socket)
 
         try:
-            self._handle_redis_session(socket, address, parser, response)
+            self._handle_redis_session(gedis_socket, address)
         except ConnectionError as err:
-            self._log_info('connection error: %s'% str(err),context="%s:%s"%address)
-            print("connection error")
+            self._log_info('connection error: %s' % str(err), context="%s:%s" % address)
         finally:
-            parser.on_disconnect()
-            self._log_info('connection closed',context="%s:%s"%address)
+            gedis_socket.on_disconnect()
+            self._log_info('connection closed', context="%s:%s" % address)
 
-    def _handle_redis_session(self, socket, address, parser, response):
+    def _handle_redis_session(self, gedis_socket, address):
         """
         deal with 1 specific session
         :param socket:
@@ -49,100 +225,73 @@ class Handler(JSBASE):
         :param response:
         :return:
         """
-
-        self._log_info("new incoming connection",context="%s:%s"%address)
+        self._log_info("new incoming connection", context="%s:%s" % address)
         while True:
-
-            request = parser.read_request()
-
-            #can have 2 or 3 parts, if 3 then the 3e one is the header
-
-            if not request:  # empty list request
-                # self.response.error('Empty request body .. probably this is a (TCP port) checking query')
-                self._log_warning('wrong formatted request',context="%s:%s"%address)
+            try:
+                request = gedis_socket.read()
+                result = self._handle_request(request, address)
+                gedis_socket.get_writer().write(result)
+            except Exception as e:
+                self._log_error(str(e))
+                gedis_socket.get_writer().error(str(e))
                 return
 
-            #FOR DEBUG PURPOSES
-            # r = self._handle_request(session, request,address)
-            # response.encode(r)
-            # continue
-
-            try:
-                r = self._handle_request(request,address)
-                response.encode(r)
-            except Exception as e:
-                # j.errorhandler.try_except_error_process(e, die=False)
-                j.shell()
-                w
-                self._log_error(msg,context="%s:%s"%address)
-                redis_cmd = request[0].decode("utf-8").lower()
-                #now error in the handling of the request
-                msg = "error: %s: %s"%(redis_cmd,str(e)).split("\n",1)[0]
-                response.error(msg)
-
-    def _handle_request(self, request,address):
+    def _handle_request(self, request, address):
         """
         deal with 1 specific request
-        :param request: 
-        :return: 
+        :param request:
+        :return:
         """
-
-        redis_cmd = request[0].decode("utf-8").lower()
-
-        #process the predefined commands
-        if redis_cmd == "command":
+        # process the predefined commands
+        if request.command == "command":
             return "OK"
-
-        elif redis_cmd == "ping":
+        elif request.command == "ping":
             return "PONG"
+        elif request.command == "auth":
+            dm_id, epoch, signed_message = request[1:]
+            if self.dm_verify(dm_id, epoch, signed_message):
+                self.session.dmid = dm_id
+                self.session.admin = True
+                return True
 
-        elif redis_cmd == "auth":
-            dm_id, epoch, *signed_message = request[1].decode("utf-8").split(",")
-            # Signed message may contains ","
-            signed_message = ",".join(signed_message)
-            return self.dm_verify(dm_id, epoch, signed_message)
+        self._log_debug("command received %s %s %s" %
+                        (request.command.namespace,
+                         request.command.actor,
+                         request.command.command),
+                        context="%s:%s" % address)
 
-        #header is {'content_type':'json', 'response_type':'capnp'} or {} if no header
-        header = self._read_header(request)
-        #content types supported auto,capnp, msgpack,json
-        content_type = header.get('content_type', 'auto').casefold()    #is format of input
-        response_type = header.get('response_type', 'auto').casefold()  #is format of what will be returned
+        # cmd is cmd metadata + cmd.method is what needs to be executed
+        cmd = self._cmd_obj_get(cmd=request.command.command,
+                                namespace=request.command.namespace,
+                                actor=request.command.actor)
 
-        namespace, actor, command = self._command_split(redis_cmd)
-        self._log_debug("command received %s %s %s" % (namespace, actor, command),context="%s:%s"%address)
-
-        #cmd is cmd metadata + cmd.method is what needs to be executed
-        cmd = self._cmd_obj_get(cmd=command, namespace=namespace, actor=actor)
         params_list = []
         params_dict = {}
         if cmd.schema_in:
-            params_dict = self._read_input_args_schema(content_type, request, cmd)
+            params_dict = self._read_input_args_schema(request, cmd)
         else:
-            if len(request) > 1:
-                params_list = request[1:]
+            params_list = request.arguments
 
-            #the params are binary values now, no conversion happened
+        # the params are binary values now, no conversion happened
+        # at this stage the input is in params as a dict
 
-        #at this stage the input is in params as a dict
-
-        #makes sure we understand which schema to use to return result from method
-
+        # makes sure we understand which schema to use to return result from method
         if cmd.schema_out:
             params_dict["schema_out"] = cmd.schema_out
 
-        #now execute the method() of the cmd
+        # now execute the method() of the cmd
         result = None
 
-        print("params cmd", params_list,  params_dict)
-        result = cmd.method(*params_list,**params_dict)
+        self._log_debug("params cmd %s %s" % (params_list, params_dict))
+        result = cmd.method(*params_list, **params_dict)
         if isinstance(result, list):
-            result = [self._result_encode(cmd,response_type,r) for r in result]
+            result = [_result_encode(cmd, request.response_type, r) for r in result]
         else:
-            result = self._result_encode(cmd,response_type,result)
+            result = _result_encode(cmd, request.response_type, result)
 
         return result
 
-    def _read_input_args_schema(self,content_type, request, command):
+    def _read_input_args_schema(self, request, command):
         """
         get the arguments from an input which is a schema
         :param content_type:
@@ -151,37 +300,38 @@ class Handler(JSBASE):
         :return:
         """
 
-        def capnp_decode(request,command,die=True):
+        def capnp_decode(request, command, die=True):
             try:
                 # Try capnp which is combination of msgpack of a list of id/capnpdata
-                id, data = j.data.serializers.msgpack.loads(request[1])
+                id, data = j.data.serializers.msgpack.loads(request.arguments[0])
                 args = command.schema_in.get(capnpbin=data)
                 if id:
                     args.id = id
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError("the content is not valid capnp while you provided content_type=capnp\n%s\n%s"%(e,request[1]))
+                    raise ValueError(
+                        "the content is not valid capnp while you provided content_type=capnp\n%s\n%s" % (e, request.arguments[0]))
                 return None
 
-        def json_decode(request,command,die=True):
+        def json_decode(request, command, die=True):
             try:
-                args = command.schema_in.get(data=j.data.serializers.json.loads(request[1]))
+                args = command.schema_in.get(data=j.data.serializers.json.loads(request.arguments[0]))
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError("the content is not valid json while you provided content_type=json\n%s\n%s"%(str,request[1]))
+                    raise ValueError(
+                        "the content is not valid json while you provided content_type=json\n%s\n%s" % (str, request.arguments[0]))
                 return None
 
-
-        if content_type == 'auto':
-                args = capnp_decode(request=request,command=command,die=False)
-                if args is None:
-                    args = json_decode(request=request,command=command)
-        elif content_type == 'json':
-            args = json_decode(request=request,command=command)
-        elif content_type == 'capnp':
-            args = capnp_decode(request=request,command=command)
+        if request.content_type == 'auto':
+            args = capnp_decode(request=request, command=command, die=False)
+            if args is None:
+                args = json_decode(request=request, command=command)
+        elif request.content_type == 'json':
+            args = json_decode(request=request, command=command)
+        elif request.content_type == 'capnp':
+            args = capnp_decode(request=request, command=command)
         else:
             raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
@@ -200,12 +350,11 @@ class Handler(JSBASE):
         """
         arguments come from self._command_split()
         will do caching of the populated command
-        :param namespace: 
-        :param actor: 
-        :param cmd: 
+        :param namespace:
+        :param actor:
+        :param cmd:
         :return: the cmd object, cmd.method is the method to be executed
         """
-
         key = "%s__%s" % (namespace, actor)
         key_cmd = "%s__%s" % (key, cmd)
 
@@ -239,94 +388,54 @@ class Handler(JSBASE):
             cl = self.actors[key]
             cmd_method = getattr(cl, cmd)
         except Exception as e:
-            raise j.exceptions.Input("Could not execute code of method '%s' in namespace '%s'\n%s" % (key, namespace, e))
+            raise j.exceptions.Input(
+                "Could not execute code of method '%s' in namespace '%s'\n%s" % (key, namespace, e))
 
         cmd_obj.method = cmd_method
         self.cmds[key_cmd] = cmd_obj
 
         return self.cmds[key_cmd]
 
-    def _command_split(self,cmd, actor="system", namespace="system"):
-        """
 
-        :param cmd: command is in form x.x.x split in parts
-        :param actor: is the default actor
-        :param namespace: is the default namespace
-        :return: (namespace, actor, cmd)
-        """
-        cmd_parts = cmd.split(".")
-        if len(cmd_parts) == 3:
-            namespace = cmd_parts[0]
-            actor = cmd_parts[1]
-            if "__" in actor:
-                actor = actor.split("__", 1)[1]
-            cmd = cmd_parts[2]
+def _result_encode(cmd, response_type, item):
 
-        elif len(cmd_parts) == 2:
-            actor = cmd_parts[0]
-            if "__" in actor:
-                actor = actor.split("__", 1)[1]
-            cmd = cmd_parts[1]
-            if actor == "system":
-                namespace = "system"
-        elif len(cmd_parts) == 1:
-            namespace = "system"
-            actor = "system"
-            cmd = cmd_parts[0]
+    if cmd.schema_out is not None:
+        if response_type == 'msgpack':
+            return item._msgpack
+        elif response_type == 'capnp' or response_type == 'auto':
+            return item._data
         else:
-            raise RuntimeError("cmd not properly formatted")
+            raise j.exceptions.Input("cannot find required encoding type for return")
+    else:
 
-        return namespace, actor, cmd
-
-    def _read_header(self,request):
-        # if len(request) < 2:
-        #     raise ValueError("can not handle with request, not enough arguments")
-
-        # If request length is > 2 we will expect a header
-        if len(request) > 2:
-            return j.data.serializers.json.loads(request[2])
-        return {}
-
-    def _result_encode(self,cmd, response_type, item):
-
-        if cmd.schema_out is not None:
-            if response_type == 'msgpack':
-                return item._msgpack
-            elif response_type == 'capnp' or response_type == 'auto':
-                return item._data
+        if isinstance(item, j.data.schema.DataObjBase):
+            if response_type == "json":
+                return item._json
             else:
-                raise j.exceptions.Input("cannot find required encoding type for return")
-        else:
+                return item._data
+        return item
 
-            if isinstance(item,j.data.schema.DataObjBase):
-                if response_type == "json":
-                    return item_json
-                else:
-                    return item._data
-            return item
 
-    def dm_verify(self, dm_id, epoch, signed_message):
-        """
-        retrieve the verify key of the threebot identified by bot_id
-        from tfchain
+def dm_verify(dm_id, epoch, signed_message):
+    """
+    retrieve the verify key of the threebot identified by bot_id
+    from tfchain
 
-        :param dm_id: threebot identification, can be one of the name or the unique integer
-                        of a threebot
-        :type dm_id: string
-        :param epoch: the epoch param that is signed
-        :type epoch: str
-        :param signed_message: the epoch param signed by the private key
-        :type signed_message: str
-        :return: True if the verification succeeded
-        :rtype: bool
-        :raises: PermissionError in case of wrong message
-        """
-        tfchain = j.clients.tfchain.new('3bot', network_type='TEST')
-        record = tfchain.threebot.record_get(dm_id)
-        verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
-        if verify_key.verify(signed_message) != epoch:
-            raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
+    :param dm_id: threebot identification, can be one of the name or the unique integer
+                    of a threebot
+    :type dm_id: string
+    :param epoch: the epoch param that is signed
+    :type epoch: str
+    :param signed_message: the epoch param signed by the private key
+    :type signed_message: str
+    :return: True if the verification succeeded
+    :rtype: bool
+    :raises: PermissionError in case of wrong message
+    """
+    tfchain = j.clients.tfchain.new('3bot', network_type='TEST')
+    record = tfchain.threebot.record_get(dm_id)
+    verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
+    if verify_key.verify(signed_message) != epoch:
+        raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
 
-        self.session.dmid = dm_id
-        self.session.admin = True
-        return True
+    return True
