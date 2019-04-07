@@ -1,3 +1,3 @@
 <b>Nodes List</b>
-{% for node in nodes %}<strong>{{node["node_id"]}}</strong> : <i>{{node["location"]["continent"]}} > {{node["location"]["country"]}} > {{node["location"]["city"]}}</i>
+{% for node in nodes %}<strong>{{node.node_zos_id}}</strong> : <i>{{node.location.continent}} > {{node.location.country}} > {{node.location.city}}</i>
 {% endfor %}

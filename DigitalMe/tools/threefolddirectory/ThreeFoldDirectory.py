@@ -55,7 +55,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         for farmer in farmers:
             if not farmer.get("name"):
                 continue
-            obj = self.farmer_get(farmer["name"])
+            obj = self.farmers.get(name=farmer["name"])
             for wallet_addr in farmer['wallet_addresses']:
                 if wallet_addr not in obj.wallets:
                     obj.wallets.append(wallet_addr)
@@ -109,14 +109,15 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
 
     def tfdir_scan(self, reset=False):
         for node in j.clients.threefold_directory.capacity:
-            data = self.nodes.findData(node_zos_id=node["node_id"])
-            if len(data) > 1:
-                raise RuntimeError("Found more than one node with the same node_id : {}".format(node["node_id"]))
-            elif len(data) == 0:
-                name = "tf_{}".format(node["node_id"])
-                o = self.nodes.new(name=name, node_zos_id=node["node_id"])
-                o.from_dir(node)
+            o = self.nodes.get(name="tf_{}".format(node["node_id"]))
+            o.from_dir(node)
+            o.save()
 
+    def get_farmer_nodes(self, farmer_id):
+        if not self.farmers.find(iyo_org=farmer_id):
+            return []
+        else:
+            return [node for node in self.nodes.find() if node.farmer_id == farmer_id]
     def scan(self):
         '''
         kosmos 'j.tools.threefold_directory.scan()'

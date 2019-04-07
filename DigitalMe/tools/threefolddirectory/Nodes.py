@@ -40,7 +40,7 @@ class Node(j.application.JSBaseConfigClass):
         
         error = ""                      #there is an error on this node
         
-        farmer_id = (S)
+        farmer_id* = (S)
         farmer = false (B)
         update = (D)
         
