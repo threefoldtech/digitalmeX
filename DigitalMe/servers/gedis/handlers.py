@@ -83,15 +83,11 @@ class Request:
     for easy access of the different part of the request
     """
 
-    def __init__(self, socket):
-        self._socket = socket
-        self._parser = RedisCommandParser(socket)
-        self._request_ = self._parser.read_request()
+    def __init__(self, request):
+        self._request_ = request
 
     @property
     def _request(self):
-        if not self._request_:
-            raise ValueError("wrong formatted request")
         return self._request_
 
     @property
@@ -166,7 +162,8 @@ class GedisSocket:
 
     def __init__(self, socket):
         self._socket = socket
-        self._parser = None
+        self._parser = RedisCommandParser(socket)
+        self._writer = ResponseWriter(self._socket)
 
     def read(self):
         """
@@ -175,13 +172,14 @@ class GedisSocket:
         :return: return a Request
         :rtype: tuple
         """
+        raw_request = self._parser.read_request()
+        if not raw_request:
+            raise ValueError("malformatted request")
+        return Request(raw_request)
 
-        request = Request(self._socket)
-        self._parser = request._parser
-        return request
-
-    def get_writer(self):
-        return ResponseWriter(self._socket)
+    @property
+    def writer(self):
+        return self._writer
 
     def on_disconnect(self):
         """
@@ -189,6 +187,10 @@ class GedisSocket:
         """
         if self._parser:
             self._parser.on_disconnect()
+
+    @property
+    def closed(self):
+        return self._socket.closed
 
 
 class Handler(JSBASE):
@@ -205,13 +207,10 @@ class Handler(JSBASE):
         # BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
         # w=self.t
         # raise RuntimeError("d")
-
         gedis_socket = GedisSocket(socket)
 
         try:
             self._handle_redis_session(gedis_socket, address)
-        except ConnectionError as err:
-            self._log_info('connection error: %s' % str(err), context="%s:%s" % address)
         finally:
             gedis_socket.on_disconnect()
             self._log_info('connection closed', context="%s:%s" % address)
@@ -226,15 +225,20 @@ class Handler(JSBASE):
         :return:
         """
         self._log_info("new incoming connection", context="%s:%s" % address)
+
         while True:
             try:
                 request = gedis_socket.read()
+                self._log_info("request received: %s" % request.command)
                 result = self._handle_request(request, address)
-                gedis_socket.get_writer().write(result)
-            except Exception as e:
-                self._log_error(str(e))
-                gedis_socket.get_writer().error(str(e))
+                gedis_socket.writer.write(result)
+            except ConnectionError as err:
+                self._log_info('connection error: %s' % str(err), context="%s:%s" % address)
                 return
+            except Exception as e:
+                self._log_error(str(e), context="%s:%s" % address)
+                if not gedis_socket.closed:
+                    gedis_socket.writer.error(str(e))
 
     def _handle_request(self, request, address):
         """
