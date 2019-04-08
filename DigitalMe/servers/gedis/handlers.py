@@ -13,10 +13,9 @@ class Session():
         self.admin = False
 
 
-def _command_split(cmd, actor="system", namespace="system"):
+def _command_split(cmd, namespace="system"):
     """
     :param cmd: command is in form x.x.x split in parts
-    :param actor: is the default actor
     :param namespace: is the default namespace
     :return: (namespace, actor, cmd)
     """
@@ -95,7 +94,7 @@ class Request:
         """
         return a Command object
         """
-        return Command(self._request[0].decode())
+        return Command(self._request[0].decode().lower())
 
     @property
     def arguments(self):
