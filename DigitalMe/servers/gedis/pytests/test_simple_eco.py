@@ -78,6 +78,9 @@ class TestSimpleEcho:
         with pytest.raises(redis.exceptions.ResponseError):
             client.actors.actor.raise_error()
 
+        # ensure the connection is still valid after an exception
+        assert client.ping()
+
 
 def wait_start_server(addr, port):
     j.tools.timer.execute_until(
