@@ -384,7 +384,7 @@ class Handler(JSBASE):
         # check cmd exists in the metadata
         if cmd not in meta.cmds:
             raise j.exceptions.Input("Cannot find method with name:%s in namespace:%s" % (cmd, namespace))
-
+    
         cmd_obj = meta.cmds[cmd]
 
         try:
@@ -406,7 +406,7 @@ def _result_encode(cmd, response_type, item):
         if response_type == 'msgpack':
             return item._msgpack
         elif response_type == 'capnp' or response_type == 'auto':
-            return item._data
+            return item
         else:
             raise j.exceptions.Input("cannot find required encoding type for return")
     else:
