@@ -8,6 +8,8 @@ Some wikis can be found at [threefoldfoundation](https://github.com/threefoldfou
 * [Foundation](https://github.com/threefoldfoundation/info_foundation)
 * [Tokens](https://github.com/threefoldfoundation/info_tokens)
 
+All wikis are now hosted at [https://wiki.grid.tf/](https://wiki.grid.tf/), for example foundation wiki can be found at [https://wiki.grid.tf/wiki/foundation](https://wiki.grid.tf/wiki/foundation).
+
 
 ![wiki.png](images/wiki.png)
 

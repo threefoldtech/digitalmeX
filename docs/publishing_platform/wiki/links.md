@@ -69,7 +69,7 @@ Will be replaced by
 
 
 ```
-[document][https://github.com/threefoldfoundation/info_tokens/issues/122]
+[Issue][https://github.com/threefoldfoundation/info_tokens/issues/122]
 ```
 
 
