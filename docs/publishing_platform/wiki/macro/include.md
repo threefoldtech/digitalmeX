@@ -91,7 +91,7 @@ This is a new para
 #### Modify headers
 
 ```
-!!!include("examples/document.md", header_level_modify=2)
+!!!include("examples/document.md", header_levels_modify=2)
 ```
 
 The content included will be the whole document, with `## head` modified to `#### head`:
