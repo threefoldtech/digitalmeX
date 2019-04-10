@@ -1,4 +1,4 @@
-# Include
+# Dot
 
 This macro can be used to generate a graph image directly from [DOT language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)).
 
