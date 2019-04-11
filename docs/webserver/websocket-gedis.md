@@ -18,11 +18,11 @@ class hello(j.application.JSBaseClass):
 ```python
 server = j.servers.gedis.configure(name='test', port=8888, host='0.0.0.0')
 # load your hello actor
-server.actor_add('/tmp/hello_actor.py')
+server.actor_add('/tmp/hello.py')
 server.start()
 ```
 
-3 - Configure lapis to be able to connect to gedis server by editing `config.moon` in our quick running lapis repository
+3 - Go to our quick running lapis repository [lapis-wiki] to configure lapis to be able to connect to gedis server by editing `config.moon` file. 
 ```
 config = require "lapis.config"
 
@@ -31,7 +31,19 @@ config "development", ->
   gedis_host '0.0.0.0'
 ```
 
-4 - Create your html file that will include [Gedis client](https://raw.githubusercontent.com/threefoldtech/jumpscale_weblibs/master/static/gedis/gedis_client.js)
+4 - compile your moon scripts into lua files and start your server
+```bash
+cd /sandbox/code/github/threefoldfoundation/lapis-wiki/ && moonc . && lapis server
+``` 
+
+5 - Make sure to get static files from jumpscale_weblibs repo
+```python
+url = "https://github.com/threefoldtech/jumpscale_weblibs"
+weblibs_path = j.clients.git.getContentPathFromURLorPath(url)
+j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path), overwriteTarget=False)
+```
+
+6 - Create your html file that will include [Gedis client](https://raw.githubusercontent.com/threefoldtech/jumpscale_weblibs/master/static/gedis/gedis_client.js)
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -61,9 +73,4 @@ config "development", ->
 </html>
 ```
 
-5 - compile your moon scripts into lua files and start your server
-```bash
-cd /sandbox/code/github/threefoldfoundation/lapis-wiki/ && moonc . && lapis server
-``` 
-
-6 - Try to open this html file using the file system or served from any web server
+7 - Try to open this html file using the file system or served from any web server
