@@ -9,7 +9,7 @@ node1.container.create(flist='https://hub.grid.tf/three_bot_tft_1/3bot_autostart
 nics=[{'type':'default','id':'None','hwaddr':'','name':'nat0'},{"name": "zerotier", "type": "zerotier", "id": "d3ecf5726d13091a"},{"name": "zerotier_ca", "type": "zerotier", "id": "c7c8172af1f387a6"}],
 name='3bot_deploy',
 hostname='3bot_deploy',
-env='IP_NODE':'10.102.223.147','WEBGATEWAY_SERV_NAME':'wg'})
+env='IP_GATEWAY':'10.243.52.81','PORT_GATEWAY':'6600','IP_NODE':'10.102.223.147','WEBGATEWAY_SERV_NAME':'wg'})
 ```
 *flist* : The flist that contains the image of the 3bot that the container will run based on. In the case of deploy website 3bot: https://hub.grid.tf/three_bot_tft_1/3bot_autostart_development.flist
 
@@ -21,6 +21,8 @@ env='IP_NODE':'10.102.223.147','WEBGATEWAY_SERV_NAME':'wg'})
 *hostname* : hostname of the container to be created
 
 *env* : environment variables that will be passed to the 3bot container created
+- *IP_GATEWAY*: IP of the web gateway to register the container with the website on
+- *PORT_GATEWAY*: Port to be used to contact the webgateway robot
 - *IP_NODE*: IP of the node to create the container on 
 - *WEBGATEWAY_SERV_NAME*: name of the webgateway's service name (to register the domain name on that webgateway)
 

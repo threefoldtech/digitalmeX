@@ -19,7 +19,7 @@ class hello(j.application.JSBaseClass):
 ```python
 server = j.servers.gedis.configure(name='test', port=8888, host='0.0.0.0')
 # load your hello actor
-server.actor_add('/tmp/hello_actor.py')
+server.actor_add('/tmp/hello.py')
 server.start()
 ```
 

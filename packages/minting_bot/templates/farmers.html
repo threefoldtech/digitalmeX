@@ -1,4 +1,4 @@
 <b>Farmers List</b>
-<Strong>Farmer name : farmer ID</Strong>
-{% for farmer in farmers %}<strong>{{farmer["name"]}}</strong> : <i>{{farmer["iyo_organization"]}}</i>
+<strong>Farmer name : farmer ID</strong>
+{% for farmer in farmers %}<strong>{{farmer.name}}</strong> : <i>{{farmer.iyo_org}}</i>
 {% endfor %}
