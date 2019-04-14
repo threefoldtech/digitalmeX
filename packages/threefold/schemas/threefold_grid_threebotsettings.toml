@@ -1,0 +1,17 @@
+
+
+@url = threefold.grid.threebotsettings
+doubleName* = ""
+totp = ""
+firstName* = ""
+lastName = ""                
+email* = ""         
+addressStreet = ""  
+addressNumber = ""
+addressZipcode = ""
+addressCity = ""                     
+addressCountry* = "" 
+telephone =
+
+
+
