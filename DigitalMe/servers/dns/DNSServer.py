@@ -7,8 +7,9 @@ import dnslib
 # from gevent.pool import Pool
 from gevent.server import DatagramServer
 from gevent import monkey
-monkey.patch_all(subprocess=False)
+# monkey.patch_all(subprocess=False)
 # from .protocol import CommandParser, ResponseWriter
+from .DNSItem import DNSItem
 
 JSBASE = j.application.JSBaseClass
 
@@ -44,6 +45,7 @@ class DNSServer(DatagramServer, JSBASE):
         self.rdatatypes["AAAA"] = dnslib.AAAA
         self.rdatatypes["NS"] = dnslib.NS
         self.rdatatypes["MX"] = dnslib.MX
+        self.resolver = DNSItem()
         
         # self.db = j.clients.redis.core_get()
 
@@ -74,22 +76,26 @@ class DNSServer(DatagramServer, JSBASE):
             name =  str(qname).rstrip(".")
             if name.split(".")[-1].upper() in j.servers.dns.dns_extensions:
                 res = []
-                try:
-                    resp = j.tools.dnstools.default.resolver.query(name,type)
-                except Exception as e:
-                    if "NoAnswer" in str(e):
-                        self._log_warning("did not find:%s"%qname)
+                local_resolve =  self.resolver.get_item(name, type)
+                if local_resolve:
+                    res.append(local_resolve.ip_address)
+                else:   
+                    try:
+                        resp = j.tools.dnstools.default.resolver.query(name,type)
+                    except Exception as e:
+                        if "NoAnswer" in str(e):
+                            self._log_warning("did not find:%s"%qname)
+                            return []
+                        self._log_error("could not resolve:%s (%s)"%(e,qname))
                         return []
-                    self._log_error("could not resolve:%s (%s)"%(e,qname))
-                    return []
-                for rr in resp:
-                    if type == "A":
-                        res.append( rr.address)
-                    elif type == "AAAA":
-                        self._log_debug("AAAA")
-                        res.append( rr.address)
-                    else:
-                        res.append(str(rr.target))
+                    for rr in resp:
+                        if type == "A":
+                            res.append( rr.address)
+                        elif type == "AAAA":
+                            self._log_debug("AAAA")
+                            res.append( rr.address)
+                        else:
+                            res.append(str(rr.target))
 
                 return res
             else:
