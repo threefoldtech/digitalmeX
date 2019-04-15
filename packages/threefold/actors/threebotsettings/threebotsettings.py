@@ -3,18 +3,18 @@ import onetimepass
 
 JSBASE = j.application.JSBaseClass
 
+
 class threebotsettings(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
-
-        j.tools.threefold_threebot.zdb = j.clients.zdb.testdb_server_start_client_admin_get(reset=False, secret="123456")
         self._bcdb = j.data.bcdb.bcdb_instances["default"]
         self._threebotsettings_model = None
 
     @property
     def threebotsettings_model(self):
         if not self._threebotsettings_model:
-            self._threebotsettings_model = self._bcdb.model_get('threefold.grid.threebotsettings')
+            self._threebotsettings_model = self._bcdb.model_get(
+                'threefold.grid.threebotsettings')
         return self._threebotsettings_model
 
     def get_otp(self, doubleName):
@@ -58,6 +58,16 @@ class threebotsettings(JSBASE):
         """
         ```in
         doubleName = (S)
+        totp = ""
+        firstName* = ""
+        lastName = ""                
+        email* = ""         
+        addressStreet = ""  
+        addressNumber = ""
+        addressZipcode = ""
+        addressCity = ""                     
+        addressCountry* = "" 
+        telephone =
         ```
         """
         bot_model = None
@@ -66,7 +76,7 @@ class threebotsettings(JSBASE):
             if bot.doubleName == doubleName:
                 bot_model = bot
                 break
-        
+
         if bot_model and onetimepass.valid_totp(totp, bot_model.totp_secret):
             bot_model.firstName = firstName
             bot_model.lastName = lastName
