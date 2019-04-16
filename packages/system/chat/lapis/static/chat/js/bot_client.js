@@ -44,6 +44,16 @@ var intContentGenerate = function (message, kwargs){
     </div>`
 }
 
+var captchaContentGenerate = function (message, captcha, label, kwargs){
+    return `
+    <h4>${message}</h4>
+    <img src="data:image/png;base64,${captcha}"/>
+    <div class="form-group">
+        <input type="text" placeholder="Captcha" class="form-control" id="value">
+    </div>
+    <label class="captcha-error">${label}</label>`
+}
+
 var mdContentGenerate = function (message, kwargs){
     let converter = new showdown.Converter({tables: true, tablesHeaderId: "table"});
     const htmlContents = converter.makeHtml(message);
@@ -152,6 +162,9 @@ var generateSlide = function(res) {
         case "int_ask":
             contents = intContentGenerate(res['msg'], res['kwargs']);
             break;
+        case "captcha_ask":
+            contents = captchaContentGenerate(res['msg'], res['captcha'], res['label'], res['kwargs']);
+            break;
         case "md_show":
             contents = mdContentGenerate(res['msg'], res['kwargs']);
             break;
@@ -179,7 +192,7 @@ var generateSlide = function(res) {
 	$(".btn-submit").on("click", function(ev){
         ev.preventDefault();
 		let value="";
-		if (["string_ask", "int_ask", "text_ask", "password_ask", "drop_down_choice"].includes(res['cat'])) {
+		if (["string_ask", "int_ask", "text_ask", "password_ask", "drop_down_choice", "captcha_ask"].includes(res['cat'])) {
 			value = $("#value").val();
         } else if (res['cat'] === "single_choice"){
             value = $("input[name='value']:checked").val();
