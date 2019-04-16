@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-STATIC_DIR = '/tmp/'
+STATIC_DIR = '/sandbox/var/
 
 
 class gdrive(j.application.JSBaseClass):
@@ -40,10 +40,12 @@ class gdrive(j.application.JSBaseClass):
         # TODO: FIX CHECKS
         assert doctype in doctypes_map
         service_name = doctypes_map[doctype]
-        if doctype=="doc":
+        if doctype == "doc":
             gfile = cl.getFile(guid, service_name=service_name, service_version="v3")
-
             gfile.exportPDF(self, path=j.sal.fs.joinPaths(STATIC_DIR, "gdrive", doctype, "{guid}.pdf".format(guid)))
         elif doctype == "slide":
-            pass
+            cl.exportSlides(guid, "/tmp/exportedslides/")
+            # rename all the slides in exportedslides/$prsentation_name/
+
+
 
