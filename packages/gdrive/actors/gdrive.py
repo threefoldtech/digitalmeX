@@ -5,11 +5,12 @@ STATIC_DIR = '/sandbox/var/
 
 class gdrive(j.application.JSBaseClass):
 
-    def file_get(self, doctype, guid, schema_out):
+    def file_get(self, doctype, guid1, guid2, schema_out):
         """
         ```in
         doctype = "" (S)
-        guid = (S)
+        guid1 = (S)
+        guid2 = "" (S)
         ```
         ```out
         res = (LS)
@@ -41,10 +42,10 @@ class gdrive(j.application.JSBaseClass):
         assert doctype in doctypes_map
         service_name = doctypes_map[doctype]
         if doctype == "doc":
-            gfile = cl.getFile(guid, service_name=service_name, service_version="v3")
-            gfile.exportPDF(self, path=j.sal.fs.joinPaths(STATIC_DIR, "gdrive", doctype, "{guid}.pdf".format(guid)))
+            gfile = cl.getFile(guid1, service_name=service_name, service_version="v3")
+            gfile.exportPDF(self, path=j.sal.fs.joinPaths(STATIC_DIR, "gdrive", doctype, "{guid}.pdf".format(guid1)))
         elif doctype == "slide":
-            cl.exportSlides(guid, "/tmp/exportedslides/")
+            cl.exportSlides(guid1, "/tmp/exportedslides/")
             # rename all the slides in exportedslides/$prsentation_name/
 
 
