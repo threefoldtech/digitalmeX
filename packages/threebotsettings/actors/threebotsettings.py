@@ -18,22 +18,6 @@ class threebotsettings(JSBASE):
         self._bcdb.models_add(
             "/sandbox/code/github/threefoldtech/digitalmeX/packages/threefold/schemas")
 
-    # def connect(self, zdb_host, zdb_port, zdb_ns, schema_out):
-    #     """
-    #     ```in
-    #     zdb_host = "0.0.0.0" (S)
-    #     zdb_port = "9900" (S)
-    #     zdb_ns = "threebotsettings" (S)
-    #     ```
-    #     """
-
-    #     zdb_cl = j.clients.zdb.client_get(
-    #         nsname=zdb_ns, addr=zdb_host, port=zdb_port)
-    #     self._bcdb = j.data.bcdb.new(
-    #         zdbclient=zdb_cl, name="threebotsettings_bcdb")
-    #     self._bcdb.model_add(
-    #         "/sandbox/code/github/threefoldtech/digitalmeX/packages/threefold/schemas/threefold_grid_threebotsettings.toml")
-
     @property
     def threebotsettings_model(self):
         if not self._threebotsettings_model:
@@ -83,15 +67,12 @@ class threebotsettings(JSBASE):
                 out = bot
                 break
 
-        # TODO: make sure u don't return the totp here
-        out.totp_secret = ""
         return out._data
 
-    def update_threebotsettings(self, doubleName, totp, firstName, lastName, email, addressStreet, addressNumber, addressZipcode, addressCity, addressCountry, telephone):
+    def update_threebotsettings(self, doubleName, firstName, lastName, email, addressStreet, addressNumber, addressZipcode, addressCity, addressCountry, telephone):
         """
         ```in
         doubleName = (S)
-        totp = ""
         firstName* = ""
         lastName = ""                
         email* = ""         
@@ -110,7 +91,9 @@ class threebotsettings(JSBASE):
                 bot_model = bot
                 break
 
-        if bot_model and onetimepass.valid_totp(totp, bot_model.totp_secret):
+        # TODO: code to verify the user.
+        ## Probably should be implemented in openresty module supports 3botlogin flow.
+        if bot_model:
             bot_model.firstName = firstName
             bot_model.lastName = lastName
             bot_model.email = email
