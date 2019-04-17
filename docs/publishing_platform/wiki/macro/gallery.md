@@ -14,7 +14,7 @@ image1 = "https://link/to/image1.png"
 
 ## Examples
 
-####A gallery with three images
+#### A gallery with three images
 
 ````
 ```
