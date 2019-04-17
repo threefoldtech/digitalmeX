@@ -78,7 +78,7 @@ class DNSServer(DatagramServer, JSBASE):
                 res = []
                 local_resolve =  self.resolver.get_item(name, type)
                 if local_resolve:
-                    res.append(local_resolve.ip_address)
+                    res.append(local_resolve.value)
                 else:   
                     try:
                         resp = j.tools.dnstools.default.resolver.query(name,type)

@@ -9,9 +9,10 @@ class DNSItem():
         @url = jumpscale.dnsItem.1
         name* = ""
         domain = "" (S)
-        dns_type = "A" (S)
-        ip_address = "127.0.0.1" (ipaddr)
+        record_type = "A,AAAA,CNAME,TXT,NS,MX,SRV,SOA" (E)
+        value = "127.0.0.1" (S)
         ttl = 100 (I)
+        priority = 10 (I)
         """
         zdb_admin = j.clients.zdb.client_admin_get(port=9901)
         zdb = zdb_admin.namespace_new("dns")
@@ -21,38 +22,41 @@ class DNSItem():
         self.model = bcdb.model_get_from_schema(schema)
 
 
-    def create_item(self, name="", domain="", dns_type='A', ip_address="127.0.0.1" , ttl=100):
+    def create_item(self, name="", domain="", record_type='A', value="127.0.0.1" , ttl=100, priority=10):
         '''Create a new dns object and save to db using bcdb
 
         :param domain: domain name of entry
         :type domain: str
-        :param dns_type: dns type
-        :type dns_type: str
-        :param ip_address: IP address of entry
-        :type ip_address: str
+        :param record_type: dns type
+        :type record_type: str
+        :param value: IP address of entry
+        :type value: str
         :param ttl: time to live
         :type ttl: int
+        :param priority: (optional) priority when record type is MX or SRV
+        :type priority: int
         '''
         # Create a new object from the model
         obj = self.model.new()
         obj.domain = domain or domain
-        obj.dns_type = dns_type or obj.dns_type
-        obj.ip_address = ip_address or obj.ip_address
+        obj.record_type = record_type or obj.record_type
+        obj.value = value or obj.value
         obj.ttl = ttl or obj.ttl
-        obj.name = "%s_%s" % (obj.domain,obj.dns_type)
+        obj.priority = priority or obj.priority
+        obj.name = "%s_%s" % (obj.domain,obj.record_type)
         obj.save()
 
-    def get_item(self, domain, dns_type="A"):
-        '''Get dns object from db using bcdb with query name as (domain)_(dns_type)
+    def get_item(self, domain, record_type="A"):
+        '''Get dns object from db using bcdb with query name as (domain)_(record_type)
 
         :param domain: domain name of entry
         :type domain: str
-        :param dns_type: dns type
-        :type dns_type: str
+        :param record_type: dns type
+        :type record_type: str
         :return: object model found in db
         :rtype: 
  
         '''
-        name = "%s_%s" % (domain, dns_type)
+        name = "%s_%s" % (domain, record_type)
         obj = self.model.get_by_name(name)
         return obj[0] if obj else None
