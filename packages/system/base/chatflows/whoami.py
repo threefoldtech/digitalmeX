@@ -7,7 +7,6 @@ def chat(bot):
     to call http://localhost:5050/chat/session/whoami
     """
 
-    res = {}
     name = bot.string_ask("What is your name?")
     age = bot.int_ask("What is your age? ")
     favorite_langs = bot.multi_choice(
