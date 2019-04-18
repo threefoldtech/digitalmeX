@@ -11,22 +11,15 @@ class extends lapis.Application
   @enable "etlua"
 
   "/:type/:guid1(/:guid2)": =>
-    print "type>>>"
-    print @params.type
-    print "type>>>"
-    print @params.guid1
-    print "type>>>"
-    print @params.guid2
-    ngx.req.read_body()
-    data = ngx.req.get_body_data()
+
+    data = {
+        "doctype": @params.type,
+        "guid1": @params.guid1,
+        "guid2": @params.guid2,
+    }
     client = redis.connect(config.gedis_host, config.gedis_port)
     
     header = {"response_type": "msgpack"}
     resp = redis.command("default.gdrive.file_get")(client, util.to_json(data), util.to_json(header))
-    decoded = mp.unpack(resp)
-    
-    response = {
-      "json": decoded,
-      "status": 201
-    }
-    return response
+    decoded = msgpack.unpack(resp)
+    redirect_to: decoded["res"]
