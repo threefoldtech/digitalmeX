@@ -22,4 +22,6 @@ header_level_modify = 1
 
 ### List of available macros
 * [include](include.md): to include content from other documents or files.
-* [dot](dot.md) to convert [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) graphs to images directly from blocks.
+* [dot](dot.md): to convert [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) graphs to images directly from blocks.
+* [team](team.md): for team member listing (with data from another repository).
+* [gallery](gallery.md): to create a gallery from images list
