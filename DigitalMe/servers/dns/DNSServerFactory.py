@@ -18,8 +18,8 @@ class DNSServerFactory(JSBASE):
         JSBASE.__init__(self)
         self._extensions = {}
 
-    def get(self,port=53):
-        return DNSServer(port=port)
+    def get(self,port=53, bcdb=None):
+        return DNSServer(port=port, bcdb=bcdb)
 
     def start(self,port=53,background=False):
         """
