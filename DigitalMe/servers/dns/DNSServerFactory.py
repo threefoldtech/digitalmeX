@@ -18,8 +18,8 @@ class DNSServerFactory(JSBASE):
         JSBASE.__init__(self)
         self._extensions = {}
 
-    def get(self,port=53):
-        return DNSServer(port=port)
+    def get(self,port=53, bcdb=None):
+        return DNSServer(port=port, bcdb=bcdb)
 
     def start(self,port=53,background=False):
         """
@@ -31,12 +31,12 @@ class DNSServerFactory(JSBASE):
                 cmd = "sudo js_shell 'j.servers.dns.start(background=False,port=%s)'"%port
             else:
                 cmd = "js_shell 'j.servers.dns.start(background=False,port=%s)'"%port
-            j.tools.tmux.execute(cmd, session='main', window='dnsserver',pane='main', session_reset=False, window_reset=True)
+            j.tools.tmux.execute(cmd, window='dnsserver',pane='main', reset=False)
             self._log_info("waiting for uidserver to start on port %s"%port)
             res = j.sal.nettools.waitConnectionTest("localhost",port)
         else:
             s = self.get(port=port)
-            s.start()
+            s.serve_forever()
 
     
     @property

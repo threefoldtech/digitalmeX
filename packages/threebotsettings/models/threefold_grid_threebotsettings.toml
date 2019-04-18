@@ -2,7 +2,6 @@
 
 @url = threefold.grid.threebotsettings
 doubleName* = ""
-totp_secret = ""
 firstName* = ""
 lastName = ""                
 email* = ""         

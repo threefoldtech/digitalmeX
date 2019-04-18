@@ -1,5 +1,7 @@
+import base64
 import sys
 import uuid
+from captcha.image import ImageCaptcha
 from importlib import import_module
 
 import gevent
@@ -152,6 +154,25 @@ class GedisChatBotSession(JSBASE):
             "kwargs": kwargs
         })
         return self.q_in.get()
+
+    def captcha_ask(self, error=False, **kwargs):
+        """
+        helper method to generate a captcha and verify that the user entered the right answer.
+        :param error: if True indicates that the previous captcha attempt failed
+        :return: a bool indicating if the user entered the right answer or not
+        """
+        image = ImageCaptcha()
+        captcha = j.data.idgenerator.generateXCharID(4)
+        self._log_info("generated captcha:%s" % captcha) # this log is for development purposes so we can use the redis client
+        data = image.generate(captcha)
+        self.q_out.put({
+            "cat": "captcha_ask",
+            "captcha": base64.b64encode(data.read()).decode(),
+            "msg": "Are you human?",
+            "label": "Please enter a valid captcha" if error else "",
+            "kwargs": kwargs
+        })
+        return self.q_in.get() == captcha
 
     def md_show(self, msg, **kwargs):
         """

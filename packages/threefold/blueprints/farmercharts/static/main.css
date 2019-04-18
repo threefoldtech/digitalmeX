@@ -1,6 +1,0 @@
-.node-item {
-    cursor: pointer;
-}
-.node-item:hover {
-   background-color: rgba(0, 0, 0, 0.15) !important;
-}

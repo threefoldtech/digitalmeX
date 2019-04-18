@@ -32,7 +32,6 @@ class gdrive(j.application.JSBaseClass):
             'doc': 'drive',
             'slide': 'slides',
         }
-
         cl = j.clients.gdrive.main
 
         if not doctype in doctypes_map:
@@ -40,6 +39,7 @@ class gdrive(j.application.JSBaseClass):
 
         service_name = doctypes_map[doctype]
         if doctype == "doc":
+
             path = j.sal.fs.joinPaths(STATIC_DIR, doctype, "{}.pdf".format(guid1))
             cl.exportFile(guid1, destpath=path, service_name=service_name, service_version="v3")
 

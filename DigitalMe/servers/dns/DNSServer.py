@@ -1,14 +1,8 @@
-
 from Jumpscale import j
-import signal
 import dnslib
 
-# import gevent.signal
-# from gevent.pool import Pool
 from gevent.server import DatagramServer
-from gevent import monkey
-monkey.patch_all(subprocess=False)
-# from .protocol import CommandParser, ResponseWriter
+from .DNSResolver import DNSResolver
 
 JSBASE = j.application.JSBaseClass
 
@@ -28,7 +22,7 @@ soaexample = dnslib.SOA(
 
 class DNSServer(DatagramServer, JSBASE):
 
-    def __init__(self,port=53):
+    def __init__(self, port=53, bcdb=None):
         JSBASE.__init__(self)
         DatagramServer.__init__(self,":%s"%port,handle=self.handle)
         self.TTL = 60 * 5
@@ -44,7 +38,7 @@ class DNSServer(DatagramServer, JSBASE):
         self.rdatatypes["AAAA"] = dnslib.AAAA
         self.rdatatypes["NS"] = dnslib.NS
         self.rdatatypes["MX"] = dnslib.MX
-        
+        self.resolver = DNSResolver(bcdb)
         # self.db = j.clients.redis.core_get()
 
     # def start(self):
@@ -74,22 +68,26 @@ class DNSServer(DatagramServer, JSBASE):
             name =  str(qname).rstrip(".")
             if name.split(".")[-1].upper() in j.servers.dns.dns_extensions:
                 res = []
-                try:
-                    resp = j.tools.dnstools.default.resolver.query(name,type)
-                except Exception as e:
-                    if "NoAnswer" in str(e):
-                        self._log_warning("did not find:%s"%qname)
+                local_resolve =  self.resolver.get_item(name, type)
+                if local_resolve:
+                    res.append(local_resolve.value)
+                else:   
+                    try:
+                        resp = j.tools.dnstools.default.resolver.query(name,type)
+                    except Exception as e:
+                        if "NoAnswer" in str(e):
+                            self._log_warning("did not find:%s"%qname)
+                            return []
+                        self._log_error("could not resolve:%s (%s)"%(e,qname))
                         return []
-                    self._log_error("could not resolve:%s (%s)"%(e,qname))
-                    return []
-                for rr in resp:
-                    if type == "A":
-                        res.append( rr.address)
-                    elif type == "AAAA":
-                        self._log_debug("AAAA")
-                        res.append( rr.address)
-                    else:
-                        res.append(str(rr.target))
+                    for rr in resp:
+                        if type == "A":
+                            res.append( rr.address)
+                        elif type == "AAAA":
+                            self._log_debug("AAAA")
+                            res.append( rr.address)
+                        else:
+                            res.append(str(rr.target))
 
                 return res
             else:
@@ -100,7 +98,7 @@ class DNSServer(DatagramServer, JSBASE):
                 #TODO: need to get DNS records from a source
         
         res = self._cache.get(key="resolve_%s_%s"%(qname,type),method=do,expire=600, qname=qname,type=type)
-        self._cache.reset() #basically don't use cache, just for debugging later should disable this line
+        #self._cache.reset() #basically don't use cache, just for debugging later should disable this line
         return res
 
     def dns_response(self,data):
