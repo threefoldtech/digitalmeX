@@ -10,17 +10,16 @@ import capture_errors_json, yield_error, assert_error from require "lapis.applic
 class extends lapis.Application
   @enable "etlua"
 
-  "/gdrive": =>
-    ngx.req.read_body()
-    data = ngx.req.get_body_data()
-    client = redis.connect(config.gedis_host, config.gedis_port)
+  "/:type/:guid1(/:guid2)": =>
 
+    data = {
+        "doctype": @params.type,
+        "guid1": @params.guid1,
+        "guid2": @params.guid2,
+    }
+    client = redis.connect(config.gedis_host, config.gedis_port)
+    
     header = {"response_type": "msgpack"}
     resp = redis.command("default.gdrive.file_get")(client, util.to_json(data), util.to_json(header))
-    decoded = mp.unpack(resp)
-
-    response = {
-      "json": decoded,
-      "status": 201
-    }
-    return response
+    decoded = msgpack.unpack(resp)
+    redirect_to: decoded["res"]
