@@ -19,7 +19,7 @@ class DNSResolver:
         schema = j.data.schema.get(schema_text)
         self.model = bcdb.model_get_from_schema(schema)
 
-    def create_item(self, name="", domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
+    def create_item(self, domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
         '''Create a new dns object and save to db using bcdb
 
         :param domain: domain name of entry
@@ -34,13 +34,18 @@ class DNSResolver:
         :type priority: int
         '''
         # Create a new object from the model
-        obj = self.model.new()
-        obj.domain = domain or domain
-        obj.record_type = record_type or obj.record_type
-        obj.value = value or obj.value
-        obj.ttl = ttl or obj.ttl
-        obj.priority = priority or obj.priority
-        obj.name = "%s_%s" % (obj.domain, obj.record_type)
+        name = "%s_%s" % (domain, record_type)
+        obj = self.model.get_by_name(name)
+        if obj:
+            obj = obj[0]
+        else:
+            obj = self.model.new()
+        obj.domain = domain
+        obj.record_type = record_type
+        obj.value = value
+        obj.ttl = ttl
+        obj.priority = priority
+        obj.name = name
         obj.save()
 
     def get_item(self, domain, record_type="A"):
