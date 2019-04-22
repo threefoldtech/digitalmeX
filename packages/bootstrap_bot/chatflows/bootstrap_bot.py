@@ -72,7 +72,6 @@ def chat(bot):
                 continue
 
             for node in nodes:
-                import ipdb; ipdb.set_trace()
                 node_sal = j.clients.zos.get_by_id(node['node_id'])
                 ports = node_sal.client.socat.reserve(2)
                 userbot = j.sal_zos.userbot.get(node_sal, bot_id, bootstrap_token, ports[0], ports[1])
@@ -115,7 +114,7 @@ def chat(bot):
     Please go to {{bot_url}} and use {{init_token}} to initialize your 3bot.
     """
     message = Mail(
-        from_email="boctor.sarah@gmail.com",
+        from_email="info@threefoldtech.com",
         to_emails=email,
         subject='3bot Initialization',
         html_content=email)
