@@ -11,24 +11,24 @@ This package provides endpoints for downloading and serving gdrive docs or slide
 ## How to start
 **This is for development and will be changed**
 
-to start this package you will need:
+To start this package you will need: 
+
 1- configure the main instance of gdrive client and make sure to provide a credentials file with the correct permissions
 ```python
 cl = j.clients.gdrive.main
 cl.cred_file = "{path_to_cred_file}"
 ```
 
-2- integrate the lapis application into our open publishing framework
-```bash
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/gdrive/app.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/applications/gdrive.moon
-ln -s /sandbox/code/github/threefoldfoundation/lapis-wiki/static/gdrive /sandbox/var/gdrive/static/
-```
-
-3- create the needed dirs to store the files
+2- create the needed dirs to store the files
 ```bash
 mkdir -p /sandbox/var/gdrive/static
 mkdir /sandbox/var/gdrive/static/doc
 mkdir /sandbox/var/gdrive/static/slide
+```
+3- integrate the lapis application into our open publishing framework
+```bash
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/gdrive/app.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/applications/gdrive.moon
+ln -s /sandbox/var/gdrive/static/ /sandbox/code/github/threefoldfoundation/lapis-wiki/static/gdrive
 ```
 
 4- start gedis server with the actor loaded (you can use tmux)
