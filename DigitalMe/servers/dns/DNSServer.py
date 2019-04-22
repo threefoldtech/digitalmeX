@@ -65,13 +65,13 @@ class DNSServer(DatagramServer, JSBASE):
 
     def resolve(self,qname,type="A"):
         def do(qname,type):
-            name =  str(qname).rstrip(".")
+            name = str(qname).rstrip(".")
             if name.split(".")[-1].upper() in j.servers.dns.dns_extensions:
                 res = []
-                local_resolve =  self.resolver.get_item(name, type)
+                local_resolve = self.resolver.get_record(name, type)
                 if local_resolve:
                     res.append(local_resolve.value)
-                else:   
+                else:
                     try:
                         resp = j.tools.dnstools.default.resolver.query(name,type)
                     except Exception as e:
@@ -96,13 +96,13 @@ class DNSServer(DatagramServer, JSBASE):
                 else:
                     return ["192.168.1.1"]
                 #TODO: need to get DNS records from a source
-        
+
         res = self._cache.get(key="resolve_%s_%s"%(qname,type),method=do,expire=600, qname=qname,type=type)
         #self._cache.reset() #basically don't use cache, just for debugging later should disable this line
         return res
 
     def dns_response(self,data):
-        
+
         request = dnslib.DNSRecord.parse(data)
 
         self._log_debug ("request:%s"%request)
@@ -123,6 +123,6 @@ class DNSServer(DatagramServer, JSBASE):
         else:
             #TODO:*1 add the other record types e.g. SOA & txt & ...
             self._log_error("did not find type:\n%s"%request)
-        
+
 
         return reply.pack()

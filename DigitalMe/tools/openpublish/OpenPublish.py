@@ -109,7 +109,7 @@ class OpenPublish(JSConfigClient):
             'app': app
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
-        self.dns_server.resolver.create_item(domain=obj.domain, value=obj.ip)
+        self.dns_server.resolver.create_record(domain=obj.domain, value=obj.ip)
         self.reload_server()
 
     def add_wiki(self, name, repo_url, domain, ip):
