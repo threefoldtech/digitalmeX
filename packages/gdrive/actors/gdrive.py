@@ -26,6 +26,7 @@ class gdrive(j.application.JSBaseClass):
         :param bucket:
         :param text:
         :return:
+        172.17.0.2:8080/slide/1-Eh4ghLxoVCGSt5onNb8Dx9sCi3-OJ3mNQGo0h9CUgg/second
         """
 
         doctypes_map = {
@@ -48,9 +49,13 @@ class gdrive(j.application.JSBaseClass):
             return out
 
         elif doctype == "slide":
-            cl.exportSlides(guid1, j.sal.fs.joinPaths(STATIC_DIR, doctype))
+            path = j.sal.fs.joinPaths(STATIC_DIR, doctype)
+            cl.exportSlides(guid1, path)
             out = schema_out.new()
-            if not guid2:
-                raise NotImplemented()
-            out.res = "/static/gdrive/slide/{}/{}.png".format(guid1, guid2)
+            if j.sal.fs.exists("{}/{}/{}.png".format(path, guid1, guid2), followlinks=True):
+                out.res = "/static/gdrive/slide/{}/{}.png".format(guid1, guid2)
+            else:
+                meta = cl.get_presentation_meta("{}/presentation.meta".format(path))
+                guid2 = meta[guid2]
+                out.res = "/static/gdrive/slide/{}/{}".format(guid1, guid2)
             return out
