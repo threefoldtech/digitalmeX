@@ -163,7 +163,8 @@ class GedisChatBotSession(JSBASE):
         """
         image = ImageCaptcha()
         captcha = j.data.idgenerator.generateXCharID(4)
-        self._log_info("generated captcha:%s" % captcha) # this log is for development purposes so we can use the redis client
+        # this log is for development purposes so we can use the redis client
+        self._log_info("generated captcha:%s" % captcha)
         data = image.generate(captcha)
         self.q_out.put({
             "cat": "captcha_ask",
@@ -173,6 +174,21 @@ class GedisChatBotSession(JSBASE):
             "kwargs": kwargs
         })
         return self.q_in.get() == captcha
+
+    def location_ask(self, msg, **kwargs):
+        """
+        helper method to generate a question that expects a `longitude, latitude` string
+        html generated in the client side will use openstreetmap div, readonly input field for value.
+        :param msg: the question message
+        :param kwargs: dict of possible extra options like (validate, reset, ...etc)
+        :return: the user answer for the question
+        """
+        self.q_out.put({
+            "cat": "location_ask",
+            "msg": msg,
+            "kwargs": kwargs
+        })
+        return self.q_in.get()
 
     def md_show(self, msg, **kwargs):
         """
