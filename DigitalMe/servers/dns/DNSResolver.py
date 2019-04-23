@@ -19,7 +19,7 @@ class DNSResolver:
         schema = j.data.schema.get(schema_text)
         self.model = bcdb.model_get_from_schema(schema)
 
-    def create_item(self, domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
+    def create_record(self, domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
         '''Create a new dns object and save to db using bcdb
 
         :param domain: domain name of entry
@@ -48,7 +48,7 @@ class DNSResolver:
         obj.name = name
         obj.save()
 
-    def get_item(self, domain, record_type="A"):
+    def get_record(self, domain, record_type="A"):
         """
         Get dns object from db using bcdb with query name as (domain)_(record_type)
         :param domain: domain name of entry
@@ -67,6 +67,6 @@ class DNSResolver:
             if len(domain_parts) > 2:
                 domain_parts.pop(0)
                 domain = ".".join(domain_parts)
-                return self.get_item(domain, record_type)
+                return self.get_record(domain, record_type)
             else:
                 return None

@@ -79,8 +79,10 @@ class OpenPublish(JSConfigClient):
         # Start Gedis Server
         self._log_info("Starting Gedis Server")
         self.gedis_server = j.servers.gedis.configure(host="0.0.0.0", port=self.gedis_port)
-        actor_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "actors", "open_publish.py")
-        self.gedis_server.actor_add(actor_path)
+        actors_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_actors")
+        self.gedis_server.actors_add(actors_path)
+        chatflows_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_chatflows")
+        self.gedis_server.chatbot.chatflows_load(chatflows_path)
         self.gedis_server.start()
 
     @staticmethod
@@ -107,7 +109,7 @@ class OpenPublish(JSConfigClient):
             'app': app
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
-        self.dns_server.resolver.create_item(domain=obj.domain, value=obj.ip)
+        self.dns_server.resolver.create_record(domain=obj.domain, value=obj.ip)
         self.reload_server()
 
     def add_wiki(self, name, repo_url, domain, ip):
