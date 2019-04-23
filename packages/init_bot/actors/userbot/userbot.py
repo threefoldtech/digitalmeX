@@ -17,15 +17,14 @@ class userbot(JSBASE):
         self._bcdb = j.data.bcdb.new(
             name="userbotsettings")
         self._bcdb.models_add(
-            "/sandbox/code/github/threefoldtech/digitalmeX/packages/user_bot/schemas")
+            "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
     @property
     def user_bot_model(self):
         if not self._user_bot_model:
             self._user_bot_model = self._bcdb.model_get(
-                'userbot.settings.initialization')
+                'threebot.initialization')
         return self._user_bot_model
-
 
     def initialization_token(self, bootstrap_token):
         """
