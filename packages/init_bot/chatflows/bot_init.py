@@ -40,7 +40,7 @@ def get_init_token():
     # get initialization token from user 3bot
     redis = j.clients.redis.get()
     init_token = redis.execute_command(
-        'default.userbot.initialization_token', '{"key": "%s"}' % bootstrap_token)
+        'default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % os.environ.get('BOOTSTRAP_TOKEN'))
     init_token = json.loads(init_token.decode())['token']
 
 
@@ -122,17 +122,17 @@ def chat(bot):
 
     R = """
     # You entered
-    
+
     - email is {{email}}
     - doubleName is {{doubleName}}
-    
+
     - mnemonic: {{seed}}
 
     - location {{location}} ->  {{continent}}, {{country}}, {{city}}
     - wallet address: {{address}}
 
-    ### Click next 
-    
+    ### Click next
+
     for the final step which will redirect you to threefold.me
 
     """

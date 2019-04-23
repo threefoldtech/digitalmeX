@@ -22,7 +22,7 @@ class settings(JSBASE):
     def threebotsettings_model(self):
         if not self._threebotsettings_model:
             self._threebotsettings_model = self._bcdb.model_get(
-                'threefold.grid.threebotsettings')
+                'threebot.user.settings')
         return self._threebotsettings_model
 
     def get_otp(self, doubleName):
@@ -74,13 +74,13 @@ class settings(JSBASE):
         ```in
         doubleName = (S)
         firstName* = ""
-        lastName = ""                
-        email* = ""         
-        addressStreet = ""  
+        lastName = ""
+        email* = ""
+        addressStreet = ""
         addressNumber = ""
         addressZipcode = ""
-        addressCity = ""                     
-        addressCountry* = "" 
+        addressCity = ""
+        addressCountry* = ""
         telephone =
         ```
         """

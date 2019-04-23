@@ -23,7 +23,7 @@ class userbot(JSBASE):
     def user_bot_model(self):
         if not self._user_bot_model:
             self._user_bot_model = self._bcdb.model_get(
-                'threebot.initialization')
+                'threebot.user.initialization')
         return self._user_bot_model
 
     def initialization_token(self, bootstrap_token):
