@@ -19,6 +19,8 @@ header_level_modify = 1
 ```
 ````
 
+When executing any macro, errors can occur, in such case, they are saved in a document called`errors.md` in the root directory of the docsite, it can be accessed normally by th link `<wiki or website link>/#/errors.md`. The content will be a listing of errors occured when pre-processing all of markdown documents.
+
 
 ### List of available macros
 * [include](include.md): to include content from other documents or files.
