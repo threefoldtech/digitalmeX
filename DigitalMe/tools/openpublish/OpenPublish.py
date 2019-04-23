@@ -7,7 +7,7 @@ MASTER_BRANCH = "master"
 DEV_BRANCH = "development"
 DEV_SUFFIX = "_dev"
 CONFIG_TEMPLATE = "CONF_TEMPLATE"
-OPEN_PUBLISH_REPO = "https://github.com/threefoldfoundation/lapis-wiki"
+OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
 
 class OpenPublish(JSConfigClient):
@@ -116,8 +116,12 @@ class OpenPublish(JSConfigClient):
         wiki = self.wikis.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
 
         # Generate md files for master and dev branches
-        self.load_site(wiki, MASTER_BRANCH)
-        self.load_site(wiki, DEV_BRANCH, DEV_SUFFIX)
+        for branch in [DEV_BRANCH and MASTER_BRANCH]:
+            suffix = DEV_SUFFIX if branch == DEV_BRANCH else ""
+            try:
+                self.load_site(wiki, branch, suffix)
+            except Exception as e:
+                self._log_warning(e)
 
         # Generate nginx config file for wiki
         self.generate_nginx_conf(wiki)
