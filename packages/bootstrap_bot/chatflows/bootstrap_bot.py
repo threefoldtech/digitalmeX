@@ -133,10 +133,10 @@ def sort_by_less_used(nodes):
     def key(node):
         return (-node['total_resources']['cru'],
                 -node['total_resources']['mru'],
-                -node['total_resources']['hru'],
+                -node['total_resources']['sru'],
                 node['used_resources']['cru'],
                 node['used_resources']['mru'],
-                node['used_resources']['hru'])
+                node['used_resources']['sru'])
     return sorted(nodes, key=key)
 
 
