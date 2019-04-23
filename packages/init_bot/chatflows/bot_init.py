@@ -59,12 +59,12 @@ def chat(bot):
     # if cl.wallets.count() > 0:
     #     raise RuntimeError("bot wallet has been configured already.")
 
-    real_init_token = get_init_token()
+    # real_init_token = get_init_token()
 
-    while True:
-        init_token = bot.string_ask("Initialization token").strip()
-        if init_token == real_init_token:
-            break
+    # while True:
+    #     init_token = bot.string_ask("Initialization token").strip()
+    #     if init_token == real_init_token:
+    #         break
 
     while True:
         email = bot.string_ask("Enter email").strip()
