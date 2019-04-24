@@ -6,6 +6,8 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+BCDB_NAMESPACE = "userbotsettings"
+
 
 class userbot(JSBASE):
     """
@@ -15,7 +17,7 @@ class userbot(JSBASE):
         JSBASE.__init__(self)
         self._user_bot_model = None
         self._bcdb = j.data.bcdb.new(
-            name="userbotsettings")
+            name=BCDB_NAMESPACE)
         self._bcdb.models_add(
             "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 

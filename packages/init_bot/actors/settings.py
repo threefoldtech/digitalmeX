@@ -1,9 +1,10 @@
 from Jumpscale import j
-import onetimepass
 from base64 import b32encode
 
 
 JSBASE = j.application.JSBaseClass
+
+BCDB_NAMESPACE = "threebotsettings"
 
 
 class settings(JSBASE):
@@ -12,7 +13,7 @@ class settings(JSBASE):
 
         self._threebotsettings_model = None
         self._bcdb = j.data.bcdb.new(
-            name="threebotsettings")
+            name=BCDB_NAMESPACE)
         self._bcdb.models_add(
             "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
@@ -22,31 +23,6 @@ class settings(JSBASE):
             self._threebotsettings_model = self._bcdb.model_get(
                 'threebot.user.settings')
         return self._threebotsettings_model
-
-    def get_otp(self, doubleName):
-        if isinstance(doubleName, bytes):
-            doubleName = doubleName.decode()
-        if self._bcdb is None:
-            raise RuntimeError("please connect to zdb first")
-
-        bot_model = None
-        threebots = self.threebotsettings_model.get_all()
-        for bot in threebots:
-            if bot.doubleName == doubleName:
-                bot_model = bot
-                break
-
-        if bot_model:
-            if not bot_model.totp_secret:
-                secret = b32encode(
-                    j.data.idgenerator.generateXCharID(8).encode())
-                bot_model.totp_secret = secret
-                bot_model.save()
-            # j.shell()
-            totp = onetimepass.get_totp(bot_model.totp_secret)
-            return totp
-
-        return False
 
     def get_threebotsettings(self, doubleName, schema_out):
         """
