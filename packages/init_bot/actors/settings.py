@@ -11,12 +11,10 @@ class settings(JSBASE):
         JSBASE.__init__(self)
 
         self._threebotsettings_model = None
-        zdb_cl = j.clients.zdb.client_get(
-            addr="0.0.0.0", port=9900, nsname="threefold")
         self._bcdb = j.data.bcdb.new(
-            zdbclient=zdb_cl, name="threebotsettings")
+            name="threebotsettings")
         self._bcdb.models_add(
-            "/sandbox/code/github/threefoldtech/digitalmeX/packages/threebot/models")
+            "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
     @property
     def threebotsettings_model(self):
@@ -57,7 +55,7 @@ class settings(JSBASE):
         ```
 
         ```out
-        !threefold.grid.threebotsettings
+        !threebot.user.settings
         ```
         """
         out = schema_out.new()
