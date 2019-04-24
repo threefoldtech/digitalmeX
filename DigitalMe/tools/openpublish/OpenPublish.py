@@ -85,13 +85,15 @@ class OpenPublish(JSConfigClient):
         self.gedis_server.chatbot.chatflows_load(chatflows_path)
         self.gedis_server.start()
 
-    @staticmethod
-    def load_site(obj, branch, suffix=""):
-        dest = j.clients.git.getGitRepoArgs(obj.repo_url)[-3] + suffix
-        j.clients.git.pullGitRepo(obj.repo_url, branch=branch, dest=dest)
-        docs_path = "{}/docs".format(dest)
-        doc_site = j.tools.markdowndocs.load(docs_path, name=obj.name + suffix)
-        doc_site.write()
+    def load_site(self, obj, branch, suffix=""):
+        try:
+            dest = j.clients.git.getGitRepoArgs(obj.repo_url)[-3] + suffix
+            j.clients.git.pullGitRepo(obj.repo_url, branch=branch, dest=dest)
+            docs_path = "{}/docs".format(dest)
+            doc_site = j.tools.markdowndocs.load(docs_path, name=obj.name + suffix)
+            doc_site.write()
+        except Exception as e:
+            self._log_warning(e)
 
     def reload_server(self):
         cmd = "cd {0} && moonc . && lapis build".format(self.open_publish_path)
@@ -118,10 +120,7 @@ class OpenPublish(JSConfigClient):
         # Generate md files for master and dev branches
         for branch in [DEV_BRANCH and MASTER_BRANCH]:
             suffix = DEV_SUFFIX if branch == DEV_BRANCH else ""
-            try:
-                self.load_site(wiki, branch, suffix)
-            except Exception as e:
-                self._log_warning(e)
+            self.load_site(wiki, branch, suffix)
 
         # Generate nginx config file for wiki
         self.generate_nginx_conf(wiki)
@@ -133,10 +132,7 @@ class OpenPublish(JSConfigClient):
         # Generate md files for master and dev branches
         for branch in [DEV_BRANCH and MASTER_BRANCH]:
             suffix = DEV_SUFFIX if branch == DEV_BRANCH else ""
-            try:
-                self.load_site(website, branch, suffix)
-            except Exception as e:
-                self._log_warning(e)
+            self.load_site(website, branch, suffix)
 
         # link website files into open publish dir
         repo_path = j.sal.fs.joinPaths(j.clients.git.getGitRepoArgs(repo_url)[-3])
