@@ -1,4 +1,5 @@
 from Jumpscale import j
+import os
 import re
 import geocoder
 import pycountry
@@ -38,38 +39,49 @@ def reverse_geocode(lat, lng):
 
 def get_init_token():
     # get initialization token from user 3bot
-    redis = j.clients.redis.get()
-    init_token = redis.execute_command(
-        'default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % os.environ.get('BOOTSTRAP_TOKEN'))
-    init_token = json.loads(init_token.decode())['token']
+    BCDB_NAMESPACE = "threebotuser"
+
+    bcdb = j.tools.open_publish.bcdb_get(
+        BCDB_NAMESPACE, use_zdb=True)
+    bcdb.models_add(
+        "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
+
+    user_bot_model = bcdb.model_get(
+        'threebot.user.initialization')
+
+    user_settings = user_bot_model.get_by_name('user_initialization')
+    if not user_settings:
+        raise RuntimeError('Initialization token is not set')
+    print("user_settings[0].token", user_settings[0].token)
+    return user_settings[0].token
 
 
 def chat(bot):
     """
     to call http://localhost:5050/chat/session/bot_init
     """
-    rndname = j.data.idgenerator.generateXCharID(4)
-    clientname = rndname  # "threebotmain"
+    #rndname = j.data.idgenerator.generateXCharID(4)
+    clientname = "threebotmain"  # set to rndname in TESTING
 
     # This check is needed and we should only have 1 client for the wallet and the tfchain under the name threebotmain.
-    # if j.clients.tfchain.count() > 0:
-    #     raise RuntimeError("bot client has been configured already.")
-    # cl = j.clients.tfchain.new(clientname, network_type='TEST')
-    # cl.save()
-    # if cl.wallets.count() > 0:
-    #     raise RuntimeError("bot wallet has been configured already.")
+    # FOR TESTING: remove the count check for the tfchain client and the wallets
+    if j.clients.tfchain.count() > 0:
+        raise RuntimeError("bot client has been configured already.")
+    cl = j.clients.tfchain.new(clientname, network_type='TEST')
+    cl.save()
+    if cl.wallets.count() > 0:
+        raise RuntimeError("bot wallet has been configured already.")
 
-    # real_init_token = get_init_token()
-
-    # while True:
-    #     init_token = bot.string_ask("Initialization token").strip()
-    #     if init_token == real_init_token:
-    #         break
+    real_init_token = get_init_token()
 
     while True:
-        email = bot.string_ask("Enter email").strip()
-        if j.data.types.email.check(email):
+        init_token = bot.string_ask("Initialization token").strip()
+        if init_token == real_init_token:
             break
+
+    email = bot.string_ask("Enter email", validate={
+                           'required': True, 'email': True}).strip()
+
     while True:
         doubleName = bot.string_ask("Double name").strip()
         if valid_doublename(doubleName):
@@ -114,6 +126,7 @@ def chat(bot):
     # dobuleName as name? it should be 5 chars max name no? it's optional nevertheless.
     # <Greenlet at 0x7fa5f49a5748: chat(bot=)> failed with InsufficientFunds
     # TODO: see half baked transactions.
+
     # res = w.threebot.record_new(months=1, names=[], addresses=[doubleName])
 
     # ## Should we wait here for transaction acceptance and rollback if not?
@@ -131,7 +144,7 @@ def chat(bot):
     - location {{location}} ->  {{continent}}, {{country}}, {{city}}
     - wallet address: {{address}}
 
-    ### Click next
+    # Click next
 
     for the final step which will redirect you to threefold.me
 
