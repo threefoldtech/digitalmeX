@@ -16,8 +16,22 @@ class OpenPublish(JSConfigClient):
         name* = "" (S)
         websites = (LO) !jumpscale.open_publish.website.1
         wikis = (LO) !jumpscale.open_publish.wiki.1
-        gedis_port = 8888 (I)
-        zdb_port = 9901 (I)
+        gedis = (O) !jumpscale.open_publish.gedis.1
+        zdb = (O) !jumpscale.open_publish.zdb.1
+        
+        @url = jumpscale.open_publish.zdb.1
+        name = "main"
+        host = "127.0.0.1" (ipaddr)
+        port = 9900 (I)
+        mode = "seq" (S)
+        adminsecret_ = "password"
+        
+        @url = jumpscale.open_publish.gedis.1
+        name = "main"
+        host = "0.0.0.0" (ipaddr)
+        port = 8888 (I),
+        ssl = False
+        password_ = ""
             
         @url = jumpscale.open_publish.website.1
         name = "" (S)
@@ -33,7 +47,7 @@ class OpenPublish(JSConfigClient):
     """
 
     def _init(self):
-        self.open_publish_path = j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=True)
+        self.open_publish_path = j.clients.git.getGitRepoArgs(OPEN_PUBLISH_REPO)[-3]
         self.gedis_server = None
         self.dns_server = None
 
@@ -46,8 +60,18 @@ class OpenPublish(JSConfigClient):
             print("Reloading docsites")
             gevent.sleep(300)
 
-    def servers_start(self):
+    def bcdb_get(self, name, secret="", use_zdb=False):
+        zdb_std_client = None
+        if use_zdb:
+            zdb_admin_client = j.clients.zdb.client_admin_get(addr=self.zdb.host, port=self.zdb.port,
+                                                              secret=self.zdb.adminsecret_, mode=self.zdb.mode)
+            zdb_std_client = zdb_admin_client.namespace_new(name, secret)
+        bcdb = j.data.bcdb.new(name, zdb_std_client)
+        return bcdb
+
+    def servers_start(self, use_zdb=True):
         # TODO Move lapis to a seperate server and just call it from here
+        j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=True)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
         j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(self.open_publish_path),
@@ -59,26 +83,22 @@ class OpenPublish(JSConfigClient):
         j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path).start()
 
         # Start ZDB Server and create dns namespace
-        self._log_info("Starting ZDB Server")
-        j.servers.zdb.configure(port=self.zdb_port)
-        j.servers.zdb.start()
-        zdb_admin_client = j.clients.zdb.client_admin_get(port=self.zdb_port)
-        zdb_std_client = zdb_admin_client.namespace_new("dns")
+        if use_zdb:
+            self._log_info("Starting ZDB Server")
+            j.servers.zdb.configure(name=self.zdb.name, addr=self.zdb.host, port=self.zdb.port,
+                                    mode=self.zdb.mode, adminsecret=self.zdb.adminsecret_)
+            j.servers.zdb.start()
 
         # Start bcdb server and create corresponding dns namespace
-        self._log_info("Starting BCDB Server")
-        bcdb_name = "dns"
-        j.data.bcdb.redis_server_start(name=bcdb_name, zdbclient_port=self.zdb_port,
-                                       background=True, zdbclient_namespace="dns")
-        bcdb = j.data.bcdb.new(bcdb_name, zdb_std_client)
-
+        bcdb = self.bcdb_get(name="dns", use_zdb=True)
         # Start DNS Server
         self.dns_server = j.servers.dns.get(bcdb=bcdb)
         gevent.spawn(self.dns_server.serve_forever)
 
         # Start Gedis Server
         self._log_info("Starting Gedis Server")
-        self.gedis_server = j.servers.gedis.configure(host="0.0.0.0", port=self.gedis_port)
+        self.gedis_server = j.servers.gedis.configure(name=self.gedis.name, port=self.gedis.port, host=self.gedis.host,
+                                                      ssl=self.gedis.ssl, password=self.gedis.password_)
         actors_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_actors")
         self.gedis_server.actors_add(actors_path)
         chatflows_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_chatflows")
@@ -111,7 +131,9 @@ class OpenPublish(JSConfigClient):
             'app': app
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
-        self.dns_server.resolver.create_record(domain=obj.domain, value=obj.ip)
+        # handle if the tool used without using dns server
+        if self.dns_server:
+            self.dns_server.resolver.create_record(domain=obj.domain, value=obj.ip)
         self.reload_server()
 
     def add_wiki(self, name, repo_url, domain, ip):
@@ -154,13 +176,15 @@ class OpenPublish(JSConfigClient):
             j.sal.fs.symlink(moon_files_path, dest_path, overwriteTarget=False)
 
         # Load actors and chatflows if exists
-        actors_path = j.sal.fs.joinPaths(repo_path, "actors")
-        if j.sal.fs.exists(actors_path):
-            self.gedis_server.actors_add(actors_path, namespace=name)
+        if self.gedis_server:
+            actors_path = j.sal.fs.joinPaths(repo_path, "actors")
+            if j.sal.fs.exists(actors_path):
+                self.gedis_server.actors_add(actors_path, namespace=name)
 
-        chatflows_path = j.sal.fs.joinPaths(repo_path, "chatflows")
-        if j.sal.fs.exists(chatflows_path):
-            self.gedis_server.chatbot.chatflows_load(chatflows_path)
+            chatflows_path = j.sal.fs.joinPaths(repo_path, "chatflows")
+            if j.sal.fs.exists(chatflows_path):
+                self.gedis_server.chatbot.chatflows_load(chatflows_path)
+
         if website.domain:
             # Generate nginx config file for website
             self.generate_nginx_conf(website)
