@@ -10,7 +10,7 @@ import capture_errors_json, yield_error, assert_error from require "lapis.applic
 class extends lapis.Application
   @enable "etlua"
 
-  "/:type/:guid1(/:guid2)": =>
+  "/gdrive/:type/:guid1(/:guid2)": =>
 
     data = {
         "doctype": @params.type,

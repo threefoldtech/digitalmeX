@@ -26,7 +26,7 @@ class gdrive(j.application.JSBaseClass):
         :param bucket:
         :param text:
         :return:
-        172.17.0.2:8080/slide/1-Eh4ghLxoVCGSt5onNb8Dx9sCi3-OJ3mNQGo0h9CUgg/second
+        172.17.0.2:8080/gdrive/slide/1-Eh4ghLxoVCGSt5onNb8Dx9sCi3-OJ3mNQGo0h9CUgg/second
         """
 
         doctypes_map = {
