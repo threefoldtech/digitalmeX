@@ -69,7 +69,7 @@ class OpenPublish(JSConfigClient):
         bcdb = j.data.bcdb.new(name, zdb_std_client)
         return bcdb
 
-    def servers_start(self, use_zdb=True):
+    def servers_start(self):
         # TODO Move lapis to a seperate server and just call it from here
         j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=True)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -83,11 +83,10 @@ class OpenPublish(JSConfigClient):
         j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path).start()
 
         # Start ZDB Server and create dns namespace
-        if use_zdb:
-            self._log_info("Starting ZDB Server")
-            j.servers.zdb.configure(name=self.zdb.name, addr=self.zdb.host, port=self.zdb.port,
-                                    mode=self.zdb.mode, adminsecret=self.zdb.adminsecret_)
-            j.servers.zdb.start()
+        self._log_info("Starting ZDB Server")
+        j.servers.zdb.configure(name=self.zdb.name, addr=self.zdb.host, port=self.zdb.port,
+                                mode=self.zdb.mode, adminsecret=self.zdb.adminsecret_)
+        j.servers.zdb.start()
 
         # Start bcdb server and create corresponding dns namespace
         bcdb = self.bcdb_get(name="dns", use_zdb=True)
