@@ -55,7 +55,8 @@ class gdrive(j.application.JSBaseClass):
             if j.sal.fs.exists("{}/{}/{}.png".format(path, guid1, guid2), followlinks=True):
                 out.res = "/static/gdrive/slide/{}/{}.png".format(guid1, guid2)
             else:
-                meta = cl.get_presentation_meta("{}/presentation.meta".format(path))
+                meta = cl.get_presentation_meta("{}/presentations.meta.json".format(path), guid1)
                 guid2 = meta[guid2]
+                guid2 = guid2.split('_', maxsplit=1)[1] # remove the 0x_ part from the file name
                 out.res = "/static/gdrive/slide/{}/{}".format(guid1, guid2)
             return out
