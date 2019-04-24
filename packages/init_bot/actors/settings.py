@@ -4,7 +4,7 @@ from base64 import b32encode
 
 JSBASE = j.application.JSBaseClass
 
-BCDB_NAMESPACE = "threebotsettings"
+BCDB_NAMESPACE = "threebotuser"
 
 
 class settings(JSBASE):
@@ -12,8 +12,7 @@ class settings(JSBASE):
         JSBASE.__init__(self)
 
         self._threebotsettings_model = None
-        self._bcdb = j.data.bcdb.new(
-            name=BCDB_NAMESPACE)
+        self._bcdb = j.tools.open_publish.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
         self._bcdb.models_add(
             "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
