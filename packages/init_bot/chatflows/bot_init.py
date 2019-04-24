@@ -60,17 +60,18 @@ def chat(bot):
     """
     to call http://localhost:5050/chat/session/bot_init
     """
-    #rndname = j.data.idgenerator.generateXCharID(4)
+    # rndname = j.data.idgenerator.generateXCharID(4)
     clientname = "threebotmain"  # set to rndname in TESTING
 
     # This check is needed and we should only have 1 client for the wallet and the tfchain under the name threebotmain.
     # FOR TESTING: remove the count check for the tfchain client and the wallets
     if j.clients.tfchain.count() > 0:
-        raise RuntimeError("bot client has been configured already.")
+        bot.md_show("Client has been configured already")
+
     cl = j.clients.tfchain.new(clientname, network_type='TEST')
     cl.save()
     if cl.wallets.count() > 0:
-        raise RuntimeError("bot wallet has been configured already.")
+        bot.md_show("Wallet has been configured already")
 
     real_init_token = get_init_token()
 
@@ -78,6 +79,7 @@ def chat(bot):
         init_token = bot.string_ask("Initialization token").strip()
         if init_token == real_init_token:
             break
+        bot.md_show("Invalid initialization token")
 
     email = bot.string_ask("Enter email", validate={
                            'required': True, 'email': True}).strip()
@@ -95,7 +97,7 @@ def chat(bot):
                 print(e)
                 break
             else:
-                print("relooping...")
+                bot.md_show("Invalid doubleName {}".format(doubleName))
                 continue
             break
 
