@@ -63,15 +63,11 @@ def chat(bot):
     # rndname = j.data.idgenerator.generateXCharID(4)
     clientname = "threebotmain"  # set to rndname in TESTING
 
-    # This check is needed and we should only have 1 client for the wallet and the tfchain under the name threebotmain.
-    # FOR TESTING: remove the count check for the tfchain client and the wallets
-    if j.clients.tfchain.count() > 0:
-        bot.md_show("Client has been configured already")
-
-    cl = j.clients.tfchain.new(clientname, network_type='TEST')
+    cl = j.clients.tfchain.get(clientname, network_type='TEST')
     cl.save()
+
     if cl.wallets.count() > 0:
-        bot.md_show("Wallet has been configured already")
+        bot.md_show("Bot has already been initialized and wallet has been configured already")
 
     real_init_token = get_init_token()
 
