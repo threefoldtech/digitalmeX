@@ -55,8 +55,8 @@ class MyJobs(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.servers.myjobs"
         JSBASE.__init__(self)
-        self.queue = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs", fromcache=True)
-        self.queue_data = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs_datachanges", fromcache=False)
+        self.queue = j.clients.redis.queue_get(redisclient=j.core.db, key="myjobs", fromcache=True)
+        self.queue_data = j.clients.redis.queue_get(redisclient=j.core.db, key="myjobs_datachanges", fromcache=False)
         self._init = False
         self.workers = {}
         self.workers_nr_min = 1
@@ -68,9 +68,7 @@ class MyJobs(JSBASE):
 
     def init(self,reset=False,start=True):
         """
-
-        :param db_cl: if None will use db_cl = j.clients.zdb.testdb_server_start_client_get(reset=True)
-        :return:
+        activates the models and starts the worker manager if required
         """
         if self._init == False or reset:
 
@@ -84,11 +82,13 @@ class MyJobs(JSBASE):
             if self.dataloop != None:
                 self.dataloop.kill()
 
-            db = j.data.bcdb.get(j.core.db, namespace="myjobs", reset=reset,json_serialize=True)
+            db = j.data.bcdb.new(name="myjobs", reset=reset)
 
             self.model_job = db.model_create(schema=schema_job)
             self.model_action = db.model_create(schema=schema_action)
             self.model_worker = db.model_create(schema=schema_worker)
+
+            j.shell()
 
             if reset:
                 self.halt(reset=True)
@@ -119,7 +119,6 @@ class MyJobs(JSBASE):
     def _start(self,onetime=False):
         """
 
-        :param nr_max: max nr of workers which can be started
         :return:
         """
         if self.workers_subprocess:
@@ -146,7 +145,7 @@ class MyJobs(JSBASE):
 
     def worker_start_inprocess(self):
         """
-        js_shell "j.servers.myjobs.worker_start_inprocess()"
+        kosmos "j.servers.myjobs.worker_start_inprocess()"
         :return:
         """
         self.init(reset=False,start=False)
@@ -424,7 +423,7 @@ class MyJobs(JSBASE):
 
     def test1(self):
         """
-        js_shell "j.servers.myjobs.test1()"
+        kosmos "j.servers.myjobs.test1()"
         :return:
         """
 
