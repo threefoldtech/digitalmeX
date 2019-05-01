@@ -11,8 +11,8 @@ JSBASE = j.application.JSBaseClass
 schema_job = """
 @url = jumpscale.myjobs.job
 category*= ""
-time_start* = 0 (D)
-time_stop = 0 (D)
+time_start* = 0 (T)
+time_stop = 0 (T)
 state* = ""
 timeout = 0
 action_id* = 0
@@ -38,8 +38,8 @@ methodname = ""
 schema_worker = """
 @url = jumpscale.myjobs.worker
 timeout = 3600
-time_start = 0 (D)
-last_update = 0 (D) 
+time_start = 0 (T)
+last_update = 0 (T) 
 current_job = (I)
 halt = false (B)
 running = false (B)
@@ -72,9 +72,9 @@ class MyJobs(JSBASE):
         """
         if self._init == False or reset:
 
-            if self.mainloop == None and  self.dataloop == None:
-                from gevent import monkey
-                monkey.patch_all()
+            # if self.mainloop == None and  self.dataloop == None:
+            #     from gevent import monkey
+            #     monkey.patch_all()  #NEED TO BE VERY CAREFUL WITH THIS
 
             if self.mainloop != None:
                 self.mainloop.kill()
@@ -84,11 +84,9 @@ class MyJobs(JSBASE):
 
             db = j.data.bcdb.new(name="myjobs", reset=reset)
 
-            self.model_job = db.model_create(schema=schema_job)
-            self.model_action = db.model_create(schema=schema_action)
-            self.model_worker = db.model_create(schema=schema_worker)
-
-            j.shell()
+            self.model_job = db.model_get_from_schema(schema=schema_job)
+            self.model_action = db.model_get_from_schema(schema=schema_action)
+            self.model_worker = db.model_get_from_schema(schema=schema_worker)
 
             if reset:
                 self.halt(reset=True)
@@ -152,7 +150,7 @@ class MyJobs(JSBASE):
         w = self.model_worker.new()
         w.time_start = j.data.time.epoch
         w.last_update = j.data.time.epoch
-        w = self.model_worker.set(w)
+        w.save()
         self._log_debug("worker started:%s"%w.id)
         myworker(w.id,showout=True)
 
@@ -356,7 +354,7 @@ class MyJobs(JSBASE):
         jid,data_ret=j.data.serializers.msgpack.loads(data)
         j.shell()
         w
-        job = self.model_job.schema.get(capnpbin=data_ret)
+        job = self.model_job.schema.get(data=data_ret)
         job.id = jid
         return job
 

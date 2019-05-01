@@ -65,7 +65,7 @@ class Community(JSBASE):
                 raise RuntimeError("did not find coordinator dna:%s"%name)
             schema_obj = self.coordinator_dna[name].schema_obj
             if capnp_data is not None:
-                data = schema_obj.get(capnpbin=capnp_data)
+                data = schema_obj.get(data=capnp_data)
             else:
                 data = schema_obj.new()
             self.coordinators[name] = self.coordinator_dna[name].Coordinator(community=self,name=name,data=data)
