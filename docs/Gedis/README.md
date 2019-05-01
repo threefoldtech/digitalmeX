@@ -102,10 +102,10 @@ server.start()
 ```python
 # create a client
 # during the connection, the client will receive the generated code for the actor
-client = j.clients.gedis.configure(name='test', host='192.168.10.10', port=8889, namespace='demo', ssl=False)
+client = j.clients.gedis.new(name='test', host='192.168.10.10', port=8889, namespace='demo', ssl=False)
 
 # use the client
-client.actor.ping()
+client.actors.actor.ping() # note if your actor name is xactor, then client.actors.xactor.ping()
 # result will be b'pong'
 ```
 
