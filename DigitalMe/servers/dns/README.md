@@ -48,7 +48,7 @@ where:
     where : *bcdb* is the bcdb instance used to communicate with the database backened
 - Functionalities available:
         
-    1. `create_item(self, domain=domain, record_type=record_type, value=value, ttl=ttl, priority=priority)`
+    1. `create_record(self, domain=domain, record_type=record_type, value=value, ttl=ttl, priority=priority)`
         
         Creates a new object based on the schema, appends the parameters passed to it, then saves it to the database with the name being the result of domain_record)type(example:  `'domain=google.com'` and `record_type='A'` then `name='google.com_A'`)
         where:
@@ -58,7 +58,7 @@ where:
         - *ttl* : time to live
         - *priority* : (optional) priority when record type is *MX* or *SRV*
     
-    2. `get_item(domain=domain, record_type=record_type)` 
+    2. `get_record(domain=domain, record_type=record_type)` 
 
         Queries for the saved record and returns its *value* if found by concatenating the domain and record type and searches with it
         where:
