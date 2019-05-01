@@ -40,12 +40,12 @@ class GedisFactory(JSConfigFactory):
             server.client_configure()  # configures the client
         return server
 
-    def _cmds_get(self, key, capnpbin):
+    def _cmds_get(self, key, data):
         """
-        Used in client only, starts from capnpbin (python client)
+        Used in client only, starts from data (python client)
         """
         namespace, name = key.split("__")
-        return GedisCmds(namespace=namespace, name=name, capnpbin=capnpbin)
+        return GedisCmds(namespace=namespace, name=name, data=data)
 
     def test(self, name="basic"):
         """

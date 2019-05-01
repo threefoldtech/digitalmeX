@@ -77,11 +77,11 @@ class GedisClient(JSConfigBase):
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
             if cmds_meta["cmds"] == {}:
                 raise RuntimeError("did not find any actors in namespace:%s" % self.namespace)
-            for key, capnpbin in cmds_meta["cmds"].items():
+            for key, data in cmds_meta["cmds"].items():
                 if "__model_" in key:
                     raise RuntimeError("aa")
                 actor_name = key.split("__")[1]
-                self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, capnpbin)
+                self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, data)
                 a=self._actorsmeta[actor_name]
 
             # at this point the schema's are loaded only for the namespace identified (is all part of metadata)

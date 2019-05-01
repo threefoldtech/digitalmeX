@@ -31,10 +31,10 @@ class GedisCmds(JSBASE):
     cmds understood by gedis server
     """
 
-    def __init__(self, server=None, namespace="default", name="", path="", capnpbin=None):
+    def __init__(self, server=None, namespace="default", name="", path="", data=None):
         JSBASE.__init__(self)
 
-        if path is "" and capnpbin is None:
+        if path is "" and data is None:
             raise RuntimeError("path cannot be None")
 
         self.path = path
@@ -45,8 +45,8 @@ class GedisCmds(JSBASE):
 
         self._cmds = {}
 
-        if capnpbin:
-            self.data = self.schema.get(capnpbin=capnpbin)
+        if data:
+            self.data = self.schema.get(data=data)
             self.cmds
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
