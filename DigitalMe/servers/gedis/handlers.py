@@ -408,7 +408,7 @@ def _result_encode(cmd, response_type, item):
         elif response_type == 'capnp' or response_type == 'auto':
             return item
         else:
-            raise j.exceptions.Input("cannot find required encoding type for return")
+            return item._json
     else:
 
         if isinstance(item, j.data.schema.DataObjBase):
