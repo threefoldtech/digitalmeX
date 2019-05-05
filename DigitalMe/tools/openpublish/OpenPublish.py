@@ -6,7 +6,8 @@ JSConfigClient = j.application.JSBaseConfigClass
 MASTER_BRANCH = "master"
 DEV_BRANCH = "development"
 DEV_SUFFIX = "_dev"
-CONFIG_TEMPLATE = "CONF_TEMPLATE"
+WIKI_CONFIG_TEMPLATE = "WIKI_CONF_TEMPLATE"
+WEBSITE_CONFIG_TEMPLATE = "WEBSITE_CONF_TEMPLATE"
 OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
 
@@ -52,12 +53,15 @@ class OpenPublish(JSConfigClient):
         self.dns_server = None
 
     def auto_update(self):
+        def update(objects):
+            for obj in objects:
+                self._log_info("Updating: {}".format(obj.name))
+                self.load_site(obj, MASTER_BRANCH)
+                self.load_site(obj, DEV_BRANCH, DEV_SUFFIX)
         while True:
-            for wiki in self.wikis:
-                self._log_info("Updating: {}".format(wiki.name))
-                self.load_site(wiki, MASTER_BRANCH)
-                self.load_site(wiki, DEV_BRANCH, DEV_SUFFIX)
-            print("Reloading docsites")
+            update(self.wikis)
+            update(self.websites)
+            self._log_info("Reload for docsites done")
             gevent.sleep(300)
 
     def bcdb_get(self, name, secret="", use_zdb=False):
@@ -80,7 +84,11 @@ class OpenPublish(JSConfigClient):
         # Start Lapis Server
         self._log_info("Starting Lapis Server")
         cmd = "moonc . && lapis server".format(self.open_publish_path)
-        j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path).start()
+        lapis = j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path)
+        if lapis.running:
+            self.reload_server()
+        else:
+            lapis.start()
 
         # Start ZDB Server and create dns namespace
         self._log_info("Starting ZDB Server")
@@ -118,21 +126,22 @@ class OpenPublish(JSConfigClient):
         cmd = "cd {0} && moonc . && lapis build".format(self.open_publish_path)
         j.tools.executorLocal.execute(cmd)
 
-    def generate_nginx_conf(self, obj, app="wiki"):
+    def generate_nginx_conf(self, obj):
+        conf_base_path = j.sal.fs.getDirName(os.path.abspath(__file__))
         if "website" in obj._schema.key:
-            app = obj.name
-
-        path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), CONFIG_TEMPLATE)
+            path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_CONFIG_TEMPLATE)
+        else:
+            path = j.sal.fs.joinPaths(conf_base_path, WIKI_CONFIG_TEMPLATE)
         dest = j.sal.fs.joinPaths(self.open_publish_path, 'vhosts', '{}.conf'.format(obj.domain))
         args = {
             'name': obj.name,
             'domain': obj.domain,
-            'app': app
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
         # handle if the tool used without using dns server
         if self.dns_server:
-            self.dns_server.resolver.create_record(domain=obj.domain, value=obj.ip)
+            self.dns_server.resolver.create_record(domain="wiki." + obj.domain, value=obj.ip)
+            self.dns_server.resolver.create_record(domain="wiki2." + obj.domain, value=obj.ip)
         self.reload_server()
 
     def add_wiki(self, name, repo_url, domain, ip):

@@ -1,6 +1,4 @@
 from Jumpscale import j
-import json
-from dns.resolver import Answer
 
 
 class DNSResolver:
@@ -52,11 +50,12 @@ class DNSResolver:
         obj.zone = zone
         # Create domain object and add to list of domains of relative zone
         name = "%s_%s" % (domain, record_type)
-        self.add_domain(obj,name=name, domain=domain, record_type=record_type, value=value, ttl=ttl, priority=priority)
-
+        domain_obj = self.add_domain(obj, name=name, domain=domain, record_type=record_type,
+                                     value=value, ttl=ttl, priority=priority)
+        obj.domains.append(domain_obj)
         obj.save()
 
-    def add_domain(self,dns_item, **kwargs):
+    def add_domain(self, dns_item, **kwargs):
         """Add a new/ update existing domain data in dns_item record
 
         :param dns_item: dns_item created using schema -> jumpscale.dnsItem.1
@@ -67,15 +66,15 @@ class DNSResolver:
             if d.name == kwargs['name']:
                 domain_obj = d
                 break
-        
+
         if not domain_obj:
             model2 = j.data.schema.get(url="jumpscale.dnsItem.record.1")
             domain_obj = model2.new()
-        
-        self.update_domain(domain_obj, **kwargs)
-        dns_item.domains.append(domain_obj)
-    
-    def update_domain(self,domain_obj, name="", domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
+
+        domain_obj = self.update_domain(domain_obj, **kwargs)
+        return domain_obj
+
+    def update_domain(self, domain_obj, name="", domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
         """Update a domain object with the parameters needed
         
         :param domain_obj: object that consists of the dns record data using schema -> jumpscale.dnsItem.record.1
@@ -98,9 +97,9 @@ class DNSResolver:
         domain_obj.value = value
         domain_obj.ttl = ttl
         domain_obj.priority = priority
-        
+
         return domain_obj
-        
+
     def get_record(self, domain, record_type="A"):
         """Get dns record object from db using bcdb with name as (domain)_(record_type)
         :param domain: domain name of entry
@@ -111,7 +110,7 @@ class DNSResolver:
         :rtype:
         """
         domain_parts = domain.split(".")[-2:]
-        if len(domain_parts)>1:
+        if len(domain_parts) > 1:
             zone = ".".join(domain_parts)
             obj = self.model.get_by_zone(zone)
             if obj:

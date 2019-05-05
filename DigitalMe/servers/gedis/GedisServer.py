@@ -305,6 +305,12 @@ class GedisServer(JSBaseConfig):
         self._log_info('stopping server')
         self.redis_server.stop()
 
+    def test(self, name=''):
+        if name:
+            self._test_run(name=name)
+        else:
+            self._test_run(name='basic')
+
     def __repr__(self):
         return '<Gedis Server address=%s  generated_code_dir=%s)' % (
             self.address, self.code_generated_dir)
