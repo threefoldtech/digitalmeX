@@ -2,12 +2,12 @@ import logging
 import pycountry
 import json
 import os
+import time
 
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 
 from logging import NullHandler
-
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -19,18 +19,7 @@ logger.addHandler(NullHandler())
 logger.setLevel(20)
 
 
-def chat(bot):
-    """
-    to call http://localhost:5050/chat/session/bootstrap_bot
-    """
-    email = bot.string_ask('Enter your email', validate={'required':True, 'email': True})
-    location = bot.drop_down_choice('Choose your location: ',  [c.name for c in pycountry.countries], validate={'required':True})
-    captcha = False
-    error = False
-    while not captcha:
-        captcha = bot.captcha_ask(error, validate={'required':True})
-        error = True
-
+def get_userbot(location):
     capacity = j.clients.threefold_directory.get(interactive=False)
     resp = capacity.api.ListFarmers()[1]
     resp.raise_for_status()
@@ -42,7 +31,6 @@ def chat(bot):
     # location_farmers is a dict where the key is location proximity and the value is a list of farmers in this location proximity
     locations_farmers = dict()
 
-
     for farmer in farmers:
         if 'location' not in farmer:
             continue
@@ -53,18 +41,13 @@ def chat(bot):
         else:
             locations_farmers[distance] = [farmer]
 
-
     bot_id = j.data.idgenerator.generateGUID()
     bootstrap_token = j.data.idgenerator.generateGUID()
     init_token = None
 
     sorted_locations = sorted(locations_farmers.keys())
     for distance in sorted_locations:
-        if init_token:
-            break
         for farmer in locations_farmers[distance]:
-            if init_token:
-                break
             farm = j.sal_zos.farm.get(farmer['iyo_organization'])
             nodes = sort_by_less_used(list(farm.filter_online_nodes()))
             # this farm has no online nodes, move on to the next farm
@@ -83,48 +66,77 @@ def chat(bot):
                     continue
 
                 # get initialization token from user 3bot
-                redis = j.clients.redis.get(ip_addr=node.addr, port=ports[0])
-                init_token = redis.execute_command('default.userbot.initialization_token', '{"key": "%s"}' % bootstrap_token)
-                init_token = json.loads(init_token.decode())['token']
-                break
+                now = time.time()
+                while True:
+                    try:
+                        cli = j.clients.redis.get(ipaddr=node_sal.addr, port=ports[0])
+                        init_token = cli.execute_command('default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % bootstrap_token)
+                        break
+                    except Exception as e:
+                        print("cant connect yet", type(e))
+                        if time.time() < now + 600:
+                            print("continue wait")
+                            time.sleep(30)
+                        else:
+                            print("time is up, destroying")
+                            userbot.destroy()
+                            break
+                if not init_token:
+                    continue
+                init_token = init_token.decode()
+                return init_token, node_sal.addr, userbot.lapis_port, bootstrap_token
+
+    return None, None, None, None
+
+def chat(bot):
+    """
+    to call http://localhost:5050/chat/session/bootstrap_bot
+    """
+    email = bot.string_ask('Enter your email', validate={'required':True, 'email': True})
+    location = bot.drop_down_choice('Choose your location: ',  [c.name for c in pycountry.countries], validate={'required':True})
+    captcha = False
+    error = False
+    while not captcha:
+        captcha = bot.captcha_ask(error, validate={'required':True})
+        error = True
+
+
+    init_token, ip, port, bootstrap_token = get_userbot(location)
 
     if not init_token:
         R = """"
-        Failed to find a suitable node for installing you 3bot
+        Failed to find a suitable node for installing your 3bot
         """
-    else:
-        R = """
-        # You have ordered 3bot for email {{email}}, near location {{location}}:
-
-        ### Click next
-
-        for the final step which will redirect you to your 3bot initiliazation page
-        and use this token for initialization {{init_token}}
-        """
-
-    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
-
-    bot.md_show(R2)
-
-    if not init_token:
+        bot.md_show(R)
         return
 
-    email = """
+    bot_url = "http://%s:%s/chat/session/bot_init" % (ip, port)
+
+    content = """
     You have ordered 3bot for email {{email}}, near location {{location}}.
     Please go to {{bot_url}} and use {{init_token}} to initialize your 3bot.
     """
+
     message = Mail(
         from_email="info@threefoldtech.com",
         to_emails=email,
         subject='3bot Initialization',
-        html_content=email)
+        html_content=j.tools.jinja2.template_render(text=j.core.text.strip(content),**locals()))
     try:
         sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
         response = sg.send(message)
     except Exception as e:
-        logger.error(e.message)
+        logger.error(str(e))
 
-    bot_url = "http://%s:8080/chat/session/initialize_bot"
+    R = """
+    You have ordered 3bot for email {{email}}, near location {{location}}.
+
+    Click next to be redirected to your 3bot initiliazation page
+    and use this token for initialization: {{init_token}}
+    """
+
+    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
+    bot.md_show(R2)
     bot.redirect(bot_url)
 
 
