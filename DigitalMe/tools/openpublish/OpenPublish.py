@@ -58,6 +58,14 @@ class OpenPublish(JSConfigClient):
                 self._log_info("Updating: {}".format(obj.name))
                 self.load_site(obj, MASTER_BRANCH)
                 self.load_site(obj, DEV_BRANCH, DEV_SUFFIX)
+
+        # ensure nginx config files generated
+        for obj in self.wikis:
+            self.generate_nginx_conf(obj)
+
+        for obj in self.websites:
+            self.generate_nginx_conf(obj)
+        self.reload_server()
         while True:
             update(self.wikis)
             update(self.websites)
@@ -126,7 +134,7 @@ class OpenPublish(JSConfigClient):
         cmd = "cd {0} && moonc . && lapis build".format(self.open_publish_path)
         j.tools.executorLocal.execute(cmd)
 
-    def generate_nginx_conf(self, obj):
+    def generate_nginx_conf(self, obj, reload=False):
         conf_base_path = j.sal.fs.getDirName(os.path.abspath(__file__))
         if "website" in obj._schema.key:
             path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_CONFIG_TEMPLATE)
@@ -139,10 +147,16 @@ class OpenPublish(JSConfigClient):
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
         # handle if the tool used without using dns server
-        if self.dns_server:
-            self.dns_server.resolver.create_record(domain="wiki." + obj.domain, value=obj.ip)
-            self.dns_server.resolver.create_record(domain="wiki2." + obj.domain, value=obj.ip)
-        self.reload_server()
+        if self.dns_server and obj.domain:
+            if "wiki" in obj._schema.key:
+                self.dns_server.resolver.create_record(domain="wiki." + obj.domain, value=obj.ip)
+                self.dns_server.resolver.create_record(domain="wiki2." + obj.domain, value=obj.ip)
+            else:
+                self.dns_server.resolver.create_record(obj.domain, value=obj.ip)
+                self.dns_server.resolver.create_record('www.' + obj.domain, value=obj.ip)
+                self.dns_server.resolver.create_record('www2.' + obj.domain, value=obj.ip)
+        if reload:
+            self.reload_server()
 
     def add_wiki(self, name, repo_url, domain, ip):
         wiki = self.wikis.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
@@ -153,7 +167,7 @@ class OpenPublish(JSConfigClient):
             self.load_site(wiki, branch, suffix)
 
         # Generate nginx config file for wiki
-        self.generate_nginx_conf(wiki)
+        self.generate_nginx_conf(wiki, reload=True)
         self.save()
 
     def add_website(self, name, repo_url, domain, ip):
@@ -195,8 +209,7 @@ class OpenPublish(JSConfigClient):
 
         if website.domain:
             # Generate nginx config file for website
-            self.generate_nginx_conf(website)
-
+            self.generate_nginx_conf(website, reload=True)
         self.save()
 
     def remove_wiki(self, name):

@@ -5,6 +5,7 @@ server {
 
     include vhosts/static.conf.loc;
     include vhosts/websocket.conf.loc;
+    include vhosts/gdrive.conf.loc;
 
     location /docsites/ {
         alias /sandbox/var/docsites/;
@@ -26,6 +27,7 @@ server {
 
     include vhosts/static.conf.loc;
     include vhosts/websocket.conf.loc;
+    include vhosts/gdrive.conf.loc;
 
     location /docsites/ {
         alias /sandbox/var/docsites/;
