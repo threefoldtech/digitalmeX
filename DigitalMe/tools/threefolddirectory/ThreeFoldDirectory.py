@@ -73,7 +73,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         else:
             return res[0]
 
-    def node_find(self,zerotier_addr=None):
+    def node_find(self,zerotier_addr=None): #TODO: needs to be extended by more arguments
         #am doing rather brute force because think sqlite indexing is broken
         res = []
         for node in self.nodes.find():
@@ -124,6 +124,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         '''
         self.farmers_load()
         self.tfdir_scan()
+        # self.zerotier_scan()
 
 
 
