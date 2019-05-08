@@ -119,3 +119,31 @@ class DNSResolver:
                     if name == domain_obj.name:
                         return domain_obj
         return None
+
+    def delete_record(self, domain="", record_type=''):
+        """Delete dns_item record, if zone contains no more records then remove zone from dns as well
+
+        :param domain: domain name of entry
+        :type domain: str
+        :param record_type: dns type
+        :type record_type: str
+
+        """
+        domain_parts = domain.split(".")[-2:]
+        if len(domain_parts) > 1:
+            zone = ".".join(domain_parts)
+            obj = self.model.get_by_zone(zone)
+            if obj:
+                obj = obj[0]
+                name = "%s_%s" % (domain, record_type)
+                # Find domain_+record_type record in zone object, if found remove it from the list 
+                for i,domain_obj in enumerate(obj.domains):
+                    if name == domain_obj.name:
+                        obj.domains.pop(i)
+            else:
+                return
+            #if inner domains list is empty remove zone from dns
+            if not obj.domains:
+                obj.delete()
+            else:
+                obj.save()
