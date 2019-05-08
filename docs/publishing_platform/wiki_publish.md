@@ -2,7 +2,7 @@
 
 Open publish enables user to publish new contents easily. To start publish your wiki content you will need the following:
 
-1 - Create new repository for your contents on any SCM platforms (i.e. github)
+1 - Create new repository for your contents on any SCM platforms (i.e. github) [more info about wikis](./wiki/README.md)
 
 2 - The repo must have `docs` directory which will contains all the md files you need to publish
 

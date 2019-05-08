@@ -3,7 +3,7 @@
 after [configuring](./configure.md) open publish you can start it as following:
 
 ```bash
-kosmos 'j.tools.open_publish.default.servers_start()'
+kosmos 'j.tools.open_publish.start(background=True)'
 ```
 
 #### Running OpenPublish tool will do the following:
@@ -25,7 +25,7 @@ any website/wiki
 - [0-DB](https://github.com/threefoldtech/0-db). Note that you need to have zdb installed firstly, you can install it
 by running `kosmos 'j.builders.db.zdb.install()'`
 
-##### 3 - Start the following servers in the same gevent loop
+##### 3 - Start the following servers in the same gevent loop (will be in tmux if used `background` option)
 - [Gedis](https://github.com/threefoldtech/digitalmeX/tree/master/docs/Gedis): which loads the base actors 
 (chatbot, open_publish, sonic search, gdrive) and base chatflows
 - [DNS Server](https://github.com/threefoldtech/digitalmeX/tree/master/DigitalMe/servers/dns): to be able to publish

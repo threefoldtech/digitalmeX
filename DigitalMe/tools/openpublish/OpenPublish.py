@@ -213,7 +213,7 @@ class OpenPublish(JSConfigClient):
         self.save()
 
     def remove_wiki(self, name):
-        for wiki in self.wikis:
+        for i, wiki in enumerate(self.wikis):
             if name == wiki.name:
                 dest = j.clients.git.getGitRepoArgs(wiki.repo_url)[-3]
                 j.sal.fs.remove(dest)
@@ -221,7 +221,10 @@ class OpenPublish(JSConfigClient):
                 j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", wiki.name))
                 j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", wiki.name + DEV_SUFFIX))
                 j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'vhosts', '{}.conf'.format(wiki.domain)))
-                self.wikis.remove(wiki)
+                if self.dns_server:
+                    self.dns_server.resolver.delete_record('wiki.' + wiki.domain, 'A')
+                    self.dns_server.resolver.delete_record('wiki2.' + wiki.domain, 'A')
+                self.wikis.pop(i)
                 self.save()
                 self.reload_server()
                 break

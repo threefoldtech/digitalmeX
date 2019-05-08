@@ -6,7 +6,7 @@ To Load actors or chatflows from file system:
 Before starting open publish tool you can copy/link your actors or chatflows into `base_actors` and `base_chatflows`
 in `openpublish` tool directory `/sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish`
 
-![actors.jpg](actors.jpg)
+![actors.jpg](images/actors.jpg)
  
  
 Note that you can easily use bcdb from your actors using:

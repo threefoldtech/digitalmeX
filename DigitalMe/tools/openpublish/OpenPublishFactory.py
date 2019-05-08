@@ -23,3 +23,18 @@ class OpenPublishFactory(JSConfigs):
 
     def bcdb_get(self, name, secret="", use_zdb=False):
         return self.default.bcdb_get(name, secret, use_zdb)
+
+    def start(self, background=True):
+        """
+        kosmos 'j.tools.open_publish.start()'
+        """
+        if background:
+            cmd = "kosmos 'j.tools.open_publish.start(background=False)'"
+            j.tools.tmux.execute(cmd, window='Open Publish', pane='main', reset=False)
+            self._log_info("waiting for gedis to start on port {}".format(self.default.gedis.port))
+            res = j.sal.nettools.waitConnectionTest("localhost", self.default.gedis.port, timeoutTotal=120)
+            if not res:
+                raise RuntimeError("Failed to start Open Publish")
+            self._log_info("Open Publish framework started")
+        else:
+            self.default.servers_start()
