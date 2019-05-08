@@ -64,6 +64,13 @@ where:
         where:
         - *domain* : domain name 
         - *record_type* : type of dns record  (one of *A,AAAA,CNAME,TXT,NS,MX,SRV,or SOA*)
+    
+    3. `delete_record(self, domain="", record_type='')`
+        
+        Deletes a record from within a zone if found, if the record to be deleted was the last item in the list of the zone, then the entire zone is removed as well
+        where:
+        - *domain* : domain name 
+        - *record_type* : type of dns record  (one of *A,AAAA,CNAME,TXT,NS,MX,SRV,or SOA*)
 
 ## Use the DNS Resolver from the server instance
 After the server has been started, an instance of the dns server is used to resolve the domains
