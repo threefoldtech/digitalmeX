@@ -1,19 +1,26 @@
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
 
-## TODO: code to check if ingest_client, search_client are configured already or not.
-class sonic(JSBASE):
-    def __init__(self):
-        JSBASE.__init__(self)
+class sonic(j.application.JSBaseClass):
 
-    def push(self, collection, bucket, objectName, text):
-        cl = j.clients.sonic.get("ingest_client")
-        with cl.client as ingest_client:
-            return ingest_client.push(collection, bucket, objectName, text)
+    def _init(self):
+        self.sonic_client = j.clients.sonic.get()
 
-    def search(self, collection, bucket, terms):
-        cl = j.clients.sonic.get("search_client")
-        with cl.client as search_client:
-            return search_client.query(collection, bucket, terms)
-
+    def query(self, collection, bucket, text, schema_out):
+        """
+        ```in
+        collection = "" (S)
+        bucket = "" (S)
+        text = "" (S)
+        ```
+        ```out
+        res = (LS)
+        ```
+        :param collection:
+        :param bucket:
+        :param text:
+        :return:
+        """
+        out = schema_out.new()
+        out.res = self.sonic_client.query(collection, bucket, text)
+        return out

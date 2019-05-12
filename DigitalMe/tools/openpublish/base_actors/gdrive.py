@@ -24,6 +24,7 @@ class gdrive(j.application.JSBaseClass):
 
         doctypes_map = {
             'doc': 'drive',
+            'sheet': 'drive',
             'slide': 'slides',
         }
         cl = j.clients.gdrive.main
@@ -32,13 +33,13 @@ class gdrive(j.application.JSBaseClass):
             raise RuntimeError("invalid type")
 
         service_name = doctypes_map[doctype]
-        if doctype == "doc":
+        if doctype in ["doc", "sheet"]:
 
             path = j.sal.fs.joinPaths(STATIC_DIR, doctype, "{}.pdf".format(guid1))
             cl.exportFile(guid1, destpath=path, service_name=service_name, service_version="v3")
 
             out = schema_out.new()
-            out.res = "/gdrive_static/doc/{}.pdf".format(guid1)
+            out.res = "/gdrive_static/{}/{}.pdf".format(doctype, guid1)
             return out
 
         elif doctype == "slide":

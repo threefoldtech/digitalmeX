@@ -19,5 +19,5 @@ cl.save()
 
 2- create the needed dirs to store the files
 ```bash
-mkdir -p /sandbox/var/gdrive/static/doc /sandbox/var/gdrive/static/slide
+mkdir -p /sandbox/var/gdrive/static/{doc,slide,sheet} 
 ```

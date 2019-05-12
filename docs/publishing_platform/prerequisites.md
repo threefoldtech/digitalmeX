@@ -8,6 +8,6 @@ installed with openresty option.
 
 
 2 - [0-DB](https://github.com/threefoldtech/0-db). Note that you can install it using jumpscaleX builders
-by running `kosmos 'j.builders.db.zdb.install()'`. It will clone 0-db repo, build binary and put it into your sandbox bin dir.
+by running `kosmos 'j.builder.db.zdb.install()'`. It will clone 0-db repo, build binary and put it into your sandbox bin dir.
 ![Zdb_install](images/Zdb_install.jpg)
 
