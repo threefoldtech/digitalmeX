@@ -21,4 +21,5 @@ class Basetest(TestCase):
         g_client.save()
         j.sal.fs.createDir('/sandbox/var/gdrive/static/doc')
         j.sal.fs.createDir('/sandbox/var/gdrive/static/slide')
+        j.sal.fs.createDir('/sandbox/var/gdrive/static/sheet')
         j.tools.open_publish.start(background=True)      
