@@ -76,7 +76,7 @@ def get_userbot(location):
                 now = time.time()
                 while True:
                     try:
-                        cli = j.clients.redis.get(ipaddr=node_sal.addr, port=ports[0])
+                        cli = j.clients.redis.get(ipaddr=node_sal.public_addr, port=ports[0])
                         init_token = cli.execute_command('default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % bootstrap_token)
                         break
                     except Exception as e:
@@ -91,7 +91,7 @@ def get_userbot(location):
                 if not init_token:
                     continue
                 init_token = init_token.decode()
-                return init_token, node_sal.addr, userbot.lapis_port, bootstrap_token
+                return init_token, node_sal.public_addr, userbot.lapis_port, bootstrap_token
 
     return None, None, None, None
 
