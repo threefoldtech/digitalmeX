@@ -49,19 +49,24 @@ def get_userbot(location):
     for distance in sorted_locations:
         for farmer in locations_farmers[distance]:
             farm = j.sal_zos.farm.get(farmer['iyo_organization'])
+            logger.info("Checking farmer %s" % farmer['iyo_organization'])
             nodes = sort_by_less_used(list(farm.filter_online_nodes()))
             # this farm has no online nodes, move on to the next farm
             if not nodes:
                 continue
 
             for node in nodes:
+                logger.info("Getting node with id %s" % node['node_id'])
+                logger.info("Bootstrap token %s" % bootstrap_token)
                 node_sal = j.clients.zos.get_by_id(node['node_id'])
+
                 ports = node_sal.client.socat.reserve(2)
                 userbot = j.sal_zos.userbot.get(node_sal, bot_id, bootstrap_token, ports[0], ports[1])
                 try:
                     userbot.start()
-                except RuntimeError:
+                except Exception as e:
                     # failed to create/start the 3bot container, continue and try another node
+                    logger.info("Failed to start node %s, continue and try another node: %s" % (node['node_id'], str(e)))
                     userbot.destroy()
                     continue
 
@@ -73,12 +78,12 @@ def get_userbot(location):
                         init_token = cli.execute_command('default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % bootstrap_token)
                         break
                     except Exception as e:
-                        print("cant connect yet", type(e))
+                        logger.info("Couldn't connect to actor on node %s: %s" % (node['node_id'], str(e)))
                         if time.time() < now + 600:
-                            print("continue wait")
+                            logger.info("Wait a bit more for node %s to respond" % node['node_id'])
                             time.sleep(30)
                         else:
-                            print("time is up, destroying")
+                            logger.info("Time is up, destroying node %s and trying another node" % node['node_id'])
                             userbot.destroy()
                             break
                 if not init_token:
