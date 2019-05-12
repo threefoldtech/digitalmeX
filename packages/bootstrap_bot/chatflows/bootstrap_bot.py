@@ -60,14 +60,16 @@ def get_userbot(location):
                 logger.info("Bootstrap token %s" % bootstrap_token)
                 node_sal = j.clients.zos.get_by_id(node['node_id'])
 
-                ports = node_sal.client.socat.reserve(2)
-                userbot = j.sal_zos.userbot.get(node_sal, bot_id, bootstrap_token, ports[0], ports[1])
                 try:
+                    ports = node_sal.client.socat.reserve(2)
+                    userbot = None
+                    userbot = j.sal_zos.userbot.get(node_sal, bot_id, bootstrap_token, ports[0], ports[1])
                     userbot.start()
                 except Exception as e:
                     # failed to create/start the 3bot container, continue and try another node
                     logger.info("Failed to start node %s, continue and try another node: %s" % (node['node_id'], str(e)))
-                    userbot.destroy()
+                    if userbot:
+                        userbot.destroy()
                     continue
 
                 # get initialization token from user 3bot
