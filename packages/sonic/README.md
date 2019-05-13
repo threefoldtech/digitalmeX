@@ -16,14 +16,14 @@ query takes in collection, bucket and text and returns list of objects where the
 To call function `query` on `actor` sonic with arguments `{"collection":"docsites", "bucket":name, "text":query}` using Gedis client for Javascript `GEDIS_CLIENT`
 ```
 
-{
-    var info = {
+
+var info = {
         "namespace": "default",
         "actor": "sonic",
         "command": "query",
-        "args": {"collection":"docsites", "bucket":name, "text":query},
+        "args": {"collection":"docsites", "bucket":"posts", "text":"lo"},
         "headers": {"response_type":"json"}
-    }
+}
 console.log(GEDIS_CLIENT.execute(info))
 ```
 
