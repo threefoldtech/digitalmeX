@@ -1,6 +1,6 @@
 # sonic actor
 
-Used to access sonic client in jumpscaleX
+It's used to access [sonic client](https://github.com/threefoldtech/jumpscaleX/blob/master/Jumpscale/clients/sonic/README.md) in jumpscaleX
 
 
 # methods
@@ -13,8 +13,9 @@ query takes in collection, bucket and text and returns list of objects where the
 
 # Example in Javascript
 
+To call function `query` on `actor` sonic with arguments `{"collection":"docsites", "bucket":name, "text":query}` using Gedis client for Javascript `GEDIS_CLIENT`
 ```
-sonic_search = function (name, query)
+
 {
     var info = {
         "namespace": "default",
@@ -23,6 +24,14 @@ sonic_search = function (name, query)
         "args": {"collection":"docsites", "bucket":name, "text":query},
         "headers": {"response_type":"json"}
     }
-    return GEDIS_CLIENT.execute(info)
-}
+console.log(GEDIS_CLIENT.execute(info))
 ```
+
+
+# Example in Python
+
+```python
+client.actors.sonic.query("forum", "posts", "love") 
+```
+
+client is `j.clients.gedis` object.
