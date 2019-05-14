@@ -36,7 +36,7 @@ class TestSimpleEcho:
 
     def test_schema_in(self):
         client = self.server.client_get()
-        x = j.data.schema.get(url='gedis.test.in').new()
+        x = j.data.schema.get_from_url_latest(url='gedis.test.in').new()
         x.foo = 'test'
         assert b'test' == client.actors.actor.schema_in(x)
 
@@ -48,14 +48,14 @@ class TestSimpleEcho:
 
     def test_schema_in_out(self):
         client = self.server.client_get()
-        x = j.data.schema.get(url='gedis.test.in').new()
+        x = j.data.schema.get_from_url_latest(url='gedis.test.in').new()
         x.foo = 'test'
         result = client.actors.actor.schema_in_out(x)
         assert result.bar == x.foo
 
     def test_schema_in_list_out(self):
         client = self.server.client_get()
-        x = j.data.schema.get(url='gedis.test.in').new()
+        x = j.data.schema.get_from_url_latest(url='gedis.test.in').new()
         x.foo = 'test'
         result = client.actors.actor.schema_in_list_out(x)
         assert isinstance(result, list)

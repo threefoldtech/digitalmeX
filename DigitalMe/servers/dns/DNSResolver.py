@@ -19,7 +19,7 @@ class DNSResolver:
         priority = 10 (I)
         """
         schema_text = j.core.text.strip(schema_text)
-        schema = j.data.schema.get(schema_text)
+        schema = j.data.schema.get_from_text(schema_text)
         self.model = bcdb.model_get_from_schema(schema)
 
     def create_record(self, domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
@@ -68,7 +68,7 @@ class DNSResolver:
                 break
 
         if not domain_obj:
-            model2 = j.data.schema.get(url="jumpscale.dnsItem.record.1")
+            model2 = j.data.schema.get_from_url_latest(url="jumpscale.dnsItem.record.1")
             domain_obj = model2.new()
 
         domain_obj = self.update_domain(domain_obj, **kwargs)

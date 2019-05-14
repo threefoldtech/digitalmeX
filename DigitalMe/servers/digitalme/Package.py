@@ -87,7 +87,7 @@ class Package(JSBASE):
         except Exception as e:
             self._error_raise("toml syntax error",path=path)
 
-        s=j.data.schema.get(SCHEMA_PACKAGE)
+        s=j.data.schema.get_from_text(SCHEMA_PACKAGE)
         self.data = s.get(data=data)
 
 

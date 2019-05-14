@@ -40,8 +40,8 @@ class GedisCmds(JSBASE):
         self.path = path
         self.server = server
 
-        self.schema = j.data.schema.get(SCHEMA)
-        # self.schema = j.data.schema.get(url="jumpscale.gedis.api")
+        self.schema = j.data.schema.get_from_text(SCHEMA)
+        # self.schema = j.data.schema.get_from_url_latest(url="jumpscale.gedis.api")
 
         self._cmds = {}
 
@@ -91,7 +91,7 @@ class GedisCmds(JSBASE):
                     j.shell()
                 if not s.url in j.data.schema.schemas:
                     if not s.content.strip().startswith("!"):
-                        j.data.schema.get(s.content, url=s.url)
+                        j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:
                 self._log_debug("\tpopulate: %s", cmd.name)
                 self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
@@ -215,12 +215,12 @@ class GedisCmds(JSBASE):
             if txt.find("@url") == -1:
                 md5 = j.data.hash.md5_string(txt.strip())
                 url = "actors.%s.%s.%s.%s" % (self.data.namespace, self.data.name, cmd.name, md5)
-                schema = j.data.schema.get(schema_text=txt, url=url)
+                schema = j.data.schema.get_from_text(schema_text=txt, url=url)
             else:
-                schema = j.data.schema.get(schema_text=txt)
+                schema = j.data.schema.get_from_text(schema_text=txt)
         else:
             url = txt.strip().lstrip("!")
-            schema = j.data.schema.get(url=url)
+            schema = j.data.schema.get_from_url_latest(url=url)
 
         self._schema_url_add(schema.url, schema.text)  # make sure we remember if needed
 
@@ -228,7 +228,7 @@ class GedisCmds(JSBASE):
             line_strip = line.strip()
             if line_strip.find("!") != -1:
                 url2 = line_strip.split("!", 1)[1]
-                s2 = j.data.schema.get(url=url2)
+                s2 = j.data.schema.get_from_url_latest(url=url2)
                 self._schema_url_add(s2.url, s2.text)
 
         return schema

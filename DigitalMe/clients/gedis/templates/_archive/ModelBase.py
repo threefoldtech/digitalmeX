@@ -15,7 +15,7 @@ class model(JSBASE):
         JSBASE.__init__(self)
         self.name = "{{obj.name}}"
         self.url = "{{obj.url}}"
-        self.schema = j.data.schema.get(url=self.url)
+        self.schema = j.data.schema.get_from_url_latest(url=self.url)
         self.client = client
         self.redis = client.redis
 
