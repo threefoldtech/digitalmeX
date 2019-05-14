@@ -30,11 +30,11 @@ class Testcases(Basetest):
         req = requests.get(url)
         
         self.log('Check that url exists')
-        self.assertEquals(req.status_code, requests.codes.ok, "Couldn't find this url")
+        self.assertEqual(req.status_code, requests.codes.ok, "Couldn't find this url")
 
         self.log('Check that the content type is png')
         content_type = req.headers['content-Type']
-        self.assertEquals(content_type, 'image/png', "This url is not contains a png")
+        self.assertEqual(content_type, 'image/png', "This url is not contains a png")
 
     @parameterized.expand(pdf_urls)
     def test002_pdf_urls(self, url):
@@ -50,8 +50,8 @@ class Testcases(Basetest):
         req = requests.get(url)
 
         self.log('Check that url exists')
-        self.assertEquals(req.status_code, requests.codes.ok, "Couldn't find this url")
+        self.assertEqual(req.status_code, requests.codes.ok, "Couldn't find this url")
 
         self.log('Check that the content type is pdf')
         content_type = req.headers['content-Type']
-        self.assertEquals(content_type, 'application/pdf', "This url is not contains a pdf")
+        self.assertEqual(content_type, 'application/pdf', "This url is not contains a pdf")

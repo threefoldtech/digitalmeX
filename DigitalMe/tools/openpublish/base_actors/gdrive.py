@@ -2,13 +2,6 @@ from Jumpscale import j
 
 STATIC_DIR = '/sandbox/var/gdrive/static'
 
-"""
-mkdir -p /sandbox/var/gdrive/static
-mkdir /sandbox/var/gdrive/static/doc
-mkdir /sandbox/var/gdrive/static/slide
-
-ln -s /sandbox/code/github/threefoldfoundation/lapis-wiki/static/gdrive /sandbox/var/gdrive/static/
-"""
 
 class gdrive(j.application.JSBaseClass):
 
@@ -31,6 +24,7 @@ class gdrive(j.application.JSBaseClass):
 
         doctypes_map = {
             'doc': 'drive',
+            'sheet': 'drive',
             'slide': 'slides',
         }
         cl = j.clients.gdrive.main
@@ -39,13 +33,13 @@ class gdrive(j.application.JSBaseClass):
             raise RuntimeError("invalid type")
 
         service_name = doctypes_map[doctype]
-        if doctype == "doc":
+        if doctype in ["doc", "sheet"]:
 
             path = j.sal.fs.joinPaths(STATIC_DIR, doctype, "{}.pdf".format(guid1))
             cl.exportFile(guid1, destpath=path, service_name=service_name, service_version="v3")
 
             out = schema_out.new()
-            out.res = "/static/gdrive/doc/{}.pdf".format(guid1)
+            out.res = "/gdrive_static/{}/{}.pdf".format(doctype, guid1)
             return out
 
         elif doctype == "slide":
@@ -53,10 +47,10 @@ class gdrive(j.application.JSBaseClass):
             cl.exportSlides(guid1, path)
             out = schema_out.new()
             if j.sal.fs.exists("{}/{}/{}.png".format(path, guid1, guid2), followlinks=True):
-                out.res = "/static/gdrive/slide/{}/{}.png".format(guid1, guid2)
+                out.res = "/gdrive_static/slide/{}/{}.png".format(guid1, guid2)
             else:
                 meta = cl.get_presentation_meta("{}/presentations.meta.json".format(path), guid1)
                 guid2 = meta[guid2]
-                guid2 = guid2.split('_', maxsplit=1)[1] # remove the 0x_ part from the file name
-                out.res = "/static/gdrive/slide/{}/{}".format(guid1, guid2)
+                guid2 = guid2.split('_', maxsplit=1)[1]  # remove the 0x_ part from the file name
+                out.res = "/gdrive_static/slide/{}/{}".format(guid1, guid2)
             return out
