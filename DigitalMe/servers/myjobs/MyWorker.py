@@ -1,9 +1,4 @@
-
-
-
-
-
-def myworker(id=999999,onetime=False,showout=False):
+def myworker(id=999999, onetime=False, showout=False):
     """
     :return:
     """
@@ -27,14 +22,12 @@ def myworker(id=999999,onetime=False,showout=False):
         print("######")
         return_data("J", obj)
         for queue_name in obj.return_queues:
-            queue = j.clients.redis.getQueue(redisclient=redisdb, name="myjobs:%s"%queue_name)
-            data_out = j.data.serializers.msgpack.dumps([obj.id,obj._json])
+            queue = j.clients.redis.getQueue(redisclient=redisdb, name="myjobs:%s" % queue_name)
+            data_out = j.data.serializers.msgpack.dumps([obj.id, obj._json])
             queue.put(data_out)
-
 
     def return_worker_obj(obj):
         return_data("W", obj)
-
 
     bcdb = j.data.bcdb.bcdb_instances["myjobs"]
     model_job = bcdb.models["jumpscale.myjobs.job"]
@@ -42,7 +35,7 @@ def myworker(id=999999,onetime=False,showout=False):
     model_worker = bcdb.models["jumpscale.myjobs.worker"]
 
     w = model_worker.get(id)
-    while w==None:
+    while w == None:
         time.sleep(0.1)
         print(3)
         w = model_worker.get(id)
@@ -58,7 +51,7 @@ def myworker(id=999999,onetime=False,showout=False):
             if showout:
                 print("queue request timeout, continue")
             w = model_worker.get(id)
-            #have to fetch this again because was waiting on queue
+            # have to fetch this again because was waiting on queue
             if w == None:
                 # raise RuntimeError("worker should always be there")
                 return
@@ -74,7 +67,7 @@ def myworker(id=999999,onetime=False,showout=False):
             # update worker has been active
             w = model_worker.get(id)
             if w == None:
-                #means worker no longer in db
+                # means worker no longer in db
                 print("WORKER REMOVE SELF:%s" % id)
                 return
             if res == "halt":
@@ -89,17 +82,17 @@ def myworker(id=999999,onetime=False,showout=False):
             #     w
 
             if job == None:
-                print("ERROR: job:%s not found"%jobid)
+                print("ERROR: job:%s not found" % jobid)
             else:
-                #now have job
+                # now have job
                 action = model_action.get(job.action_id)
                 if action == None:
-                    raise RuntimeError("ERROR: action:%s not found"%job.action_id)
+                    raise RuntimeError("ERROR: action:%s not found" % job.action_id)
                 kwargs = j.data.serializers.json.loads(job.kwargs)
                 args = j.data.serializers.json.loads(job.args)
 
                 w.last_update = j.data.time.epoch
-                w.current_job = jobid #set current jobid
+                w.current_job = jobid  # set current jobid
                 return_worker_obj(w)
 
                 if showout:
@@ -110,25 +103,25 @@ def myworker(id=999999,onetime=False,showout=False):
                     exec(action.code)
                     method = eval(action.methodname)
                 except Exception as e:
-                    job.error = str(e)+"\nCOULD NOT GET TO METHOD, IMPORT ERROR."
+                    job.error = str(e) + "\nCOULD NOT GET TO METHOD, IMPORT ERROR."
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
                     if showout:
-                        print("ERROR:%s"%e)
+                        print("ERROR:%s" % e)
                     if onetime:
                         return
                     continue
 
                 try:
-                   res  = method(*args,**kwargs)
+                    res = method(*args, **kwargs)
                 except Exception as e:
                     job.error = str(e)
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
                     if showout:
-                        print("ERROR:%s"%e)
+                        print("ERROR:%s" % e)
                     if onetime:
                         return
                     continue
@@ -136,12 +129,14 @@ def myworker(id=999999,onetime=False,showout=False):
                 try:
                     job.result = j.data.serializers.json.dumps(res)
                 except Exception as e:
-                    job.error = str(e)+"\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
+                    job.error = (
+                        str(e) + "\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
+                    )
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
                     if showout:
-                        print("ERROR:%s"%e)
+                        print("ERROR:%s" % e)
                     if onetime:
                         return
                     continue

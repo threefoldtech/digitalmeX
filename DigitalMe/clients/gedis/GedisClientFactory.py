@@ -6,7 +6,6 @@ JSConfigBase = j.application.JSBaseConfigsClass
 
 
 class GedisClientCmds:
-
     def __init__(self, client):
         self._client = client
         self.__dict__.update(client.cmds.__dict__)
@@ -15,7 +14,7 @@ class GedisClientCmds:
         output = "Gedis Client: (instance=%s) (address=%s:%-4s)" % (
             self._client.name,
             self._client.host,
-            self._client.port
+            self._client.port,
         )
         if self._client.data.ssl:
             # FIXME: we should probably NOT print the key. this is VERY private information
@@ -28,4 +27,3 @@ class GedisClientCmds:
 class GedisClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.gedis"
     _CHILDCLASS = GedisClient
-

@@ -1,8 +1,8 @@
-
 from Jumpscale import j
 import os
 import sys
 from importlib import import_module
+
 JSBASE = j.application.JSBaseClass
 from gevent import spawn
 import gevent
@@ -40,9 +40,9 @@ class Community(JSBASE):
 
         self.coordinators = {}
 
-        self.coordinator_dna = {}    #are the classes for coordinators
-        self.service_dna = {}        #are the classes for services (which can run inside coordinators)
-        self.knowledge = []          #are paths to the knowledge to learn
+        self.coordinator_dna = {}  # are the classes for coordinators
+        self.service_dna = {}  # are the classes for services (which can run inside coordinators)
+        self.knowledge = []  # are paths to the knowledge to learn
 
         # self.schema_state = j.data.schema.get_from_text(SCHEMA)
 
@@ -52,30 +52,27 @@ class Community(JSBASE):
         return Coordinator
 
     def service_class_get(self):
-        return Service        
+        return Service
 
     def start(self):
         gevent.sleep(1000000000000)
 
-    def coordinator_get(self,name="main",capnp_data=None):
+    def coordinator_get(self, name="main", capnp_data=None):
 
         name = j.core.text.strip_to_ascii_dense(name)
         if name not in self.coordinators:
             if name not in self.coordinator_dna:
-                raise RuntimeError("did not find coordinator dna:%s"%name)
+                raise RuntimeError("did not find coordinator dna:%s" % name)
             schema_obj = self.coordinator_dna[name].schema_obj
             if capnp_data is not None:
                 data = schema_obj.get(data=capnp_data)
             else:
                 data = schema_obj.new()
-            self.coordinators[name] = self.coordinator_dna[name].Coordinator(community=self,name=name,data=data)
+            self.coordinators[name] = self.coordinator_dna[name].Coordinator(community=self, name=name, data=data)
 
         return self.coordinators[name]
 
-
-
-
-    def knowledge_learn(self,path=""):
+    def knowledge_learn(self, path=""):
         """
 
         add knowledge to the community, do this by loading service or coordinator classes
@@ -88,32 +85,31 @@ class Community(JSBASE):
         if "http" in path:
             path = j.clients.git.getContentPathFromURLorPath(url)
         if path is "":
-            path = "%s/%s"%(self._path, "actors_example")
+            path = "%s/%s" % (self._path, "actors_example")
 
-        tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="service_*.py",followSymlinks=True)
-        tocheck += j.sal.fs.listFilesInDir(path, recursive=True, filter="coordinator_*.py",followSymlinks=True)
+        tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="service_*.py", followSymlinks=True)
+        tocheck += j.sal.fs.listFilesInDir(path, recursive=True, filter="coordinator_*.py", followSymlinks=True)
 
-        for classpath in  tocheck:
+        for classpath in tocheck:
             dpath = j.sal.fs.getDirName(classpath)
             if dpath not in sys.path:
                 sys.path.append(dpath)
-            self._log_info("dna:%s"%classpath)
-            modulename=j.sal.fs.getBaseName(classpath)[:-3]
+            self._log_info("dna:%s" % classpath)
+            modulename = j.sal.fs.getBaseName(classpath)[:-3]
 
             try:
-                self._log_info("import module:%s"%modulename)
+                self._log_info("import module:%s" % modulename)
                 module = import_module(modulename)
                 self._log_debug("ok")
             except Exception as e:
-                self.error_raise("could not import module:%s"%modulename,e)
-
+                self.error_raise("could not import module:%s" % modulename, e)
 
             if modulename.startswith("service_"):
                 name = modulename[8:]
-                self.service_dna[name] = self._module_fix(module,name,"service")
+                self.service_dna[name] = self._module_fix(module, name, "service")
             else:
                 name = modulename[12:]
-                self.coordinator_dna[name] = self._module_fix(module,name,"coordinator")
+                self.coordinator_dna[name] = self._module_fix(module, name, "coordinator")
 
     def knowledge_refresh(self):
         """
@@ -122,55 +118,58 @@ class Community(JSBASE):
         for path in self.knowledge:
             self.learn(path)
 
-    def _module_fix(self,module,name,cat):
-        
+    def _module_fix(self, module, name, cat):
+
         if not "SCHEMA" in module.__dict__:
-            raise RuntimeError("could not find SCHEMA in module:%s"%module)     
-            
+            raise RuntimeError("could not find SCHEMA in module:%s" % module)
+
         name = j.core.text.strip_to_ascii_dense(name)
-        
-        #will check if we didn't define url/name in beginning of schema
-        schema1=""
+
+        # will check if we didn't define url/name in beginning of schema
+        schema1 = ""
         for line in module.SCHEMA.split("\n"):
-            if line.strip()=="":
+            if line.strip() == "":
                 continue
             if line.startswith("#"):
                 continue
             if line.startswith("@"):
-                raise RuntimeError("Schema:\n%s\nshould not define name & url at start, will be added automatically."%name)
+                raise RuntimeError(
+                    "Schema:\n%s\nshould not define name & url at start, will be added automatically." % name
+                )
             if "world.service.state.state" in line:
                 continue
             if line.startswith("name =") or line.startswith("name="):
                 continue
             if line.startswith("instance =") or line.startswith("instance="):
                 continue
-            schema1+="%s\n"%line
-            
-        splitted=[item.strip().lower() for item in name.split("_")]
-        if len(splitted)<2:
-            raise RuntimeError("unique name for coordinator or service needs to be at least 2 parts separated with .Now:%s"%name)
+            schema1 += "%s\n" % line
 
-        SCHEMA2="@url = %s.%s\n"% (cat,".".join(splitted))
-        SCHEMA2+="@name = %s\n"% "_".join(splitted)
-        SCHEMA2+=schema1
-        SCHEMA2+="stateobj = (O) !world.service.state.state\n"
+        splitted = [item.strip().lower() for item in name.split("_")]
+        if len(splitted) < 2:
+            raise RuntimeError(
+                "unique name for coordinator or service needs to be at least 2 parts separated with .Now:%s" % name
+            )
 
-        #default properties
+        SCHEMA2 = "@url = %s.%s\n" % (cat, ".".join(splitted))
+        SCHEMA2 += "@name = %s\n" % "_".join(splitted)
+        SCHEMA2 += schema1
+        SCHEMA2 += "stateobj = (O) !world.service.state.state\n"
+
+        # default properties
         if "description = " not in SCHEMA2:
-            SCHEMA2 += "description = \"\"\n"
-        SCHEMA2 += "name = \"\"\n"
+            SCHEMA2 += 'description = ""\n'
+        SCHEMA2 += 'name = ""\n'
         if cat == "service":
-            SCHEMA2 += "instance = \"\"\n"
+            SCHEMA2 += 'instance = ""\n'
         if "state = " not in SCHEMA2:
-            SCHEMA2 += "state = \"new,active,error,halted,deleted\" (S)\n"  #TODO: *1 needs enumeration
+            SCHEMA2 += 'state = "new,active,error,halted,deleted" (S)\n'  # TODO: *1 needs enumeration
         print(SCHEMA2)
         try:
             module.schema_obj = j.data.schema.get_from_text(SCHEMA2)[0]
         except Exception as e:
-            self.error_raise("cannot parse schema:%s"%SCHEMA2,e=e)
+            self.error_raise("cannot parse schema:%s" % SCHEMA2, e=e)
 
-        return module    
-            
+        return module
 
     # def server_add(self,name,server):
     #     self.servers[name]=server
@@ -199,5 +198,3 @@ class Community(JSBASE):
     #             else: # gevent <= 0.13
     #                 import traceback
     #                 traceback.print_exc()
-
-

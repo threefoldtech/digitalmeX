@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 # import sys
 # libpath = j.sal.fs.getDirName(__file__)
 # if libpath not in sys.path:
@@ -16,17 +17,18 @@ class order_book(JSBASE):
     This class functions are actually registered in
 
     """
+
     def __init__(self):
         JSBASE.__init__(self)
 
-        if not hasattr(j.servers.gedis.latest, 'context'):
+        if not hasattr(j.servers.gedis.latest, "context"):
             j.servers.gedis.latest.context = {
-                'wallets': {},
-                'sell_orders':{},
-                'buy_orders': {},
-                'transactions': [],
-                'matcher': Matcher(),
-                'trader': Trader()
+                "wallets": {},
+                "sell_orders": {},
+                "buy_orders": {},
+                "transactions": [],
+                "matcher": Matcher(),
+                "trader": Trader(),
             }
 
         self.orderbook = OrderBook()
@@ -56,7 +58,7 @@ class order_book(JSBASE):
         w.jwt = wallet.jwt
         return self.orderbook.wallet.register(w)
 
-    def add_sell_order(self,order):
+    def add_sell_order(self, order):
         """
         ```in
         !threefoldtoken.order.sell
@@ -72,7 +74,7 @@ class order_book(JSBASE):
 
         return self.orderbook.sell.add(self.orderbook.wallet.current, order)
 
-    def add_buy_order(self,order):
+    def add_buy_order(self, order):
         """
         ```in
         !threefoldtoken.order.buy
@@ -191,7 +193,13 @@ class order_book(JSBASE):
         """
         out = schema_out.new()
 
-        for order in self.orderbook.sell.list(self.orderbook.wallet.current, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+        for order in self.orderbook.sell.list(
+            self.orderbook.wallet.current,
+            sortby=sortby,
+            desc=desc,
+            total_items_in_page=total_items_in_page,
+            page_number=page_number,
+        ):
             out.orders.append(order)
         return out
 
@@ -212,7 +220,13 @@ class order_book(JSBASE):
         :rtype: list
         """
         out = schema_out.new()
-        for order in self.orderbook.buy.list(self.orderbook.wallet.current, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
+        for order in self.orderbook.buy.list(
+            self.orderbook.wallet.current,
+            sortby=sortby,
+            desc=desc,
+            total_items_in_page=total_items_in_page,
+            page_number=page_number,
+        ):
             out.orders.append(order)
         return out
 
@@ -234,9 +248,11 @@ class order_book(JSBASE):
         """
         out = schema_out.new()
 
-        for order in self.orderbook.sell.list(None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
-            order.owner_email_addr = ''
-            order.wallet_addr = ''
+        for order in self.orderbook.sell.list(
+            None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number
+        ):
+            order.owner_email_addr = ""
+            order.wallet_addr = ""
             out.orders.append(order)
         return out
 
@@ -258,9 +274,11 @@ class order_book(JSBASE):
         """
         out = schema_out.new()
 
-        for order in self.orderbook.buy.list(None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number):
-            order.owner_email_addr = ''
-            order.wallet_addr = ''
+        for order in self.orderbook.buy.list(
+            None, sortby=sortby, desc=desc, total_items_in_page=total_items_in_page, page_number=page_number
+        ):
+            order.owner_email_addr = ""
+            order.wallet_addr = ""
             out.orders.append(order)
         return out
 
@@ -282,9 +300,11 @@ class order_book(JSBASE):
         """
         out = schema_out.new()
 
-        for transaction in self.orderbook.transactions.list(wallet=None, state=state, total_items_in_page=total_items_in_page, page_number=page_number):
-            transaction.buyer_email_addr = ''
-            transaction.seller_email_addr = ''
+        for transaction in self.orderbook.transactions.list(
+            wallet=None, state=state, total_items_in_page=total_items_in_page, page_number=page_number
+        ):
+            transaction.buyer_email_addr = ""
+            transaction.seller_email_addr = ""
             out.transactions.append(transaction)
         return out
 
@@ -306,6 +326,11 @@ class order_book(JSBASE):
         """
         out = schema_out.new()
 
-        for transaction in self.orderbook.transactions.list(wallet=self.orderbook.wallet.current, state=state, total_items_in_page=total_items_in_page, page_number=page_number):
+        for transaction in self.orderbook.transactions.list(
+            wallet=self.orderbook.wallet.current,
+            state=state,
+            total_items_in_page=total_items_in_page,
+            page_number=page_number,
+        ):
             out.transactions.append(transaction)
         return out

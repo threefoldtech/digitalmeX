@@ -2,13 +2,10 @@ from Jumpscale import j
 
 
 class CoordinatorBase(j.application.JSFactoryBaseClass):
-
     def __init__(self):
         j.application.JSFactoryBaseClass.__init__(self)
         self.services = {}
-        self._name=self.__jslocation__.replace("j.world.","")
-
-
+        self._name = self.__jslocation__.replace("j.world.", "")
 
     # def _service_action_ask(self,instance,name):
     #     cmd = [name,arg]
@@ -26,6 +23,5 @@ class CoordinatorBase(j.application.JSFactoryBaseClass):
     #         self._key = "%s"%(j.core.text.strip_to_ascii_dense(self.name))
     #     return self._key
 
-
     def __str__(self):
-        return "coordinator:%s"%self._name
+        return "coordinator:%s" % self._name

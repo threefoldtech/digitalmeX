@@ -10,24 +10,14 @@ class RedisCommandParser(PythonParser):
     Parse the command send from the client
     """
 
-    def __init__(self, socket, socket_read_size=8192
-                 ):
-        super(RedisCommandParser, self).__init__(
-            socket_read_size=socket_read_size
-        )
+    def __init__(self, socket, socket_read_size=8192):
+        super(RedisCommandParser, self).__init__(socket_read_size=socket_read_size)
 
         self._sock = socket
 
-        self._buffer = SocketBuffer(
-            self._sock,
-            self.socket_read_size
-        )
+        self._buffer = SocketBuffer(self._sock, self.socket_read_size)
 
-        self.encoder = Encoder(
-            encoding='utf-8',
-            encoding_errors='strict',
-            decode_responses=False
-        )
+        self.encoder = Encoder(encoding="utf-8", encoding_errors="strict", decode_responses=False)
 
     def read_request(self):
         # rename the function to map more with server side
@@ -59,26 +49,26 @@ class RedisResponseWriter(object):
     def encode(self, value):
         """Respond with data."""
         if value is None:
-            self._write_buffer('$-1\r\n')
+            self._write_buffer("$-1\r\n")
         elif isinstance(value, int):
-            self._write_buffer(':%d\r\n' % value)
+            self._write_buffer(":%d\r\n" % value)
         elif isinstance(value, bool):
-            self._write_buffer(':%d\r\n' % (1 if value else 0))
+            self._write_buffer(":%d\r\n" % (1 if value else 0))
         elif isinstance(value, str):
             if "\n" in value:
                 self._bulk(value)
             else:
-                self._write_buffer('+%s\r\n' % value)
+                self._write_buffer("+%s\r\n" % value)
         elif isinstance(value, bytes):
             self._bulkbytes(value)
         elif isinstance(value, list):
             if value and value[0] == "*REDIS*":
                 value = value[1:]
             self._array(value)
-        elif hasattr(value, '__repr__'):
+        elif hasattr(value, "__repr__"):
             self._bulk(value.__repr__())
         else:
-            value = j.data.serializers.json.dumps(value, encoding='utf-8')
+            value = j.data.serializers.json.dumps(value, encoding="utf-8")
             self.encode(value)
 
         self._send()
@@ -120,12 +110,12 @@ class RedisResponseWriter(object):
         self.buffer = BytesIO()  # seems faster then truncating
 
 
-class WebsocketResponseWriter():
+class WebsocketResponseWriter:
     def __init__(self, socket):
         self.socket = socket
 
     def encode(self, data):
-        self.socket.send(j.data.serializers.json.dumps(data, encoding='utf-8'))
+        self.socket.send(j.data.serializers.json.dumps(data, encoding="utf-8"))
 
     def error(self, msg):
         self.socket.send(msg)

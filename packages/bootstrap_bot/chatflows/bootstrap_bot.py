@@ -14,7 +14,7 @@ from sendgrid.helpers.mail import Mail
 from Jumpscale import j
 
 
-logger = logging.getLogger('bootstrap_bot')
+logger = logging.getLogger("bootstrap_bot")
 logger.addHandler(NullHandler())
 logger.setLevel(20)
 
@@ -25,16 +25,16 @@ def get_userbot(location):
     resp.raise_for_status()
     farmers = resp.json()
 
-    geolocator = Nominatim(user_agent='bootstrap_bot')
-    user_location = geolocator.geocode({'country': location})
+    geolocator = Nominatim(user_agent="bootstrap_bot")
+    user_location = geolocator.geocode({"country": location})
 
     # location_farmers is a dict where the key is location proximity and the value is a list of farmers in this location proximity
     locations_farmers = dict()
 
     for farmer in farmers:
-        if 'location' not in farmer:
+        if "location" not in farmer:
             continue
-        farmer_location = (farmer['location']['latitude'], farmer['location']['longitude'])
+        farmer_location = (farmer["location"]["latitude"], farmer["location"]["longitude"])
         distance = geodesic((user_location.latitude, user_location.longitude), farmer_location).km
         if distance in locations_farmers:
             locations_farmers[distance].append(farmer)
@@ -48,17 +48,17 @@ def get_userbot(location):
     sorted_locations = sorted(locations_farmers.keys())
     for distance in sorted_locations:
         for farmer in locations_farmers[distance]:
-            farm = j.sal_zos.farm.get(farmer['iyo_organization'])
-            logger.info("Checking farmer %s" % farmer['iyo_organization'])
+            farm = j.sal_zos.farm.get(farmer["iyo_organization"])
+            logger.info("Checking farmer %s" % farmer["iyo_organization"])
             nodes = sort_by_less_used(list(farm.filter_online_nodes()))
             # this farm has no online nodes, move on to the next farm
             if not nodes:
                 continue
 
             for node in nodes:
-                logger.info("Getting node with id %s" % node['node_id'])
+                logger.info("Getting node with id %s" % node["node_id"])
                 logger.info("Bootstrap token %s" % bootstrap_token)
-                node_sal = j.clients.zos.get_by_id(node['node_id'])
+                node_sal = j.clients.zos.get_by_id(node["node_id"])
 
                 try:
                     ports = node_sal.client.socat.reserve(2)
@@ -67,7 +67,9 @@ def get_userbot(location):
                     userbot.start()
                 except Exception as e:
                     # failed to create/start the 3bot container, continue and try another node
-                    logger.info("Failed to start node %s, continue and try another node: %s" % (node['node_id'], str(e)))
+                    logger.info(
+                        "Failed to start node %s, continue and try another node: %s" % (node["node_id"], str(e))
+                    )
                     if userbot:
                         userbot.destroy()
                     continue
@@ -77,15 +79,17 @@ def get_userbot(location):
                 while True:
                     try:
                         cli = j.clients.redis.get(ipaddr=node_sal.public_addr, port=ports[0])
-                        init_token = cli.execute_command('default.userbot.initialization_token', '{"bootstrap_token": "%s"}' % bootstrap_token)
+                        init_token = cli.execute_command(
+                            "default.userbot.initialization_token", '{"bootstrap_token": "%s"}' % bootstrap_token
+                        )
                         break
                     except Exception as e:
-                        logger.info("Couldn't connect to actor on node %s: %s" % (node['node_id'], str(e)))
+                        logger.info("Couldn't connect to actor on node %s: %s" % (node["node_id"], str(e)))
                         if time.time() < now + 600:
-                            logger.info("Wait a bit more for node %s to respond" % node['node_id'])
+                            logger.info("Wait a bit more for node %s to respond" % node["node_id"])
                             time.sleep(30)
                         else:
-                            logger.info("Time is up, destroying node %s and trying another node" % node['node_id'])
+                            logger.info("Time is up, destroying node %s and trying another node" % node["node_id"])
                             userbot.destroy()
                             break
                 if not init_token:
@@ -95,18 +99,20 @@ def get_userbot(location):
 
     return None, None, None, None
 
+
 def chat(bot):
     """
     to call http://localhost:5050/chat/session/bootstrap_bot
     """
-    email = bot.string_ask('Enter your email', validate={'required':True, 'email': True})
-    location = bot.drop_down_choice('Choose your location: ',  [c.name for c in pycountry.countries], validate={'required':True})
+    email = bot.string_ask("Enter your email", validate={"required": True, "email": True})
+    location = bot.drop_down_choice(
+        "Choose your location: ", [c.name for c in pycountry.countries], validate={"required": True}
+    )
     captcha = False
     error = False
     while not captcha:
-        captcha = bot.captcha_ask(error, validate={'required':True})
+        captcha = bot.captcha_ask(error, validate={"required": True})
         error = True
-
 
     init_token, ip, port, bootstrap_token = get_userbot(location)
 
@@ -127,10 +133,11 @@ def chat(bot):
     message = Mail(
         from_email="info@threefoldtech.com",
         to_emails=email,
-        subject='3bot Initialization',
-        html_content=j.tools.jinja2.template_render(text=j.core.text.strip(content),**locals()))
+        subject="3bot Initialization",
+        html_content=j.tools.jinja2.template_render(text=j.core.text.strip(content), **locals()),
+    )
     try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
         response = sg.send(message)
     except Exception as e:
         logger.error(str(e))
@@ -142,20 +149,20 @@ def chat(bot):
     and use this token for initialization: {{init_token}}
     """
 
-    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R),**locals())
+    R2 = j.tools.jinja2.template_render(text=j.core.text.strip(R), **locals())
     bot.md_show(R2)
     bot.redirect(bot_url)
 
 
-
 def sort_by_less_used(nodes):
     def key(node):
-        return (-node['total_resources']['cru'],
-                -node['total_resources']['mru'],
-                -node['total_resources']['sru'],
-                node['used_resources']['cru'],
-                node['used_resources']['mru'],
-                node['used_resources']['sru'])
+        return (
+            -node["total_resources"]["cru"],
+            -node["total_resources"]["mru"],
+            -node["total_resources"]["sru"],
+            node["used_resources"]["cru"],
+            node["used_resources"]["mru"],
+            node["used_resources"]["sru"],
+        )
+
     return sorted(nodes, key=key)
-
-

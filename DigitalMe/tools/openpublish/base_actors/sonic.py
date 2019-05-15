@@ -2,7 +2,6 @@ from Jumpscale import j
 
 
 class sonic(j.application.JSBaseClass):
-
     def _init(self):
         self.sonic_client = j.clients.sonic.get()
 

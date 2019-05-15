@@ -11,7 +11,6 @@ class example(JSBASE):
     # def __init__(self):
     #     JSBASE.__init__(self)
 
-
     def test(self, name, schema_out):
         """
         ```in
@@ -25,12 +24,12 @@ class example(JSBASE):
         ```
         """
 
-        r=schema_out.new()
+        r = schema_out.new()
         r.cat = "acat"
-        r.msg = "name was: %s"%name
+        r.msg = "name was: %s" % name
         r.options = ["acat"]
 
         return r
 
     def ping(self):
-        return 'PONG' 
+        return "PONG"

@@ -11,15 +11,10 @@ from .TFBot import TFBot
 
 
 class TFBotFactory(JSBASE):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.tfbot"
         JSBASE.__init__(self)
-        self._tbots={}
-
-
-
-
+        self._tbots = {}
 
     def test(self):
         """

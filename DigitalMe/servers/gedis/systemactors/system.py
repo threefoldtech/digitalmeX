@@ -4,7 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class system(JSBASE):
-
     def __init__(self):
         JSBASE.__init__(self)
         self.server = j.servers.gedis.latest
@@ -96,7 +95,7 @@ class system(JSBASE):
                     return
 
         # check if path is actor if yes, reload that one
-        if not changeobj.is_directory and changeobj.src_path.endswith('.py'):
+        if not changeobj.is_directory and changeobj.src_path.endswith(".py"):
             paths = list()
             paths.append(j.servers.gedis.latest.code_generated_dir)
             paths.append(j.servers.gedis.latest.app_dir + "/actors")
@@ -105,13 +104,13 @@ class system(JSBASE):
             for path in paths:
                 if path in changeobj.src_path:
                     actor_name = j.sal.fs.getBaseName(changeobj.src_path)[:-3].lower()
-                    namespace = j.servers.gedis.latest.instance + '.' + actor_name
+                    namespace = j.servers.gedis.latest.instance + "." + actor_name
                     if namespace in j.servers.gedis.latest.cmds_meta:
-                        del (j.servers.gedis.latest.cmds_meta[namespace])
-                        del (j.servers.gedis.latest.actors[namespace])
+                        del j.servers.gedis.latest.cmds_meta[namespace]
+                        del j.servers.gedis.latest.actors[namespace]
                         for cmd in list(j.servers.gedis.latest.cmds.keys()):
                             if actor_name in cmd:
-                                del (j.servers.gedis.latest.cmds[cmd])
+                                del j.servers.gedis.latest.cmds[cmd]
                         j.servers.gedis.latest.cmds_add(namespace, path=changeobj.src_path)
                         self._log_info("reloading namespace: {}".format(namespace))
                         return

@@ -3,6 +3,7 @@ from Jumpscale import j
 
 # THIS IS A TEST CHAT FOR RESERVING VM
 
+
 def chat(bot):
     farmer = j.tools.threefold_farmer
     farmer.zdb = j.clients.zdb.testdb_server_start_client_get()
@@ -38,15 +39,21 @@ you can use the following data to connect to it using your ssh key
          - VM IPs:
           -- ZT Network ID 1: {network0} ---> IP: {ip_address0}
           -- ZT Network ID 2: {network1} ---> IP: {ip_address1}
-        """.format(robot_url=robot_url, service_secret=service_secret,
-                   network0=ip_addresses[0]['network_id'], ip_address0=ip_addresses[0]['ip_address'],
-                   network1=ip_addresses[1]['network_id'], ip_address1=ip_addresses[1]['ip_address'])
+        """.format(
+            robot_url=robot_url,
+            service_secret=service_secret,
+            network0=ip_addresses[0]["network_id"],
+            ip_address0=ip_addresses[0]["ip_address"],
+            network1=ip_addresses[1]["network_id"],
+            ip_address1=ip_addresses[1]["ip_address"],
+        )
         bot.md_show(msg)
     elif vm_type == "zero-os":
         organization = bot.string_ask("Enter your organization name to be able to access zero-os using JWT")
         bot.md_show(msg)
         robot_url, service_secret, ip_addresses, port = farmer.capacity_planner.zos_reserve(
-            node=node, vm_name=vm_name, zerotier_token=zt_token, zerotier_network=zt_network, organization=organization)
+            node=node, vm_name=vm_name, zerotier_token=zt_token, zerotier_network=zt_network, organization=organization
+        )
         msg = """
         ## You have successfully reserved Zero-OS vm,
         you can use the following data to connect to it using your zos client
@@ -56,7 +63,13 @@ you can use the following data to connect to it using your ssh key
           -- ZT Network ID 1: {network0} ---> IP: {ip_address0}
           -- ZT Network ID 2: {network1} ---> IP: {ip_address1}
          - Redis Port: {port}
-        """.format(robot_url=robot_url, service_secret=service_secret, port=port,
-                   network0=ip_addresses[0]['network_id'], ip_address0=ip_addresses[0]['ip_address'],
-                   network1=ip_addresses[1]['network_id'], ip_address1=ip_addresses[1]['ip_address'])
+        """.format(
+            robot_url=robot_url,
+            service_secret=service_secret,
+            port=port,
+            network0=ip_addresses[0]["network_id"],
+            ip_address0=ip_addresses[0]["ip_address"],
+            network1=ip_addresses[1]["network_id"],
+            ip_address1=ip_addresses[1]["ip_address"],
+        )
         bot.md_show(msg)

@@ -7,7 +7,7 @@ from .protocol import RedisCommandParser, RedisResponseWriter
 JSBASE = j.application.JSBaseClass
 
 
-class Session():
+class Session:
     def __init__(self):
         self.dmid = None  # is the digital me id e.g. kristof.ibiza
         self.admin = False
@@ -122,7 +122,7 @@ class Request:
         :return: read the content type of the request form the headers
         :rtype: string
         """
-        return self.headers.get('content_type', 'auto').casefold()
+        return self.headers.get("content_type", "auto").casefold()
 
     @property
     def response_type(self):
@@ -130,7 +130,7 @@ class Request:
         :return: read the response type from the headers
         :rtype: string
         """
-        return self.headers.get('response_type', 'auto').casefold()
+        return self.headers.get("response_type", "auto").casefold()
 
 
 class ResponseWriter:
@@ -212,7 +212,7 @@ class Handler(JSBASE):
             self._handle_redis_session(gedis_socket, address)
         finally:
             gedis_socket.on_disconnect()
-            self._log_info('connection closed', context="%s:%s" % address)
+            self._log_info("connection closed", context="%s:%s" % address)
 
     def _handle_redis_session(self, gedis_socket, address):
         """
@@ -232,7 +232,7 @@ class Handler(JSBASE):
                 result = self._handle_request(request, address)
                 gedis_socket.writer.write(result)
             except ConnectionError as err:
-                self._log_info('connection error: %s' % str(err), context="%s:%s" % address)
+                self._log_info("connection error: %s" % str(err), context="%s:%s" % address)
                 return
             except Exception as e:
                 self._log_error(str(e), context="%s:%s" % address)
@@ -257,16 +257,15 @@ class Handler(JSBASE):
                 self.session.admin = True
                 return True
 
-        self._log_debug("command received %s %s %s" %
-                        (request.command.namespace,
-                         request.command.actor,
-                         request.command.command),
-                        context="%s:%s" % address)
+        self._log_debug(
+            "command received %s %s %s" % (request.command.namespace, request.command.actor, request.command.command),
+            context="%s:%s" % address,
+        )
 
         # cmd is cmd metadata + cmd.method is what needs to be executed
-        cmd = self._cmd_obj_get(cmd=request.command.command,
-                                namespace=request.command.namespace,
-                                actor=request.command.actor)
+        cmd = self._cmd_obj_get(
+            cmd=request.command.command, namespace=request.command.namespace, actor=request.command.actor
+        )
 
         params_list = []
         params_dict = {}
@@ -314,7 +313,9 @@ class Handler(JSBASE):
             except Exception as e:
                 if die:
                     raise ValueError(
-                        "the content is not valid capnp while you provided content_type=capnp\n%s\n%s" % (e, request.arguments[0]))
+                        "the content is not valid capnp while you provided content_type=capnp\n%s\n%s"
+                        % (e, request.arguments[0])
+                    )
                 return None
 
         def json_decode(request, command, die=True):
@@ -324,22 +325,24 @@ class Handler(JSBASE):
             except Exception as e:
                 if die:
                     raise ValueError(
-                        "the content is not valid json while you provided content_type=json\n%s\n%s" % (str, request.arguments[0]))
+                        "the content is not valid json while you provided content_type=json\n%s\n%s"
+                        % (str, request.arguments[0])
+                    )
                 return None
 
-        if request.content_type == 'auto':
+        if request.content_type == "auto":
             args = capnp_decode(request=request, command=command, die=False)
             if args is None:
                 args = json_decode(request=request, command=command)
-        elif request.content_type == 'json':
+        elif request.content_type == "json":
             args = json_decode(request=request, command=command)
-        elif request.content_type == 'capnp':
+        elif request.content_type == "capnp":
             args = capnp_decode(request=request, command=command)
         else:
             raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
         method_arguments = command.cmdobj.args
-        if 'schema_out' in method_arguments:
+        if "schema_out" in method_arguments:
             raise RuntimeError("schema_out should not be in arguments of method")
 
         params = {}
@@ -365,7 +368,7 @@ class Handler(JSBASE):
         if key_cmd in self.cmds:
             return self.cmds[key_cmd]
 
-        self._log_debug('command cache miss:%s %s %s' % (namespace, actor, cmd))
+        self._log_debug("command cache miss:%s %s %s" % (namespace, actor, cmd))
         if namespace == "system" and key not in self.actors:
             # we will now check if the info is in default namespace
             key = "default__%s" % actor
@@ -384,7 +387,7 @@ class Handler(JSBASE):
         # check cmd exists in the metadata
         if cmd not in meta.cmds:
             raise j.exceptions.Input("Cannot find method with name:%s in namespace:%s" % (cmd, namespace))
-    
+
         cmd_obj = meta.cmds[cmd]
 
         try:
@@ -392,7 +395,8 @@ class Handler(JSBASE):
             cmd_method = getattr(cl, cmd)
         except Exception as e:
             raise j.exceptions.Input(
-                "Could not execute code of method '%s' in namespace '%s'\n%s" % (key, namespace, e))
+                "Could not execute code of method '%s' in namespace '%s'\n%s" % (key, namespace, e)
+            )
 
         cmd_obj.method = cmd_method
         self.cmds[key_cmd] = cmd_obj
@@ -403,9 +407,9 @@ class Handler(JSBASE):
 def _result_encode(cmd, response_type, item):
 
     if cmd.schema_out is not None:
-        if response_type == 'msgpack':
+        if response_type == "msgpack":
             return item._msgpack
-        elif response_type == 'capnp' or response_type == 'auto':
+        elif response_type == "capnp" or response_type == "auto":
             return item._data
         else:
             return item._json
@@ -435,7 +439,7 @@ def dm_verify(dm_id, epoch, signed_message):
     :rtype: bool
     :raises: PermissionError in case of wrong message
     """
-    tfchain = j.clients.tfchain.new('3bot', network_type='TEST')
+    tfchain = j.clients.tfchain.new("3bot", network_type="TEST")
     record = tfchain.threebot.record_get(dm_id)
     verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
     if verify_key.verify(signed_message) != epoch:

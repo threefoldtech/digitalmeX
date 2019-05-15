@@ -13,14 +13,12 @@ class settings(JSBASE):
 
         self._threebotsettings_model = None
         self._bcdb = j.tools.open_publish.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
-        self._bcdb.models_add(
-            "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
+        self._bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
     @property
     def threebotsettings_model(self):
         if not self._threebotsettings_model:
-            self._threebotsettings_model = self._bcdb.model_get(
-                'threebot.user.settings')
+            self._threebotsettings_model = self._bcdb.model_get("threebot.user.settings")
         return self._threebotsettings_model
 
     def get_threebotsettings(self, doubleName, schema_out):
@@ -42,7 +40,19 @@ class settings(JSBASE):
 
         return out._data
 
-    def update_threebotsettings(self, doubleName, firstName, lastName, email, addressStreet, addressNumber, addressZipcode, addressCity, addressCountry, telephone):
+    def update_threebotsettings(
+        self,
+        doubleName,
+        firstName,
+        lastName,
+        email,
+        addressStreet,
+        addressNumber,
+        addressZipcode,
+        addressCity,
+        addressCountry,
+        telephone,
+    ):
         """
         ```in
         doubleName = (S)

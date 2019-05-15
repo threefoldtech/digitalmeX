@@ -14,7 +14,7 @@ class ZOSVirtual(j.application.JSBaseConfigClass):
     """
 
     def _init(self):
-        self.ZOSNode = None  #links to the ZOSNode which hosts this ZOSContainer
+        self.ZOSNode = None  # links to the ZOSNode which hosts this ZOSContainer
 
     @property
     def zos_client(self):
@@ -23,7 +23,7 @@ class ZOSVirtual(j.application.JSBaseConfigClass):
         :return:
         """
         pass
-        #implement caching at client side
+        # implement caching at client side
 
     def ssh_client(self):
         """
@@ -31,17 +31,15 @@ class ZOSVirtual(j.application.JSBaseConfigClass):
         :return: ssh client to this container
         """
         pass
-        #implement caching at client side
-
+        # implement caching at client side
 
     def __str__(self):
-        return "zoscontainer:%-14s %-25s:%-4s" % (self.name, self.addr,self.port)
+        return "zoscontainer:%-14s %-25s:%-4s" % (self.name, self.addr, self.port)
 
     __repr__ = __str__
 
 
-#REMARK: create an SSH connection to the ZOS node, can only be done when virtual
+# REMARK: create an SSH connection to the ZOS node, can only be done when virtual
 
 
-#IMPLEMENT START/....
-
+# IMPLEMENT START/....

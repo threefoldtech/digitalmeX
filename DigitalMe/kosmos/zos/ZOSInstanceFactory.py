@@ -5,6 +5,7 @@ from .ZosNodes.ZOSHostVirtualbox import ZOSHostVirtualbox
 from .ZosNodes.ZOSTFNode import ZOSTFNode
 from .ZosNodes.ZOSVirtual import ZOSVirtual
 
+
 class ZOSInstanceFactory(j.application.JSFactoryBaseClass):
     """
     hosts different implementation of zos hosts
@@ -12,6 +13,4 @@ class ZOSInstanceFactory(j.application.JSFactoryBaseClass):
 
     """
 
-    _CHILDCLASSES = [ZOSHostVirtualbox,ZOSHostOVH,ZOSTFNode,ZOSVirtual]
-
-
+    _CHILDCLASSES = [ZOSHostVirtualbox, ZOSHostOVH, ZOSTFNode, ZOSVirtual]

@@ -1,13 +1,13 @@
-
 from dnslib import *
+
 
 class DomainName(str):
     def __getattr__(self, item):
-        return DomainName(item + '.' + self)
+        return DomainName(item + "." + self)
 
 
-D = DomainName('example.com')
-IP = '127.0.0.1'
+D = DomainName("example.com")
+IP = "127.0.0.1"
 TTL = 60 * 5
 PORT = 5053
 
@@ -21,7 +21,7 @@ soa_record = SOA(
         60 * 60 * 3,  # retry
         60 * 60 * 24,  # expire
         60 * 60 * 1,  # minimum
-    )
+    ),
 )
 ns_records = [NS(D.ns1), NS(D.ns2)]
 records = {
@@ -31,4 +31,3 @@ records = {
     D.mail: [A(IP)],
     D.andrei: [CNAME(D)],
 }
-

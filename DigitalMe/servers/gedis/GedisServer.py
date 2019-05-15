@@ -43,7 +43,7 @@ class GedisServer(JSBaseConfig):
 
         self.host = self.data.host
         self.port = self.data.port
-        self.address = '{}:{}'.format(self.host, self.port)
+        self.address = "{}:{}".format(self.host, self.port)
         self.ssl = self.data.ssl
 
         self.web_client_code = None
@@ -61,14 +61,15 @@ class GedisServer(JSBaseConfig):
             code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, cat)
             j.sal.fs.remove(code_generated_dir)
             j.sal.fs.createDir(code_generated_dir)
-            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, '__init__.py'))
+            j.sal.fs.touch(j.sal.fs.joinPaths(code_generated_dir, "__init__.py"))
 
         # now add the one for the server
         if self.code_generated_dir not in sys.path:
             sys.path.append(self.code_generated_dir)
 
-        self.actors_add(namespace="system", path=j.sal.fs.joinPaths(
-            j.servers.gedis._dirpath, "systemactors"))  # add the system actors
+        self.actors_add(
+            namespace="system", path=j.sal.fs.joinPaths(j.servers.gedis._dirpath, "systemactors")
+        )  # add the system actors
 
         for sig in [signal.SIGINT, signal.SIGTERM]:
             self._sig_handler.append(gevent.signal(sig, self.stop))
@@ -184,8 +185,8 @@ class GedisServer(JSBaseConfig):
         res = {}
         for actor in actors:
             res[actor.name] = {
-                'schema': str(actor.schema),
-                'cmds': {cmd.name: str(cmd.args) for cmd in actor.cmds.values()},
+                "schema": str(actor.schema),
+                "cmds": {cmd.name: str(cmd.args) for cmd in actor.cmds.values()},
             }
         return res
 
@@ -256,9 +257,9 @@ class GedisServer(JSBaseConfig):
         if res:
             self._log_info("generated sslkeys for gedis in %s" % path)
         else:
-            self._log_info('using existing key and cerificate for gedis @ %s' % path)
-        key = j.sal.fs.joinPaths(path, 'ca.key')
-        cert = j.sal.fs.joinPaths(path, 'ca.crt')
+            self._log_info("using existing key and cerificate for gedis @ %s" % path)
+        key = j.sal.fs.joinPaths(path, "ca.key")
+        cert = j.sal.fs.joinPaths(path, "ca.crt")
         return key, cert
 
     def start(self):
@@ -278,14 +279,10 @@ class GedisServer(JSBaseConfig):
                 spawn=Pool(),
                 handle=handler.handle_redis,
                 keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
+                certfile=self.ssl_cert_path,
             )
         else:
-            self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=handler.handle_redis
-            )
+            self.redis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=handler.handle_redis)
         self._log_info("%s RUNNING", str(self))
         self.redis_server.serve_forever()
 
@@ -302,18 +299,17 @@ class GedisServer(JSBaseConfig):
         for h in self._sig_handler:
             h.cancel()
 
-        self._log_info('stopping server')
+        self._log_info("stopping server")
         self.redis_server.stop()
 
-    def test(self, name=''):
+    def test(self, name=""):
         if name:
             self._test_run(name=name)
         else:
-            self._test_run(name='basic')
+            self._test_run(name="basic")
 
     def __repr__(self):
-        return '<Gedis Server address=%s  generated_code_dir=%s)' % (
-            self.address, self.code_generated_dir)
+        return "<Gedis Server address=%s  generated_code_dir=%s)" % (self.address, self.code_generated_dir)
 
     __str__ = __repr__
 

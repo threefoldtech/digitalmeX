@@ -24,16 +24,9 @@ class GedisFactory(JSConfigFactory):
         server = self.get(instance=instance)
         return server.redis_server
 
-    def configure(self, name="test", port=8889,
-                  host="127.0.0.1", ssl=False, password="", configureclient=False):
+    def configure(self, name="test", port=8889, host="127.0.0.1", ssl=False, password="", configureclient=False):
 
-        data = {
-            "port": port,
-            "host": host,
-            "password_": password,
-            "ssl": ssl,
-            "name": name
-        }
+        data = {"port": port, "host": host, "password_": password, "ssl": ssl, "name": name}
 
         server = self.get(**data)
         if configureclient:

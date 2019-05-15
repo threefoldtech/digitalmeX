@@ -1,8 +1,9 @@
 from Jumpscale import j
-#GENERATED CODE, can now change
+
+# GENERATED CODE, can now change
 
 
-SCHEMA="""
+SCHEMA = """
 
 # Buy Order
 @url = threefoldtoken.order.buy
@@ -20,11 +21,14 @@ wallet_addr* = (S)           # Wallet address
 
 """
 from peewee import *
+
 db = j.data.bcdb.bcdb_instances["system"].sqlitedb
+
 
 class BaseModel(Model):
     class Meta:
         database = db
+
 
 class Index_threefoldtoken_order_buy(BaseModel):
     id = IntegerField(unique=True)
@@ -35,7 +39,9 @@ class Index_threefoldtoken_order_buy(BaseModel):
     approved = BooleanField(index=True)
     wallet_addr = TextField(index=True)
 
-MODEL_CLASS=j.data.bcdb.MODEL_CLASS
+
+MODEL_CLASS = j.data.bcdb.MODEL_CLASS
+
 
 class Model(MODEL_CLASS):
     def __init__(self, bcdb):
@@ -43,9 +49,9 @@ class Model(MODEL_CLASS):
         self.url = "threefoldtoken.order.buy"
         self.index = Index_threefoldtoken_order_buy
         self.index.create_table()
-    
-    def index_set(self,obj):
-        idict={}
+
+    def index_set(self, obj):
+        idict = {}
         idict["currency_to_buy"] = obj.currency_to_buy
         idict["price_max"] = obj.price_max_usd
         idict["amount"] = obj.amount
@@ -53,9 +59,7 @@ class Model(MODEL_CLASS):
         idict["approved"] = obj.approved
         idict["wallet_addr"] = obj.wallet_addr
         idict["id"] = obj.id
-        if not self.index.select().where(self.index.id == obj.id).count()==0:
-            #need to delete previous record from index
+        if not self.index.select().where(self.index.id == obj.id).count() == 0:
+            # need to delete previous record from index
             self.index.delete().where(self.index.id == obj.id).execute()
         self.index.insert(**idict).execute()
-
-    

@@ -11,22 +11,20 @@ class GedisCmd(JSBASE):
         """
         JSBASE.__init__(self)
 
-
         ## is resulting obj from
-        #@url = jumpscale.gedis.cmd
-        #name = ""
-        #comment = ""
-        #schema_in = ""
-        #schema_out = ""
-        #args = (ls)
+        # @url = jumpscale.gedis.cmd
+        # name = ""
+        # comment = ""
+        # schema_in = ""
+        # schema_out = ""
+        # args = (ls)
         self.cmdobj = cmd
 
         # self.data = cmd._data
         self.namespace = namespace
         self.name = cmd.name
 
-
-        if cmd.schema_in_url!="":
+        if cmd.schema_in_url != "":
             if cmd.schema_in_url not in j.data.schema.schemas:
                 j.shell()
                 w
@@ -34,7 +32,7 @@ class GedisCmd(JSBASE):
         else:
             self.schema_in = None
 
-        if cmd.schema_out_url!="":
+        if cmd.schema_out_url != "":
             if cmd.schema_out_url not in j.data.schema.schemas:
                 j.shell()
                 w
@@ -76,13 +74,13 @@ class GedisCmd(JSBASE):
 
             args = self.cmdobj.args
 
-            to_exclude = ['schema_out', ':']
+            to_exclude = ["schema_out", ":"]
             for item in to_exclude:
                 if item in args:
                     args.remove(item)
 
             if args:
-                return "," + ','.join(args)
+                return "," + ",".join(args)
             return ""
         else:
             if len(self.schema_in.properties) == 0:
@@ -117,7 +115,6 @@ class GedisCmd(JSBASE):
     def comment(self):
         return self.cmdobj.comment
 
-
     @property
     def comment_indent(self):
         return j.core.text.indent(self.cmdobj.comment).rstrip()
@@ -138,9 +135,6 @@ class GedisCmd(JSBASE):
     #     return self._method
 
     def __repr__(self):
-        return '%s:%s' % (self.namespace, self.name)
+        return "%s:%s" % (self.namespace, self.name)
 
     __str__ = __repr__
-
-
-

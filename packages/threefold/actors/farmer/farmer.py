@@ -24,25 +24,25 @@ class Farmer(JSBASE):
     @property
     def farmer_model(self):
         if not self._farmer_model:
-            self._farmer_model = self._bcdb.model_get('threefold.grid.farmer')
+            self._farmer_model = self._bcdb.model_get("threefold.grid.farmer")
         return self._farmer_model
 
     @property
     def node_model(self):
         if not self._node_model:
-            self._node_model = self._bcdb.model_get('threefold.grid.node')
+            self._node_model = self._bcdb.model_get("threefold.grid.node")
         return self._node_model
 
     @property
     def wgw_rule_model(self):
         if not self._wgw_rule_model:
-            self._wgw_rule_model = self._bcdb.model_get('threefold.grid.webgateway_rule')
+            self._wgw_rule_model = self._bcdb.model_get("threefold.grid.webgateway_rule")
         return self._wgw_rule_model
 
     @property
     def wgw_model(self):
         if not self._wgw_model:
-            self._wgw_model = self._bcdb.model_get('threefold.grid.webgateway')
+            self._wgw_model = self._bcdb.model_get("threefold.grid.webgateway")
         return self._wgw_model
 
     def farmers_get(self, dummy, schema_out):
@@ -74,7 +74,9 @@ class Farmer(JSBASE):
         out.res = list({n.location.country for n in nodes if n.location.country})
         return out
 
-    def node_find(self, country, farmer_name, cores_min_nr, mem_min_mb, ssd_min_gb, hd_min_gb, nr_max,node_zos_id, schema_out):
+    def node_find(
+        self, country, farmer_name, cores_min_nr, mem_min_mb, ssd_min_gb, hd_min_gb, nr_max, node_zos_id, schema_out
+    ):
         """
         ```in
         country = "" (S)
@@ -164,14 +166,16 @@ class Farmer(JSBASE):
         :param zerotier_token: is the zerotier token to get the ip address
         user can now connect the ZOS client to this ipaddress with specified adminsecret over SSL
         """
-        res = self.capacity_planner.zos_reserve(node, vm_name, memory=memory, cores=cores,
-                                                organization=organization, zerotier_token=zerotier_token)
+        res = self.capacity_planner.zos_reserve(
+            node, vm_name, memory=memory, cores=cores, organization=organization, zerotier_token=zerotier_token
+        )
         out = schema_out.new()
         out.robot_url, out.service_secret, out.ip_address, out.redis_port = res
         return out
 
-    def ubuntu_reserve(self, jwttoken, node, vm_name, memory, cores,
-                       zerotier_network, zerotier_token, pub_ssh_key, schema_out):
+    def ubuntu_reserve(
+        self, jwttoken, node, vm_name, memory, cores, zerotier_network, zerotier_token, pub_ssh_key, schema_out
+    ):
         """
         ```in
         jwttoken = (S)
@@ -207,18 +211,26 @@ class Farmer(JSBASE):
         each of these VM's is automatically connected to the TF Public Zerotier network (TODO: which one is it)
         VM is only connected to the 1 or 2 zerotier networks ! and NAT connection to internet.
         """
-        res = self.capacity_planner.ubuntu_reserve(node, vm_name, memory=memory, zerotier_network=zerotier_network,
-                                                   zerotier_token=zerotier_token, pub_ssh_key=pub_ssh_key, cores=cores)
+        res = self.capacity_planner.ubuntu_reserve(
+            node,
+            vm_name,
+            memory=memory,
+            zerotier_network=zerotier_network,
+            zerotier_token=zerotier_token,
+            pub_ssh_key=pub_ssh_key,
+            cores=cores,
+        )
         out = schema_out.new()
         out.node_robot_url, out.service_secret, connection_info = res
-        out.ip_addr1 = connection_info[0]['ip_address'] or ""
-        out.zt_network1 = connection_info[0]['network_id'] or ""
-        out.ip_addr2 = connection_info[1]['ip_address'] or ""
-        out.zt_network2 = connection_info[1]['network_id'] or ""
+        out.ip_addr1 = connection_info[0]["ip_address"] or ""
+        out.zt_network1 = connection_info[0]["network_id"] or ""
+        out.ip_addr2 = connection_info[1]["ip_address"] or ""
+        out.zt_network2 = connection_info[1]["network_id"] or ""
         return out
 
-    def zdb_reserve(self, jwttoken, node, zdb_name, name_space, disk_type,
-                    disk_size, namespace_size, secret, schema_out):
+    def zdb_reserve(
+        self, jwttoken, node, zdb_name, name_space, disk_type, disk_size, namespace_size, secret, schema_out
+    ):
         """
         ```in
         jwttoken = (S)
@@ -251,13 +263,14 @@ class Farmer(JSBASE):
 
         user can now connect to this ZDB using redis client
         """
-        res = self.capacity_planner.zdb_reserve(node, zdb_name, name_space, disk_type,
-                                                disk_size, namespace_size, secret)
+        res = self.capacity_planner.zdb_reserve(
+            node, zdb_name, name_space, disk_type, disk_size, namespace_size, secret
+        )
         out = schema_out.new()
         out.robot_url, out.service_secret, ip_info = res
-        out.ip_address = ip_info['ip']
-        out.storage_ip = ip_info['storage_ip']
-        out.port = ip_info['port']
+        out.ip_address = ip_info["ip"]
+        out.storage_ip = ip_info["storage_ip"]
+        out.port = ip_info["port"]
         return out
 
     def web_gateways_get(self, jwttoken, country, farmer_name, schema_out):
@@ -302,14 +315,14 @@ class Farmer(JSBASE):
         :param domains: list of domains we need to register e.g. ["threefold.io", "www.threefold.io"]
         :param backends: list of backends that the domains will point to e.g. ['10.10.100.10:80', '10.10.100.11:80']
         """
-        user = jwt.get_unverified_claims(jwttoken)['username']
+        user = jwt.get_unverified_claims(jwttoken)["username"]
         self.capacity_planner.web_gateway_add_host(web_gateway, rule_name, domains, backends)
 
         # Check if the rule already exist, so we need to update it or create a new one
         res = self.wgw_rule_model.index.select().where(self.wgw_rule_model.index.user == user).execute()
         rules = [self.wgw_rule_model.get(rule.id) for rule in res]
         for user_rule in rules:
-            if user_rule.rule_name == rule_name and user_rule.webgateway_name == web_gateway['name']:
+            if user_rule.rule_name == rule_name and user_rule.webgateway_name == web_gateway["name"]:
                 rule = user_rule
                 break
         else:
@@ -336,7 +349,7 @@ class Farmer(JSBASE):
         :param schema_out:
         :return:
         """
-        user = jwt.get_unverified_claims(jwttoken)['username']
+        user = jwt.get_unverified_claims(jwttoken)["username"]
         res = self.wgw_rule_model.index.select().where(self.wgw_rule_model.index.user == user).execute()
         out = schema_out.new()
         out.res = [self.wgw_rule_model.get(rule.id) for rule in res]
@@ -354,11 +367,11 @@ class Farmer(JSBASE):
         :param rule_name: the rule name for the config you need to delete
         :return:
         """
-        user = jwt.get_unverified_claims(jwttoken)['username']
+        user = jwt.get_unverified_claims(jwttoken)["username"]
         res = self.wgw_rule_model.index.select().where(self.wgw_rule_model.index.user == user).execute()
         rules = [self.wgw_rule_model.get(rule.id) for rule in res]
         for rule in rules:
-            if rule.rule_name == rule_name and rule.webgateway_name == web_gateway['name']:
+            if rule.rule_name == rule_name and rule.webgateway_name == web_gateway["name"]:
                 self.capacity_planner.web_gateway_delete_host(web_gateway, rule_name)
                 self.wgw_rule_model.delete(rule.id)
                 break
@@ -388,8 +401,21 @@ class Farmer(JSBASE):
         self.farmer_model.set(new_farmer)
         return
 
-    def web_gateway_register(self, jwttoken, etcd_host, etcd_port, etcd_secret, farmer_name, name,
-                             pubip4, pubip6, country, location, description, schema_out):
+    def web_gateway_register(
+        self,
+        jwttoken,
+        etcd_host,
+        etcd_port,
+        etcd_secret,
+        farmer_name,
+        name,
+        pubip4,
+        pubip6,
+        country,
+        location,
+        description,
+        schema_out,
+    ):
         """
         ```in
         jwttoken = (S)

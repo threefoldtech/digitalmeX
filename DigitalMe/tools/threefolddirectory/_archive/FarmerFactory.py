@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 # from .CapacityPlanner import CapacityPlanner
 
 JSBASE = j.application.JSBaseClass
@@ -34,7 +35,9 @@ class FarmerFactory(JSBASE):
     @property
     def zerotier_net_sysadmin(self):
         if not self._zerotier_net_sysadmin:
-            self._zerotier_net_sysadmin = self.zerotier_client.network_get("1d71939404587f3c")  # don't change the nr is fixed
+            self._zerotier_net_sysadmin = self.zerotier_client.network_get(
+                "1d71939404587f3c"
+            )  # don't change the nr is fixed
         return self._zerotier_net_sysadmin
 
     @property
@@ -46,7 +49,7 @@ class FarmerFactory(JSBASE):
     @property
     def jwt(self):
         if not self._jwt:
-            self._jwt = self.iyo.jwt_get(refreshable=True, scope='user:memberof:threefold.sysadmin')
+            self._jwt = self.iyo.jwt_get(refreshable=True, scope="user:memberof:threefold.sysadmin")
         return self._jwt
 
     @property
@@ -63,7 +66,8 @@ class FarmerFactory(JSBASE):
             raise RuntimeError("you need to set self.zdb with a zerodb connection")
         if self._models is None:
             models_path = j.clients.git.getContentPathFromURLorPath(
-                "https://github.com/threefoldtech/digital_me/tree/development_simple/packages/threefold/models")
+                "https://github.com/threefoldtech/digital_me/tree/development_simple/packages/threefold/models"
+            )
             self.bcdb.models_add(models_path, overwrite=True)
             self._models = Models()
             self._models.nodes = self.bcdb.model_get_from_url("threefold.grid.node")
@@ -89,10 +93,8 @@ class FarmerFactory(JSBASE):
         for item in DIR_ITEMS:
             if ipaddr and "robot_address" in item and ipaddr in item["robot_address"]:
                 return item
-            if node_id and node_id.lower() == item['node_id'].lower():
+            if node_id and node_id.lower() == item["node_id"].lower():
                 return item
-
-
 
     @staticmethod
     def robot_get(node):
@@ -130,10 +132,10 @@ class FarmerFactory(JSBASE):
                 continue
             obj = self.farmer_get_from_dir(farmer["name"])
             obj.name = farmer["name"]
-            for wallet_addr in farmer['wallet_addresses']:
+            for wallet_addr in farmer["wallet_addresses"]:
                 if wallet_addr not in obj.wallets:
                     obj.wallets.append(wallet_addr)
-            obj.iyo_org = farmer['iyo_organization']
+            obj.iyo_org = farmer["iyo_organization"]
             self.models.farmers.set(obj)
 
     def node_get_from_zerotier(self, node_addr, return_none_if_not_exist=False):

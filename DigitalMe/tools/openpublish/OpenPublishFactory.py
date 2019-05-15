@@ -8,6 +8,7 @@ class OpenPublishFactory(JSConfigs):
     """
     Open Publish factory
     """
+
     __jslocation__ = "j.tools.open_publish"
     _CHILDCLASS = OpenPublish
 
@@ -30,7 +31,7 @@ class OpenPublishFactory(JSConfigs):
         """
         if background:
             cmd = "kosmos 'j.tools.open_publish.start(background=False)'"
-            j.tools.tmux.execute(cmd, window='Open Publish', pane='main', reset=False)
+            j.tools.tmux.execute(cmd, window="Open Publish", pane="main", reset=False)
             self._log_info("waiting for gedis to start on port {}".format(self.default.gedis.port))
             res = j.sal.nettools.waitConnectionTest("localhost", self.default.gedis.port, timeoutTotal=120)
             if not res:

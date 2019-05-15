@@ -85,7 +85,7 @@ class GedisCmds(JSBASE):
     @property
     def cmds(self):
         if self._cmds == {}:
-            self._log_debug('Populating commands for namespace(%s)', self.data.name)
+            self._log_debug("Populating commands for namespace(%s)", self.data.name)
             for s in self.data.schemas:
                 if s.content.strip().startswith("!"):
                     j.shell()
@@ -102,7 +102,7 @@ class GedisCmds(JSBASE):
         return name in self._cmds
 
     def __repr__(self):
-        return 'CMDS:%s' % (self.namespace)
+        return "CMDS:%s" % (self.namespace)
 
     __str__ = __repr__
 
@@ -126,15 +126,15 @@ class GedisCmds(JSBASE):
                 if "self" in lstrip:
                     if "," in lstrip:
                         _, arg = lstrip.split(",", 1)
-                        args = arg[:arg.index(')')]
-                        args = [j.core.text.strip(x) for x in args.split(',')]
+                        args = arg[: arg.index(")")]
+                        args = [j.core.text.strip(x) for x in args.split(",")]
                     else:
                         args = []
                 else:
                     _, arg = lstrip.split("(", 1)
                     args = arg.split(")", 1)
                 continue
-            if lstrip.startswith("\"\"\""):
+            if lstrip.startswith('"""'):
                 if state == "DEF":
                     state = "COMMENT"
                     continue
