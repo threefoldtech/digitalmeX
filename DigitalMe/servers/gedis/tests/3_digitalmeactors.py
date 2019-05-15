@@ -5,7 +5,7 @@ def main(self):
 
     """
     this method is only used when not used in digitalme
-    js_shell 'j.servers.gedis.test_server_start()'
+    kosmos 'j.servers.gedis.test_server_start()'
 
     """
     gedis = self.get(name="test")
