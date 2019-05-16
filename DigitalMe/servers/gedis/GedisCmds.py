@@ -21,6 +21,7 @@ schema_out_url = ""
 args = (ls)
 
 @url = jumpscale.gedis.schema
+md5 = ""
 url = ""
 content = ""
 """
@@ -40,8 +41,8 @@ class GedisCmds(JSBASE):
         self.path = path
         self.server = server
 
-        self.schema = j.data.schema.get_from_text(SCHEMA)
-        # self.schema = j.data.schema.get_from_url_latest(url="jumpscale.gedis.api")
+        j.data.schema.get_from_text(SCHEMA)
+        self.schema = j.data.schema.get_from_url_latest(url="jumpscale.gedis.api")
 
         self._cmds = {}
 
@@ -89,7 +90,7 @@ class GedisCmds(JSBASE):
             for s in self.data.schemas:
                 if s.content.strip().startswith("!"):
                     j.shell()
-                if not s.url in j.data.schema.schemas:
+                if not s.md5 in j.data.schema.md5_to_schema:
                     if not s.content.strip().startswith("!"):
                         j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:

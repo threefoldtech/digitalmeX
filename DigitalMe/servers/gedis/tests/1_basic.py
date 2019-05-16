@@ -32,7 +32,7 @@ def main(self):
             interpreter="jumpscale",
             daemon=True,
         )
-        cmd.start()
+        cmd.start(foreground=False)
 
         res = j.sal.nettools.waitConnectionTest("localhost", 8888, timeoutTotal=30)
         if res == False:

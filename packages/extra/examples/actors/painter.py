@@ -16,13 +16,13 @@ schema_text = """
 schema_text2 = """
     @url = jumpscale.example.wallet
     jwt = "" (S)                # JWT Token
-    addr* = ""                   # Address
+    addr* = ""                  # Address
     ipaddr = (ipaddr)           # IP Address
     email = "" (S)              # Email address
     username = "" (S)           # User name
     """
-j.data.schema.get(schema_text)
-j.data.schema.get(schema_text2)
+j.data.schema.get_from_text(schema_text)
+j.data.schema.get_from_text(schema_text2)
 
 
 class painter(JSBASE):
