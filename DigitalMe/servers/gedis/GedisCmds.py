@@ -86,15 +86,15 @@ class GedisCmds(JSBASE):
     @property
     def cmds(self):
         if self._cmds == {}:
-            self._log_debug("Populating commands for namespace(%s)", self.data.name)
+            self._log_debug("Populating commands for namespace(%s)" % self.data.name)
             for s in self.data.schemas:
                 if s.content.strip().startswith("!"):
                     j.shell()
-                if not s.md5 in j.data.schema.md5_to_schema:
+                if not s.url in j.data.schema.url_to_md5:
                     if not s.content.strip().startswith("!"):
                         j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:
-                self._log_debug("\tpopulate: %s", cmd.name)
+                self._log_debug("\tpopulate: %s" % cmd.name)
                 self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
 
         return self._cmds

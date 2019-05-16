@@ -387,6 +387,7 @@ class Handler(JSBASE):
 
         # check cmd exists in the metadata
         if cmd not in meta.cmds:
+            j.shell()
             raise j.exceptions.Input("Cannot find method with name:%s in namespace:%s" % (cmd, namespace))
 
         cmd_obj = meta.cmds[cmd]

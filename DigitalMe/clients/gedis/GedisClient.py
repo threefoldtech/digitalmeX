@@ -82,7 +82,7 @@ class GedisClient(JSConfigBase):
                     raise RuntimeError("aa")
                 actor_name = key.split("__")[1]
                 self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, data)
-                a = self._actorsmeta[actor_name]
+                # a = self._actorsmeta[actor_name]
 
             # at this point the schema's are loaded only for the namespace identified (is all part of metadata)
             for actorname, actormeta in self._actorsmeta.items():
@@ -99,7 +99,7 @@ class GedisClient(JSConfigBase):
 
                 o = cl(client=self)
                 setattr(self._actors, actorname, o)
-                self._log_debug("cmds:%s" % actorname)
+                self._log_info("cmds for actor:%s" % actorname)
 
                 def process_url(url):
                     url = url.replace(".", "_")
