@@ -16,18 +16,11 @@ class chatbot(JSBASE):
         # check self.chatbot.chatflows for the existing chatflows
         # all required commands are here
 
-    def work_get(self, sessionid, schema_out):
+    def work_get(self, sessionid):
         """
         ```in
         sessionid = "" (S)
         ```
-        ```out
-        cat = "" (S)
-        msg = "" (S)
-        error = "" (S)
-        options = L(S)
-        ```
-
         """
         res = self.chatbot.session_work_get(sessionid)
         return json.dumps(res)
@@ -38,10 +31,6 @@ class chatbot(JSBASE):
         sessionid = "" (S)
         result = "" (S)
         ```
-
-        ```out
-        ```
-
         """
         self.chatbot.session_work_set(sessionid, result)
         return

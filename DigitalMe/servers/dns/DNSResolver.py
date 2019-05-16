@@ -22,8 +22,8 @@ class DNSResolver:
         self.model = bcdb.model_get_from_schema(schema)
 
     def create_record(self, domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
-        """Create a new dns object and save to db using bcdb. 
-        If zone(last two items in domain) already has an entry, 
+        """Create a new dns object and save to db using bcdb.
+        If zone(last two items in domain) already has an entry,
         then add the new domain items to new or updated domain in the list of domains associated with that zone
 
         :param domain: domain name of entry
@@ -76,7 +76,7 @@ class DNSResolver:
 
     def update_domain(self, domain_obj, name="", domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
         """Update a domain object with the parameters needed
-        
+
         :param domain_obj: object that consists of the dns record data using schema -> jumpscale.dnsItem.record.1
         :param name:name of record used to store in bcdb
         :type name: str
@@ -89,7 +89,7 @@ class DNSResolver:
         :param ttl: time to live
         :type ttl: int
         :param priority: (optional) priority when record type is MX or SRV
-        :type priority: int 
+        :type priority: int
         """
         domain_obj.name = name
         domain_obj.domain = domain
