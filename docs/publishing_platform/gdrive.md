@@ -21,11 +21,3 @@ cl.save()
 ```bash
 mkdir -p /sandbox/var/gdrive/static/{doc,slide,sheet} 
 ```
-
-3- make the needed links
-
-```
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/gdrive/app.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/applications/gdrive.moon
-
-ln -s /sandbox/var/gdrive/static/ /sandbox/code/github/threefoldfoundation/lapis-wiki/static/gdrive
-```
