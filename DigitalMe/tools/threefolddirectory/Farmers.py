@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 
@@ -18,7 +17,6 @@ class Farmer(j.application.JSBaseConfigClass):
         mobile = (LS)
         """
 
-
     def _init(self):
         pass
 
@@ -27,4 +25,5 @@ class Farmers(j.application.JSBaseConfigsClass):
     """
     ...
     """
+
     _CHILDCLASS = Farmer

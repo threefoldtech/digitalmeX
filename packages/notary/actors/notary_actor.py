@@ -10,7 +10,7 @@ JSBASE = j.application.JSBaseClass
 class notary_actor(JSBASE):
     def __init__(self):
         self.bcdb = j.data.bcdb.bcdb_instances["notary_bcdb"]
-        self.tfchain = j.clients.tfchain.new('notary', network_type='TEST')
+        self.tfchain = j.clients.tfchain.new("notary", network_type="TEST")
 
     def _bot_verify_key(self, bot_id):
         """
@@ -25,9 +25,7 @@ class notary_actor(JSBASE):
         """
         record = self.tfchain.threebot.record_get(bot_id)
         encoded_key = record.public_key.hash
-        return nacl.signing.VerifyKey(
-            str(encoded_key),
-            encoder=nacl.encoding.HexEncoder), record.identifier
+        return nacl.signing.VerifyKey(str(encoded_key), encoder=nacl.encoding.HexEncoder), record.identifier
 
     def register(self, threebot_id, content, content_signature, schema_out):
         """
@@ -71,7 +69,7 @@ class notary_actor(JSBASE):
         if not result:
             raise KeyError("reservation not found")
         if len(result) > 1:
-            raise RuntimeError('found 2 reservation with that hash, this should never happens')
+            raise RuntimeError("found 2 reservation with that hash, this should never happens")
 
         return result[0]
 
@@ -97,13 +95,13 @@ def _hash_content(threebot_id, content):
     buff.write(bi)
 
     if isinstance(content, str):
-        content = content.encode('utf-8')
+        content = content.encode("utf-8")
     buff.write(content)
     return j.data.hash.blake2_string(buff.getvalue(), 32)
 
 
 def _int_to_bytes(i):
-    return i.to_bytes(64, byteorder='big')
+    return i.to_bytes(64, byteorder="big")
 
 
 def _verify_signature(smessage, signature, verify_key):

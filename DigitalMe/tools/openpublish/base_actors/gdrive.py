@@ -1,10 +1,9 @@
 from Jumpscale import j
 
-STATIC_DIR = '/sandbox/var/gdrive/static'
+STATIC_DIR = "/sandbox/var/gdrive/static"
 
 
 class gdrive(j.application.JSBaseClass):
-
     def file_get(self, doctype, guid1, guid2, schema_out):
         """
         ```in
@@ -22,11 +21,7 @@ class gdrive(j.application.JSBaseClass):
         172.17.0.2:8080/gdrive/slide/1-Eh4ghLxoVCGSt5onNb8Dx9sCi3-OJ3mNQGo0h9CUgg/second
         """
 
-        doctypes_map = {
-            'doc': 'drive',
-            'sheet': 'drive',
-            'slide': 'slides',
-        }
+        doctypes_map = {"doc": "drive", "sheet": "drive", "slide": "slides"}
         cl = j.clients.gdrive.main
 
         if not doctype in doctypes_map:
@@ -51,6 +46,6 @@ class gdrive(j.application.JSBaseClass):
             else:
                 meta = cl.get_presentation_meta("{}/presentations.meta.json".format(path), guid1)
                 guid2 = meta[guid2]
-                guid2 = guid2.split('_', maxsplit=1)[1]  # remove the 0x_ part from the file name
+                guid2 = guid2.split("_", maxsplit=1)[1]  # remove the 0x_ part from the file name
                 out.res = "/gdrive_static/slide/{}/{}".format(guid1, guid2)
             return out

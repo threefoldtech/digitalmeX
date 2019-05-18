@@ -1,8 +1,9 @@
 from Jumpscale import j
-#GENERATED CODE, can now change
+
+# GENERATED CODE, can now change
 
 
-SCHEMA="""
+SCHEMA = """
 @url = jumpscale.example.order.sell
 comment = ""
 currency_to_sell* = "" (S)   # currency types BTC/ETH/XRP/TFT
@@ -20,7 +21,8 @@ wallet_addr* = (S)           # Wallet address
 """
 from peewee import *
 
-MODEL_CLASS=j.data.bcdb.MODEL_CLASS
+MODEL_CLASS = j.data.bcdb.MODEL_CLASS
+
 
 class BCDBModel2(MODEL_CLASS):
     def __init__(self, bcdb):
@@ -30,7 +32,7 @@ class BCDBModel2(MODEL_CLASS):
         self._init()
 
     def _init(self):
-        pass #to make sure works if no index
+        pass  # to make sure works if no index
 
         db = self.bcdb.sqlitedb
 
@@ -48,16 +50,14 @@ class BCDBModel2(MODEL_CLASS):
             wallet_addr = TextField(index=True)
 
         self.index = Index_jumpscale_example_order_sell
-            
-        self.index.create_table()
 
+        self.index.create_table()
 
         self.index = Index_jumpscale_example_order_sell
         self.index.create_table()
 
-    
-    def index_set(self,obj):
-        idict={}
+    def index_set(self, obj):
+        idict = {}
         idict["currency_to_sell"] = obj.currency_to_sell
         idict["price_min"] = obj.price_min_usd
         idict["amount"] = obj.amount
@@ -65,9 +65,7 @@ class BCDBModel2(MODEL_CLASS):
         idict["approved"] = obj.approved
         idict["wallet_addr"] = obj.wallet_addr
         idict["id"] = obj.id
-        if not self.index.select().where(self.index.id == obj.id).count()==0:
-            #need to delete previous record from index
+        if not self.index.select().where(self.index.id == obj.id).count() == 0:
+            # need to delete previous record from index
             self.index.delete().where(self.index.id == obj.id).execute()
         self.index.insert(**idict).execute()
-
-    

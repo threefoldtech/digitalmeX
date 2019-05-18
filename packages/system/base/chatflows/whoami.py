@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 # THIS IS A TEST CHAT
 
 
@@ -9,10 +10,10 @@ def chat(bot):
 
     name = bot.string_ask("What is your name?")
     age = bot.int_ask("What is your age? ")
-    favorite_langs = bot.multi_choice(
-        "Favorite language: ", ['python', 'perl', 'haskell', 'pascal'])
+    favorite_langs = bot.multi_choice("Favorite language: ", ["python", "perl", "haskell", "pascal"])
     worst_person = bot.single_choice(
-        "Room with stalin, hitler and toby who would you shoot twice? ", ['stalin', 'hitler', 'toby'])
+        "Room with stalin, hitler and toby who would you shoot twice? ", ["stalin", "hitler", "toby"]
+    )
 
     R = """
     # You entered

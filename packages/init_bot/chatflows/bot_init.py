@@ -16,17 +16,17 @@ def reverse_geocode(lat, lng):
     city = None
     continent = None
     try:
-        feature_properties = reverse_data['features'][0]['properties']
-        cc = feature_properties['country_code'].upper()
+        feature_properties = reverse_data["features"][0]["properties"]
+        cc = feature_properties["country_code"].upper()
         city = None
         if "city" in feature_properties:
-            city = feature_properties['city']
+            city = feature_properties["city"]
         elif "town" in feature_properties:
             city = feature_properties["town"]
         elif "state" in feature_properties:
-            city = feature_properties['state']
+            city = feature_properties["state"]
         elif "county" in feature_properties:
-            city = feature_properties['county']
+            city = feature_properties["county"]
 
         country = pycountry.countries.get(alpha_2=cc).name
         continent_code = country_alpha2_to_continent_code(cc)
@@ -41,17 +41,14 @@ def get_init_token():
     # get initialization token from user 3bot
     BCDB_NAMESPACE = "threebotuser"
 
-    bcdb = j.tools.open_publish.bcdb_get(
-        BCDB_NAMESPACE, use_zdb=True)
-    bcdb.models_add(
-        "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
+    bcdb = j.tools.open_publish.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
+    bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
-    user_bot_model = bcdb.model_get(
-        'threebot.user.initialization')
+    user_bot_model = bcdb.model_get("threebot.user.initialization")
 
-    user_settings = user_bot_model.get_by_name('user_initialization')
+    user_settings = user_bot_model.get_by_name("user_initialization")
     if not user_settings:
-        raise RuntimeError('Initialization token is not set')
+        raise RuntimeError("Initialization token is not set")
     print("user_settings[0].token", user_settings[0].token)
     return user_settings[0].token
 
@@ -63,7 +60,7 @@ def chat(bot):
     # rndname = j.data.idgenerator.generateXCharID(4)
     clientname = "threebotmain"  # set to rndname in TESTING
 
-    cl = j.clients.tfchain.get(clientname, network_type='TEST')
+    cl = j.clients.tfchain.get(clientname, network_type="TEST")
     cl.save()
 
     if cl.wallets.count() > 0:
@@ -77,8 +74,7 @@ def chat(bot):
             break
         bot.md_show("Invalid initialization token")
 
-    email = bot.string_ask("Enter email", validate={
-                           'required': True, 'email': True}).strip()
+    email = bot.string_ask("Enter email", validate={"required": True, "email": True}).strip()
 
     while True:
         doubleName = bot.string_ask("Double name").strip()
@@ -98,8 +94,7 @@ def chat(bot):
             break
 
     mnemonic = bot.text_ask("Mnemonics? ").strip()
-    walletseed = j.data.encryption.mnemonic_to_seed(
-        mnemonic) if mnemonic else ""
+    walletseed = j.data.encryption.mnemonic_to_seed(mnemonic) if mnemonic else ""
 
     while True:
         location = bot.location_ask("Location? ")

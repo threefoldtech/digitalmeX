@@ -33,7 +33,6 @@ class ZOSInstance(j.application.JSFactoryBaseClass):
         if self._zos_client_ is None:
             j.shell()
 
-
     # def zos_container_get(self,name="test"):
     #     if name not in self.zos_containers:
     #         zc = ZOSContainer(name=name)
@@ -56,10 +55,7 @@ class ZOSInstance(j.application.JSFactoryBaseClass):
     #         self.zos_virtual[name] = zc
     #     return self.zos_virtual[name]
 
-
-
     def __str__(self):
-        return "zero-os: %-14s %-25s:%-4s" % (self.name, self.addr,self.port)
+        return "zero-os: %-14s %-25s:%-4s" % (self.name, self.addr, self.port)
 
     __repr__ = __str__
-

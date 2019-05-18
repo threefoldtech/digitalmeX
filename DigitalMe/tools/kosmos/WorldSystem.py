@@ -1,7 +1,6 @@
 from Jumpscale import j
 
 
-
 from .BASE_CLASSES.CoordinatorBase import CoordinatorBase
 from .BASE_CLASSES.ServiceBase import ServiceBase
 import gevent
@@ -51,15 +50,12 @@ class WorldSystem(JSFactoryBase):
     _ServiceBase = ServiceBase
     _CoordinatorBase = CoordinatorBase
 
-
     def __init__(self):
 
         JSFactoryBase.__init__(self)
         self._bcdb = j.data.bcdb.new("world")
         self._schema_service_state = j.data.schema.get(SCHEMA_SERVICE_STATE)
         self._schema_service_action = self._bcdb.model_get_from_schema(SCHEMA_SERVICE_ACTION)
-
-
 
     def test(self):
         """
@@ -71,12 +67,11 @@ class WorldSystem(JSFactoryBase):
 
         hv = j.world.hypervisor
 
-        #servicepool is a chosen name for the group of services, is optional
-        #when id None which is default, then will be a new one or will check if there is an instance with the name for the servicepool
-        #if id not None, it will check if it exists, name should not be given then, or at least the same
+        # servicepool is a chosen name for the group of services, is optional
+        # when id None which is default, then will be a new one or will check if there is an instance with the name for the servicepool
+        # if id not None, it will check if it exists, name should not be given then, or at least the same
 
-        vb = hv.ServiceVirtualBox(id=None,key="myhypervisor",servicepool="tf_gent")
-
+        vb = hv.ServiceVirtualBox(id=None, key="myhypervisor", servicepool="tf_gent")
 
         assert vb.data.description == ""
         print(vb.data)
@@ -84,21 +79,18 @@ class WorldSystem(JSFactoryBase):
         vb.data.description = "test"
         vb.data_save()
 
-
-        vb2 = hv.ServiceVirtualBox(id=None,key="myhypervisor",servicepool="tf_gent")
-        assert vb2.id == vb.id #should have same id
-        assert vb2.key == vb.key #should have same key
-
+        vb2 = hv.ServiceVirtualBox(id=None, key="myhypervisor", servicepool="tf_gent")
+        assert vb2.id == vb.id  # should have same id
+        assert vb2.key == vb.key  # should have same key
 
         vb3 = hv.ServiceVirtualBox(id=vb2.id)
 
-        assert  vb3.key == vb.key
+        assert vb3.key == vb.key
 
-        #TODO: need to move logic with keys to BCDB, on wrong location now
-        #TODO: need to implement reload index when index not there or broken
+        # TODO: need to move logic with keys to BCDB, on wrong location now
+        # TODO: need to implement reload index when index not there or broken
 
         state = vb3.state
-
 
         action = vb3.task1(descr="mytask_test")
 

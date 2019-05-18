@@ -2,7 +2,6 @@ from Jumpscale import j
 
 
 class DNSResolver:
-
     def __init__(self, bcdb):
         schema_text = """
         @url = jumpscale.dnsItem.1
@@ -22,7 +21,7 @@ class DNSResolver:
         schema = j.data.schema.get(schema_text)
         self.model = bcdb.model_get_from_schema(schema)
 
-    def create_record(self, domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
+    def create_record(self, domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
         """Create a new dns object and save to db using bcdb. 
         If zone(last two items in domain) already has an entry, 
         then add the new domain items to new or updated domain in the list of domains associated with that zone
@@ -50,8 +49,9 @@ class DNSResolver:
         obj.zone = zone
         # Create domain object and add to list of domains of relative zone
         name = "%s_%s" % (domain, record_type)
-        domain_obj = self.add_domain(obj, name=name, domain=domain, record_type=record_type,
-                                     value=value, ttl=ttl, priority=priority)
+        domain_obj = self.add_domain(
+            obj, name=name, domain=domain, record_type=record_type, value=value, ttl=ttl, priority=priority
+        )
         obj.domains.append(domain_obj)
         obj.save()
 
@@ -63,7 +63,7 @@ class DNSResolver:
         """
         domain_obj = None
         for d in dns_item.domains:
-            if d.name == kwargs['name']:
+            if d.name == kwargs["name"]:
                 domain_obj = d
                 break
 
@@ -74,7 +74,7 @@ class DNSResolver:
         domain_obj = self.update_domain(domain_obj, **kwargs)
         return domain_obj
 
-    def update_domain(self, domain_obj, name="", domain="", record_type='A', value="127.0.0.1", ttl=100, priority=10):
+    def update_domain(self, domain_obj, name="", domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
         """Update a domain object with the parameters needed
         
         :param domain_obj: object that consists of the dns record data using schema -> jumpscale.dnsItem.record.1
@@ -120,7 +120,7 @@ class DNSResolver:
                         return domain_obj
         return None
 
-    def delete_record(self, domain="", record_type=''):
+    def delete_record(self, domain="", record_type=""):
         """Delete dns_item record, if zone contains no more records then remove zone from dns as well
 
         :param domain: domain name of entry
@@ -136,13 +136,13 @@ class DNSResolver:
             if obj:
                 obj = obj[0]
                 name = "%s_%s" % (domain, record_type)
-                # Find domain_+record_type record in zone object, if found remove it from the list 
-                for i,domain_obj in enumerate(obj.domains):
+                # Find domain_+record_type record in zone object, if found remove it from the list
+                for i, domain_obj in enumerate(obj.domains):
                     if name == domain_obj.name:
                         obj.domains.pop(i)
             else:
                 return
-            #if inner domains list is empty remove zone from dns
+            # if inner domains list is empty remove zone from dns
             if not obj.domains:
                 obj.delete()
             else:

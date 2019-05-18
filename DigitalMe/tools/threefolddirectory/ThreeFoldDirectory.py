@@ -2,10 +2,11 @@ from Jumpscale import j
 from .Farmers import *
 from .Nodes import *
 
+
 class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.tools.threefold_directory"
-    _CHILDCLASSES = [Farmers,Nodes]
+    _CHILDCLASSES = [Farmers, Nodes]
 
     def _init(self):
         self._zerotier_client = None
@@ -14,19 +15,22 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
         self._iyo = None
         self._jwt = None
 
-
     @property
     def zerotier_client(self):
         if not self._zerotier_client:
             if not j.clients.zerotier.exists("sysadmin"):
-                raise RuntimeError("Please configure your zerotier sysadmin client: j.clients.zerotier.get(name='sysadmin', token_=TOKEN)")
+                raise RuntimeError(
+                    "Please configure your zerotier sysadmin client: j.clients.zerotier.get(name='sysadmin', token_=TOKEN)"
+                )
             self._zerotier_client = j.clients.zerotier.get("sysadmin")
         return self._zerotier_client
 
     @property
     def zerotier_net_sysadmin(self):
         if not self._zerotier_net_sysadmin:
-            self._zerotier_net_sysadmin = self.zerotier_client.network_get("1d71939404587f3c")  # don't change the nr is fixed
+            self._zerotier_net_sysadmin = self.zerotier_client.network_get(
+                "1d71939404587f3c"
+            )  # don't change the nr is fixed
         return self._zerotier_net_sysadmin
 
     @property
@@ -38,7 +42,7 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
     @property
     def jwt(self):
         if not self._jwt:
-            self._jwt = self.iyo.jwt_get(refreshable=True, scope='user:memberof:threefold.sysadmin')
+            self._jwt = self.iyo.jwt_get(refreshable=True, scope="user:memberof:threefold.sysadmin")
         return self._jwt
 
     def farmer_get(self, name):
@@ -56,25 +60,25 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
             if not farmer.get("name"):
                 continue
             obj = self.farmers.get(name=farmer["name"])
-            for wallet_addr in farmer['wallet_addresses']:
+            for wallet_addr in farmer["wallet_addresses"]:
                 if wallet_addr not in obj.wallets:
                     obj.wallets.append(wallet_addr)
-            obj.iyo_org = farmer['iyo_organization']
+            obj.iyo_org = farmer["iyo_organization"]
             obj.save()
 
-    def node_get(self,zerotier_addr=None,die=False):
+    def node_get(self, zerotier_addr=None, die=False):
         res = self.node_find(zerotier_addr=zerotier_addr)
-        if len(res)==0:
+        if len(res) == 0:
             if die:
-                raise RuntimeError("could not find node: zerotier_addr=%s"%(zerotier_addr))
+                raise RuntimeError("could not find node: zerotier_addr=%s" % (zerotier_addr))
             return None
-        elif len(res)>1:
-            raise RuntimeError("found too many nodes, should only be 1: zerotier_addr=%s"%(zerotier_addr))
+        elif len(res) > 1:
+            raise RuntimeError("found too many nodes, should only be 1: zerotier_addr=%s" % (zerotier_addr))
         else:
             return res[0]
 
-    def node_find(self,zerotier_addr=None): #TODO: needs to be extended by more arguments
-        #am doing rather brute force because think sqlite indexing is broken
+    def node_find(self, zerotier_addr=None):  # TODO: needs to be extended by more arguments
+        # am doing rather brute force because think sqlite indexing is broken
         res = []
         for node in self.nodes.find():
             found = True
@@ -84,7 +88,6 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
             if found:
                 res.append(node)
         return res
-
 
     def zerotier_scan(self, reset=False):
         """
@@ -99,9 +102,9 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
             # online_past_sec = int(j.data.time.epoch - node.data["lastOnline"] / 1000)
             ipaddr = node.data["config"]["ipAssignments"][0]
             if online:
-                o=self.node_get(zerotier_addr=node.address,die=False)
+                o = self.node_get(zerotier_addr=node.address, die=False)
                 if not o:
-                    o = self.nodes.new(name="zt_%s"%node.address)
+                    o = self.nodes.new(name="zt_%s" % node.address)
                     o.sysadmin_ipaddr = ipaddr
                     o.node_zerotier_id = node.address
                     o.save()
@@ -118,13 +121,11 @@ class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
             return []
         else:
             return [node for node in self.nodes.find() if node.farmer_id == farmer_id]
+
     def scan(self):
-        '''
+        """
         kosmos 'j.tools.threefold_directory.scan()'
-        '''
+        """
         self.farmers_load()
         self.tfdir_scan()
         # self.zerotier_scan()
-
-
-

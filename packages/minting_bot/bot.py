@@ -1,5 +1,6 @@
 from Jumpscale import j
 from telegram import ParseMode
+
 """
 Minting Telgram bot
 
@@ -22,11 +23,13 @@ def print_error(func):
     Python telegram bot methods ignores exceptions in order not to block the thread, this decorator is to print any
     exception happened in the method to make debugging easier
     """
+
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except Exception as e:
             print(e)
+
     return wrapper
 
 
@@ -45,7 +48,7 @@ def chunks(l, n):
     Yield successive n-sized chunks from list
     """
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
 
 
 def respond_html(update, context, content):
@@ -63,6 +66,7 @@ def start(update, context):
     content = "<i>Hello</i> I'm ThreeFoldToken minting bot, to get a list of what I can do please send /help"
     respond_html(update, context, content)
 
+
 @print_error
 def list_farmers(update, context):
     """
@@ -74,16 +78,20 @@ def list_farmers(update, context):
 
         respond_html(update, context, content)
 
+
 @print_error
 def list_nodes_farmer(update, context):
     """
     List all nodes for a given farmer
     """
     if not context.args:
-        respond_html(update, context, "Sorry but I didn't get it, please provide a farmer ID, example:-  "
-                                      "/list_nodes_farmer 123")
+        respond_html(
+            update,
+            context,
+            "Sorry but I didn't get it, please provide a farmer ID, example:-  " "/list_nodes_farmer 123",
+        )
         return
-    farmer_id = ' '.join(context.args)
+    farmer_id = " ".join(context.args)
     nodes = directory.nodes.findData(farmer_id=farmer_id)
     if not nodes:
         respond_html(update, context, "Sorry but I couldn't find any up nodes for the provided farmer ID")
@@ -101,8 +109,9 @@ def node_info(update, context):
     #TODO: now it display very basic info we should show more data in human readable format
     """
     if not context.args:
-        respond_html(update, context, "Sorry but I didn't get it, please provide a Node ID, example:-  "
-                                      "/node_details 123")
+        respond_html(
+            update, context, "Sorry but I didn't get it, please provide a Node ID, example:-  " "/node_details 123"
+        )
         return
     node_id = context.args[0]
     node = directory.nodes.get(name="tf_{}".format(node_id))

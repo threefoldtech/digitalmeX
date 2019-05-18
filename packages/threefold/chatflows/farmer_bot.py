@@ -29,8 +29,13 @@ def chat(bot):
         email_address = bot.string_ask("Enter farmer email:")
         mobile_number = bot.string_ask("Enter farmer mobile:")
         farmer_pub_key = bot.text_ask("Public key for the farmer:")
-        gedis_client.farmer.farmer_register(jwttoken, farmer_name, email_addresses=[email_address],
-                                            mobile_numbers=[mobile_number], pubkey=farmer_pub_key)
+        gedis_client.farmer.farmer_register(
+            jwttoken,
+            farmer_name,
+            email_addresses=[email_address],
+            mobile_numbers=[mobile_number],
+            pubkey=farmer_pub_key,
+        )
 
     def farmers_get():
         report = ""
@@ -60,9 +65,16 @@ def chat(bot):
     def ubuntu_reserve(jwt_token, node, vm_name, zerotier_token, cores, memory):
         pub_ssh_key = bot.string_ask("Enter your public ssh key")
         zerotier_network = bot.string_ask("Enter the extra zerotier network id you need the vm to join:")
-        res = gedis_client.farmer.ubuntu_reserve(jwttoken=jwt_token, node=node, vm_name=vm_name, memory=memory,
-                                                 cores=cores, zerotier_network=zerotier_network,
-                                                 zerotier_token=zerotier_token, pub_ssh_key=pub_ssh_key)
+        res = gedis_client.farmer.ubuntu_reserve(
+            jwttoken=jwt_token,
+            node=node,
+            vm_name=vm_name,
+            memory=memory,
+            cores=cores,
+            zerotier_network=zerotier_network,
+            zerotier_token=zerotier_token,
+            pub_ssh_key=pub_ssh_key,
+        )
         report = """## Ubuntu reserved
     # you have successfully registered a zos vm
     - robot url = {robot_url}
@@ -71,8 +83,14 @@ def chat(bot):
     - ZT IP 1 = {ip_addr1}
     - ZT Network 2 = {zt_network2}
     - ZT IP 2 = {ip_addr2}
-""".format(robot_url=res.node_robot_url, service_secret=res.service_secret, zt_network1=res.zt_network1,
-           zt_network2=res.zt_network2, ip_addr1=res.ip_addr1, ip_addr2=res.ip_addr2)
+""".format(
+            robot_url=res.node_robot_url,
+            service_secret=res.service_secret,
+            zt_network1=res.zt_network1,
+            zt_network2=res.zt_network2,
+            ip_addr1=res.ip_addr1,
+            ip_addr2=res.ip_addr2,
+        )
         bot.md_show(report)
 
     def zos_reserve(jwttoken, node, vm_name, zerotier_token, memory, cores):
@@ -83,17 +101,21 @@ def chat(bot):
     - robot url = {robot_url}
     - service secret = {service_secret}
     - ip address = {ip_address}
-    - port = {port}""".format(robot_url=res.robot_url, service_secret=res.service_secret,
-                              ip_address=res.ip_address, port=res.redis_port)
+    - port = {port}""".format(
+            robot_url=res.robot_url, service_secret=res.service_secret, ip_address=res.ip_address, port=res.redis_port
+        )
         bot.md_show(report)
         bot.redirect("https://threefold.me")
 
     def web_gateway_http_proxy_delete():
         web_gateways = gedis_client.farmer.web_gateways_get().res
-        jwttoken = bot.string_ask("Please enter your JWT, "
-                                  "(click <a target='_blank' href='/client'>here</a> to get one)")
-        web_gateway_name = bot.drop_down_choice("Choose the web gateway you need to delete your domain from: ",
-                                                [web_gateway.name for web_gateway in web_gateways])
+        jwttoken = bot.string_ask(
+            "Please enter your JWT, " "(click <a target='_blank' href='/client'>here</a> to get one)"
+        )
+        web_gateway_name = bot.drop_down_choice(
+            "Choose the web gateway you need to delete your domain from: ",
+            [web_gateway.name for web_gateway in web_gateways],
+        )
         web_gateway = {}
         for gateway in web_gateways:
             if gateway.name == web_gateway_name:
@@ -103,40 +125,51 @@ def chat(bot):
 
     def web_gateway_http_proxy_set():
         web_gateways = gedis_client.farmer.web_gateways_get().res
-        jwttoken = bot.string_ask("Please enter your JWT, "
-                                  "(click <a target='_blank' href='/client'>here</a> to get one)")
-        web_gateway_name = bot.drop_down_choice("Choose the web gateway you need to add your domain to it: ",
-                                                [web_gateway.name for web_gateway in web_gateways])
+        jwttoken = bot.string_ask(
+            "Please enter your JWT, " "(click <a target='_blank' href='/client'>here</a> to get one)"
+        )
+        web_gateway_name = bot.drop_down_choice(
+            "Choose the web gateway you need to add your domain to it: ",
+            [web_gateway.name for web_gateway in web_gateways],
+        )
         web_gateway = {}
         for gateway in web_gateways:
             if gateway.name == web_gateway_name:
                 web_gateway = gateway
         rule_name = bot.string_ask("Choose a forwarding rule name that you can refer to afterwards:")
-        domains = bot.string_ask("Enter comma separated domains to configure "
-                                 "i.e. www.test.com,test.com")
+        domains = bot.string_ask("Enter comma separated domains to configure " "i.e. www.test.com,test.com")
         domains = [domain.strip() for domain in domains.split(",")]
-        backends = bot.string_ask("Enter comma separated backends you need to point to: "
-                                  "i.e. http://192.168.1.1:8000,http://192.168.1.2:5000")
+        backends = bot.string_ask(
+            "Enter comma separated backends you need to point to: "
+            "i.e. http://192.168.1.1:8000,http://192.168.1.2:5000"
+        )
         backends = [backend.strip() for backend in backends.split(",")]
-        gedis_client.farmer.web_gateway_add_host(jwttoken, web_gateway=web_gateway, rule_name=rule_name,
-                                                 domains=domains, backends=backends)
+        gedis_client.farmer.web_gateway_add_host(
+            jwttoken, web_gateway=web_gateway, rule_name=rule_name, domains=domains, backends=backends
+        )
 
     def web_gateway_list_hosts():
-        jwttoken = bot.string_ask("Please enter your JWT, "
-                                  "(click <a target='_blank' href='/client'>here</a> to get one)")
+        jwttoken = bot.string_ask(
+            "Please enter your JWT, " "(click <a target='_blank' href='/client'>here</a> to get one)"
+        )
         res = gedis_client.farmer.web_gateway_list_hosts(jwttoken).res
         report = """| Rule Name    |                Domains                       |             Backends                  |   Gateway    | 
 |:-------------:|:---------------------------------------:|:--------------------------------------------:|:-----------------------------:|  
 """
         for rule in res:
             report += """|{rule_name}|{domains}|{backends}|{webgateway_name}| 
-""".format(rule_name=rule.rule_name, domains=",".join(rule.domains),
-           backends=", ".join(rule.backends), webgateway_name=rule.webgateway_name)
+""".format(
+                rule_name=rule.rule_name,
+                domains=",".join(rule.domains),
+                backends=", ".join(rule.backends),
+                webgateway_name=rule.webgateway_name,
+            )
         bot.md_show(report)
 
     def web_gateway_register():
-        jwttoken = bot.string_ask("Please enter your JWT, "
-                                  "(click <a target='_blank' href='/client'>here</a> to get one)")
+        jwttoken = bot.string_ask(
+            "Please enter your JWT, " "(click <a target='_blank' href='/client'>here</a> to get one)"
+        )
         etcd_host = bot.string_ask("Enter etcd ip:")
         etcd_port = bot.string_ask("Enter etcd port:")
         etcd_secret = bot.password_ask("Enter etcd secret:")
@@ -144,16 +177,26 @@ def chat(bot):
         name = bot.string_ask("Enter gateway name:")
         pubip4 = bot.string_ask("Enter comma separated public IPsV4 i.e. (192.168.20.3,192.168.30.3):")
         pubip4 = [ip.strip() for ip in pubip4.split(",")] if pubip4 else []
-        pubip6 = bot.string_ask("Enter comma separated public IPsV6 "
-                                "i.e. (0:0:0:0:0:ffff:c0a8:114,0:0:0:0:0:ffff:c0a8:115):")
+        pubip6 = bot.string_ask(
+            "Enter comma separated public IPsV6 " "i.e. (0:0:0:0:0:ffff:c0a8:114,0:0:0:0:0:ffff:c0a8:115):"
+        )
         pubip6 = [ip.strip() for ip in pubip6.split(",")] if pubip6 else []
         country = bot.drop_down_choice("choose country:", [country for country in countries])
         location = None  # what is the difference between location and country
         description = bot.string_ask("Additional description?")
-        gedis_client.farmer.web_gateway_register(jwttoken=jwttoken, etcd_host=etcd_host, etcd_port=etcd_port,
-                                                 etcd_secret=etcd_secret, farmer_name=farmer_name, name=name,
-                                                 pubip4=pubip4, pubip6=pubip6, country=country, location=location,
-                                                 description=description)
+        gedis_client.farmer.web_gateway_register(
+            jwttoken=jwttoken,
+            etcd_host=etcd_host,
+            etcd_port=etcd_port,
+            etcd_secret=etcd_secret,
+            farmer_name=farmer_name,
+            name=name,
+            pubip4=pubip4,
+            pubip6=pubip6,
+            country=country,
+            location=location,
+            description=description,
+        )
 
     def zdb_reserve(jwttoken, node):
         zdb_name = bot.string_ask("Please enter your ZDB name:")
@@ -162,22 +205,29 @@ def chat(bot):
         namespace_name = bot.string_ask("Please enter your namespace name:")
         namespace_size = bot.int_ask("Please enter the namespace size:")
         namespace_secret = bot.password_ask("Please enter the namespace secret:")
-        res = gedis_client.farmer.zdb_reserve(jwttoken, node, zdb_name, namespace_name, disk_type, disk_size,
-                                              namespace_size, namespace_secret)
+        res = gedis_client.farmer.zdb_reserve(
+            jwttoken, node, zdb_name, namespace_name, disk_type, disk_size, namespace_size, namespace_secret
+        )
         report = """## ZDB reserved
         # you have successfully registered a Zero DB
             - robot url = {robot_url}
             - service secret = {service_secret}
             - ip address = {ip_address}
             - storage_ip = {storage_ip}
-            - port = port""".format(robot_url=res.robot_url, service_secret=res.service_secret,
-                                    ip_address=res.ip_address, port=res.port, storage_ip=res.storage_ip)
+            - port = port""".format(
+            robot_url=res.robot_url,
+            service_secret=res.service_secret,
+            ip_address=res.ip_address,
+            port=res.port,
+            storage_ip=res.storage_ip,
+        )
         bot.md_show(report)
         bot.redirect("https://threefold.me")
 
     def reserve_vm():
-        jwt_token = bot.string_ask("Please enter your JWT, "
-                                   "(click <a target='_blank' href='/client'>here</a> to get one)")
+        jwt_token = bot.string_ask(
+            "Please enter your JWT, " "(click <a target='_blank' href='/client'>here</a> to get one)"
+        )
         while True:
             node_filters = node_find()
             candidate_nodes = gedis_client.farmer.node_find(**node_filters)
@@ -192,8 +242,8 @@ def chat(bot):
             return
         vm_name = bot.string_ask("What will you call the vm?")
         zerotier_token = bot.string_ask("Enter your zerotier token:")
-        cores = int(node_filters.get('cores_min_nr', DEFAULT_CORE_NR))
-        memory = int(node_filters.get('mem_min_mb', DEFAULT_MEM_SIZE))
+        cores = int(node_filters.get("cores_min_nr", DEFAULT_CORE_NR))
+        memory = int(node_filters.get("mem_min_mb", DEFAULT_MEM_SIZE))
         if vm_type == "Ubuntu":
             ubuntu_reserve(jwt_token, node, vm_name, zerotier_token, cores, memory)
         elif vm_type == "Zero OS":
@@ -207,16 +257,15 @@ def chat(bot):
         if gedis_clients:
             gedis_client_name = bot.single_choice(
                 "Choose the farmer robot you want to use or choose other to configure new one:",
-                gedis_clients + ['other']
+                gedis_clients + ["other"],
             )
         if not gedis_client_name or gedis_client_name == "other":
             gedis_host = bot.string_ask("Enter the farmer robot host ip:")
             gedis_port = bot.int_ask("Enter the farmer robot host port: ")
             gedis_client_name = bot.string_ask("Choose a convenient name for the farmer robot:")
-            gedis_client = j.clients.gedis.get(instance=gedis_client_name, data={
-                'host': gedis_host,
-                'port': gedis_port
-            })
+            gedis_client = j.clients.gedis.get(
+                instance=gedis_client_name, data={"host": gedis_host, "port": gedis_port}
+            )
         else:
             gedis_client = j.clients.gedis.get(instance=gedis_client_name)
         countries = gedis_client.farmer.country_list().res

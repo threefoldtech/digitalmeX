@@ -5,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class open_publish(JSBASE):
-
     def __init__(self):
         JSBASE.__init__(self)
         self.open_publish_tool = j.tools.open_publish.default

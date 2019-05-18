@@ -1,11 +1,11 @@
 from Jumpscale import j
+
 # import baselib.remote
 
 JSBASE = j.application.JSBaseClass
 
 
 class CiscoSwitchManager(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.ciscoswitch"
         JSBASE.__init__(self)
@@ -22,6 +22,8 @@ class CiscoSwitchManager(j.application.JSBaseClass):
             CiscoSwitch -- return your Cisco Switch 
         """
         return CiscoSwitch(host, login, password)
+
+
 #!/usr/bin/python
 
 
@@ -29,12 +31,11 @@ from .Router import Router
 
 
 class CiscoSwitch(j.application.JSBaseClass):
-
     def __init__(self, host, login, password):
         JSBASE.__init__(self)
-        R1 = Router(hostname=host, logfile='cisco.log')
-        login_cmd = 'telnet ' + host
-        login_expect = '#'  # .format(hostname)  # TODO: NEEDS TO BE ADJUSTED
+        R1 = Router(hostname=host, logfile="cisco.log")
+        login_cmd = "telnet " + host
+        login_expect = "#"  # .format(hostname)  # TODO: NEEDS TO BE ADJUSTED
         out = R1.login(login_cmd, login, password, login_expect)
         # if out != R1._LOGIN_USERNAME_PROMPTS:
         #     R1.logout()
@@ -136,6 +137,7 @@ class CiscoSwitch(j.application.JSBaseClass):
     def download(self, path, dest):
         # TODO: now sure how that works on cisco sw
         from ftplib import FTP
+
         ftp = FTP(host=self.host, user=self.login, passwd=self.password)
-        ftp.retrbinary('RETR %s' % path, open(dest, 'wb').write)
+        ftp.retrbinary("RETR %s" % path, open(dest, "wb").write)
         ftp.close()

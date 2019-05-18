@@ -14,7 +14,6 @@ bar = (S)
 
 
 class actor(JSBASE):
-
     def __init__(self):
         JSBASE.__init__(self)
 
@@ -45,7 +44,7 @@ class actor(JSBASE):
         ```
         """
         result = schema_out.new()
-        result.bar = 'test'
+        result.bar = "test"
         return result
 
     def schema_in_out(self, x, schema_out):
@@ -86,4 +85,4 @@ class actor(JSBASE):
         return "%s %s" % (foo, bar)
 
     def raise_error(self):
-        raise RuntimeError('woopsy daisy')
+        raise RuntimeError("woopsy daisy")

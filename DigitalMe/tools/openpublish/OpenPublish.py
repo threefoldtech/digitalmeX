@@ -75,8 +75,9 @@ class OpenPublish(JSConfigClient):
     def bcdb_get(self, name, secret="", use_zdb=False):
         zdb_std_client = None
         if use_zdb:
-            zdb_admin_client = j.clients.zdb.client_admin_get(addr=self.zdb.host, port=self.zdb.port,
-                                                              secret=self.zdb.adminsecret_, mode=self.zdb.mode)
+            zdb_admin_client = j.clients.zdb.client_admin_get(
+                addr=self.zdb.host, port=self.zdb.port, secret=self.zdb.adminsecret_, mode=self.zdb.mode
+            )
             zdb_std_client = zdb_admin_client.namespace_new(name, secret)
         bcdb = j.data.bcdb.new(name, zdb_std_client)
         return bcdb
@@ -86,8 +87,9 @@ class OpenPublish(JSConfigClient):
         j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=True)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
-        j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(self.open_publish_path),
-                         overwriteTarget=False)
+        j.sal.fs.symlink(
+            "{}/static".format(weblibs_path), "{}/static/weblibs".format(self.open_publish_path), overwriteTarget=False
+        )
 
         # Start Lapis Server
         self._log_info("Starting Lapis Server")
@@ -100,8 +102,13 @@ class OpenPublish(JSConfigClient):
 
         # Start ZDB Server and create dns namespace
         self._log_info("Starting ZDB Server")
-        j.servers.zdb.configure(name=self.zdb.name, addr=self.zdb.host, port=self.zdb.port,
-                                mode=self.zdb.mode, adminsecret=self.zdb.adminsecret_)
+        j.servers.zdb.configure(
+            name=self.zdb.name,
+            addr=self.zdb.host,
+            port=self.zdb.port,
+            mode=self.zdb.mode,
+            adminsecret=self.zdb.adminsecret_,
+        )
         j.servers.zdb.start()
 
         # Start bcdb server and create corresponding dns namespace
@@ -112,8 +119,13 @@ class OpenPublish(JSConfigClient):
 
         # Start Gedis Server
         self._log_info("Starting Gedis Server")
-        self.gedis_server = j.servers.gedis.configure(name=self.gedis.name, port=self.gedis.port, host=self.gedis.host,
-                                                      ssl=self.gedis.ssl, password=self.gedis.password_)
+        self.gedis_server = j.servers.gedis.configure(
+            name=self.gedis.name,
+            port=self.gedis.port,
+            host=self.gedis.host,
+            ssl=self.gedis.ssl,
+            password=self.gedis.password_,
+        )
         actors_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_actors")
         self.gedis_server.actors_add(actors_path)
         chatflows_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "base_chatflows")
@@ -140,11 +152,8 @@ class OpenPublish(JSConfigClient):
             path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_CONFIG_TEMPLATE)
         else:
             path = j.sal.fs.joinPaths(conf_base_path, WIKI_CONFIG_TEMPLATE)
-        dest = j.sal.fs.joinPaths(self.open_publish_path, 'vhosts', '{}.conf'.format(obj.domain))
-        args = {
-            'name': obj.name,
-            'domain': obj.domain,
-        }
+        dest = j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(obj.domain))
+        args = {"name": obj.name, "domain": obj.domain}
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
         # handle if the tool used without using dns server
         if self.dns_server and obj.domain:
@@ -153,8 +162,8 @@ class OpenPublish(JSConfigClient):
                 self.dns_server.resolver.create_record(domain="wiki2." + obj.domain, value=obj.ip)
             else:
                 self.dns_server.resolver.create_record(obj.domain, value=obj.ip)
-                self.dns_server.resolver.create_record('www.' + obj.domain, value=obj.ip)
-                self.dns_server.resolver.create_record('www2.' + obj.domain, value=obj.ip)
+                self.dns_server.resolver.create_record("www." + obj.domain, value=obj.ip)
+                self.dns_server.resolver.create_record("www2." + obj.domain, value=obj.ip)
         if reload:
             self.reload_server()
 
@@ -182,19 +191,19 @@ class OpenPublish(JSConfigClient):
         repo_path = j.sal.fs.joinPaths(j.clients.git.getGitRepoArgs(repo_url)[-3])
         lapis_path = j.sal.fs.joinPaths(repo_path, "lapis")
 
-        static_path = j.sal.fs.joinPaths(lapis_path, 'static', name)
+        static_path = j.sal.fs.joinPaths(lapis_path, "static", name)
         if j.sal.fs.exists(static_path):
-            dest_path = j.sal.fs.joinPaths(self.open_publish_path, 'static', name)
+            dest_path = j.sal.fs.joinPaths(self.open_publish_path, "static", name)
             j.sal.fs.symlink(static_path, dest_path, overwriteTarget=False)
 
-        views_path = j.sal.fs.joinPaths(lapis_path, 'views', name)
+        views_path = j.sal.fs.joinPaths(lapis_path, "views", name)
         if j.sal.fs.exists(views_path):
-            dest_path = j.sal.fs.joinPaths(self.open_publish_path, 'views', name)
+            dest_path = j.sal.fs.joinPaths(self.open_publish_path, "views", name)
             j.sal.fs.symlink(views_path, dest_path, overwriteTarget=False)
 
-        moon_files_path = j.sal.fs.joinPaths(lapis_path, 'applications', name + ".moon")
+        moon_files_path = j.sal.fs.joinPaths(lapis_path, "applications", name + ".moon")
         if j.sal.fs.exists(moon_files_path):
-            dest_path = j.sal.fs.joinPaths(self.open_publish_path, 'applications', name + ".moon")
+            dest_path = j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon")
             j.sal.fs.symlink(moon_files_path, dest_path, overwriteTarget=False)
 
         # Load actors and chatflows if exists
@@ -220,10 +229,10 @@ class OpenPublish(JSConfigClient):
                 j.sal.fs.remove(dest + DEV_SUFFIX)
                 j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", wiki.name))
                 j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", wiki.name + DEV_SUFFIX))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'vhosts', '{}.conf'.format(wiki.domain)))
+                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(wiki.domain)))
                 if self.dns_server:
-                    self.dns_server.resolver.delete_record('wiki.' + wiki.domain, 'A')
-                    self.dns_server.resolver.delete_record('wiki2.' + wiki.domain, 'A')
+                    self.dns_server.resolver.delete_record("wiki." + wiki.domain, "A")
+                    self.dns_server.resolver.delete_record("wiki2." + wiki.domain, "A")
                 self.wikis.pop(i)
                 self.save()
                 self.reload_server()
@@ -242,10 +251,10 @@ class OpenPublish(JSConfigClient):
                     j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", website.name + DEV_SUFFIX))
                 except ValueError:
                     self._log_info("This website doesn't contain docsite to remove")
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'vhosts', '{}.conf'.format(website.domain)))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'static', name))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'views', name))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, 'applications', name + ".moon"))
+                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(website.domain)))
+                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "static", name))
+                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "views", name))
+                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon"))
                 self.websites.remove(website)
                 self.save()
                 self.reload_server()

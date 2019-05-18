@@ -22,4 +22,4 @@ if p.platformtype.isLinux:
     j.servers.dns.test()
 
 
-print ("DIGITAL ME TESTS OK")
+print("DIGITAL ME TESTS OK")

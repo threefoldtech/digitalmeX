@@ -14,7 +14,6 @@ bar = (S)
 
 
 class simple(JSBASE):
-
     def __init__(self):
         JSBASE.__init__(self)
 

@@ -1,8 +1,8 @@
-
 from Jumpscale import j
 import os
 import sys
 from importlib import import_module
+
 JSBASE = j.application.JSBaseClass
 from gevent import spawn
 from gevent import monkey
@@ -20,7 +20,7 @@ class ServerRack(JSBASE):
         self.servers = {}
         self._monkeypatch_done = False
 
-    def add(self,name,server):
+    def add(self, name, server):
         """
         add a gevent server e.g
 
@@ -33,7 +33,7 @@ class ServerRack(JSBASE):
 
         """
         monkey.patch_all(subprocess=False)
-        self.servers[name]=server
+        self.servers[name] = server
 
     def _monkeypatch(self):
         if not self._monkeypatch_done:
@@ -42,18 +42,20 @@ class ServerRack(JSBASE):
 
     def _nomonkeypatch_check(self):
         if self._monkeypatch_done:
-            raise RuntimeError("cannot start workers because gevent has been inited already, make sure you do gevent later")
-        
+            raise RuntimeError(
+                "cannot start workers because gevent has been inited already, make sure you do gevent later"
+            )
 
-    def filemonitor_start(self,gedis_instance_name=None,subprocess=True):
+    def filemonitor_start(self, gedis_instance_name=None, subprocess=True):
         """
         @param gedis_instance_name: gedis instance name that will be monitored
 
         js_shell 'j.servers.digitalme.filemonitor_start("test",subprocess=False)'
 
-        """        
+        """
         self._nomonkeypatch_check()
-        from .FileSystemMonitor import monitor_changes_subprocess,monitor_changes_parent
+        from .FileSystemMonitor import monitor_changes_subprocess, monitor_changes_parent
+
         if subprocess:
             self.filemonitor = monitor_changes_parent(gedis_instance_name=gedis_instance_name)
         else:
@@ -62,19 +64,19 @@ class ServerRack(JSBASE):
     def zrobot_start(self):
         # get zrobot instance
         self._monkeypatch()
-        self.zrobot = j.servers.zrobot.get(name,
-                                    data={"template_repo": "git@github.com:threefoldtech/0-templates.git",
-                                    "block": False})
+        self.zrobot = j.servers.zrobot.get(
+            name, data={"template_repo": "git@github.com:threefoldtech/0-templates.git", "block": False}
+        )
 
     def start(self):
         self._monkeypatch()
         started = []
         try:
-            for key,server in self.servers.items():
+            for key, server in self.servers.items():
                 server.start()
                 started.append(server)
-                name = getattr(server, 'name', None) or server.__class__.__name__ or 'Server'
-                self._log_info('%s started on %s' % (name, server.address))
+                name = getattr(server, "name", None) or server.__class__.__name__ or "Server"
+                self._log_info("%s started on %s" % (name, server.address))
         except:
             self.stop(started)
             raise
@@ -85,19 +87,17 @@ class ServerRack(JSBASE):
         except KeyboardInterrupt:
             self.stop()
 
-
     def stop(self, servers=None):
         self._log_info("stopping server rack")
         if servers is None:
-            servers = [item[1] for item in  self.servers.items()]
+            servers = [item[1] for item in self.servers.items()]
         for server in servers:
             try:
                 server.stop()
             except:
-                if hasattr(server, 'loop'): # gevent >= 1.0
+                if hasattr(server, "loop"):  # gevent >= 1.0
                     server.loop.handle_error(server.stop, *sys.exc_info())
-                else: # gevent <= 0.13
+                else:  # gevent <= 0.13
                     import traceback
+
                     traceback.print_exc()
-
-

@@ -13,10 +13,10 @@ class MulticastFactory(JSConfigBase):
         """
         js_shell 'j.clients.multicast.test_listen()'
         """
-        data={}
+        data = {}
         # data["group"]='ff15:7079:7468:6f6e:6465:6d6f:6d63:6173'
-        data["port"]=8123
-        cl=self.get(data=data)
+        data["port"] = 8123
+        cl = self.get(data=data)
         print("listen")
         cl.listen()
 
@@ -24,8 +24,8 @@ class MulticastFactory(JSConfigBase):
         """
         js_shell 'j.clients.multicast.test_send()'
         """
-        data={}
-        data["group"]='ff15:7079:7468:6f6e:6465:6d6f:6d63:6173'
-        data["port"]=8123
-        cl=self.get(data=data)
-        cl.send()        
+        data = {}
+        data["group"] = "ff15:7079:7468:6f6e:6465:6d6f:6d63:6173"
+        data["port"] = 8123
+        cl = self.get(data=data)
+        cl.send()

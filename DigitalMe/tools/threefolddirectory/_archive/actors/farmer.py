@@ -53,9 +53,7 @@ class Farmer(JSBASE):
     @property
     def wgw_rule_model(self):
         if not self._wgw_rule_model:
-            self._wgw_rule_model = self.bcdb.model_get(
-                "threefold.grid.webgateway_rule"
-            )
+            self._wgw_rule_model = self.bcdb.model_get("threefold.grid.webgateway_rule")
         return self._wgw_rule_model
 
     @property
@@ -94,16 +92,7 @@ class Farmer(JSBASE):
         return out
 
     def node_find(
-        self,
-        country,
-        farmer_name,
-        cores_min_nr,
-        mem_min_mb,
-        ssd_min_gb,
-        hd_min_gb,
-        nr_max,
-        node_zos_id,
-        schema_out,
+        self, country, farmer_name, cores_min_nr, mem_min_mb, ssd_min_gb, hd_min_gb, nr_max, node_zos_id, schema_out
     ):
         """
         ```in
@@ -149,21 +138,13 @@ class Farmer(JSBASE):
                 continue
             if selected_farmer and selected_farmer.id != node.farmer_id:
                 continue
-            if cores_min_nr and cores_min_nr > (
-                node.capacity_total.cru - node.capacity_used.cru
-            ):
+            if cores_min_nr and cores_min_nr > (node.capacity_total.cru - node.capacity_used.cru):
                 continue
-            if mem_min_mb and mem_min_mb > (
-                node.capacity_total.mru - node.capacity_used.mru
-            ):
+            if mem_min_mb and mem_min_mb > (node.capacity_total.mru - node.capacity_used.mru):
                 continue
-            if ssd_min_gb and ssd_min_gb > (
-                node.capacity_total.sru - node.capacity_used.sru
-            ):
+            if ssd_min_gb and ssd_min_gb > (node.capacity_total.sru - node.capacity_used.sru):
                 continue
-            if hd_min_gb and hd_min_gb > (
-                node.capacity_total.hru - node.capacity_used.hru
-            ):
+            if hd_min_gb and hd_min_gb > (node.capacity_total.hru - node.capacity_used.hru):
                 continue
             if node_zos_id and node_zos_id != node.node_zos_id:
                 continue
@@ -173,17 +154,7 @@ class Farmer(JSBASE):
         out.res = nodes
         return out
 
-    def zos_reserve(
-        self,
-        jwttoken,
-        node,
-        vm_name,
-        memory,
-        cores,
-        zerotier_token,
-        organization,
-        schema_out,
-    ):
+    def zos_reserve(self, jwttoken, node, vm_name, memory, cores, zerotier_token, organization, schema_out):
         """
         ```in
         jwttoken = (S)
@@ -213,28 +184,14 @@ class Farmer(JSBASE):
         user can now connect the ZOS client to this ipaddress with specified adminsecret over SSL
         """
         res = self.capacity_planner.zos_reserve(
-            node,
-            vm_name,
-            memory=memory,
-            cores=cores,
-            organization=organization,
-            zerotier_token=zerotier_token,
+            node, vm_name, memory=memory, cores=cores, organization=organization, zerotier_token=zerotier_token
         )
         out = schema_out.new()
         out.robot_url, out.service_secret, out.ip_address, out.redis_port = res
         return out
 
     def ubuntu_reserve(
-        self,
-        jwttoken,
-        node,
-        vm_name,
-        memory,
-        cores,
-        zerotier_network,
-        zerotier_token,
-        pub_ssh_key,
-        schema_out,
+        self, jwttoken, node, vm_name, memory, cores, zerotier_network, zerotier_token, pub_ssh_key, schema_out
     ):
         """
         ```in
@@ -289,16 +246,7 @@ class Farmer(JSBASE):
         return out
 
     def zdb_reserve(
-        self,
-        jwttoken,
-        node,
-        zdb_name,
-        name_space,
-        disk_type,
-        disk_size,
-        namespace_size,
-        secret,
-        schema_out,
+        self, jwttoken, node, zdb_name, name_space, disk_type, disk_size, namespace_size, secret, schema_out
     ):
         """
         ```in
@@ -383,9 +331,7 @@ class Farmer(JSBASE):
         :param backends: list of backends that the domains will point to e.g. ['10.10.100.10:80', '10.10.100.11:80']
         """
         user = jwt.get_unverified_claims(jwttoken)["username"]
-        service = self.capacity_planner.web_gateway_add_host(
-            web_gateway["service_name"], domain, backends
-        )
+        service = self.capacity_planner.web_gateway_add_host(web_gateway["service_name"], domain, backends)
         rule = self.wgw_rule_model.new()
         rule.rule_name = service.name
         rule.webgateway_name = web_gateway["name"]
@@ -409,11 +355,7 @@ class Farmer(JSBASE):
         :return:
         """
         user = jwt.get_unverified_claims(jwttoken)["username"]
-        res = (
-            self.wgw_rule_model.index.select()
-            .where(self.wgw_rule_model.index.user == user)
-            .execute()
-        )
+        res = self.wgw_rule_model.index.select().where(self.wgw_rule_model.index.user == user).execute()
         out = schema_out.new()
         out.res = [self.wgw_rule_model.get(rule.id) for rule in res]
         return out
@@ -431,30 +373,15 @@ class Farmer(JSBASE):
         :return:
         """
         user = jwt.get_unverified_claims(jwttoken)["username"]
-        res = (
-            self.wgw_rule_model.index.select()
-            .where(self.wgw_rule_model.index.user == user)
-            .execute()
-        )
+        res = self.wgw_rule_model.index.select().where(self.wgw_rule_model.index.user == user).execute()
         rules = [self.wgw_rule_model.get(rule.id) for rule in res]
         for rule in rules:
-            if (
-                rule.rule_name == rule_name
-                and rule.webgateway_name == web_gateway["name"]
-            ):
+            if rule.rule_name == rule_name and rule.webgateway_name == web_gateway["name"]:
                 self.capacity_planner.web_gateway_delete_host(web_gateway, rule_name)
                 self.wgw_rule_model.delete(rule.id)
                 break
 
-    def farmer_register(
-        self,
-        jwttoken,
-        farmername,
-        email_addresses=None,
-        mobile_numbers=None,
-        pubkey="",
-        iyo_org="",
-    ):
+    def farmer_register(self, jwttoken, farmername, email_addresses=None, mobile_numbers=None, pubkey="", iyo_org=""):
         """
         ```in
         jwttoken = (S)
@@ -482,9 +409,7 @@ class Farmer(JSBASE):
         self.farmer_model.set(new_farmer)
         return
 
-    def web_gateway_register(
-        self, jwttoken, name, service_name, description, master_domain, schema_out
-    ):
+    def web_gateway_register(self, jwttoken, name, service_name, description, master_domain, schema_out):
         """
         ```in
         jwttoken = (S)

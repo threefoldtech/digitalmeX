@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-serverscript = '''
+serverscript = """
 
 # starting the server
 gedis = j.servers.gedis.configure(name="test", port=8888, host="127.0.0.1", ssl=False, password="123456")
@@ -8,7 +8,7 @@ gedis.save()
 gedis.actors_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/extra/examples/actors", "ibiza")
 gedis.start()
 
-'''
+"""
 
 
 def main(self):
@@ -19,9 +19,19 @@ def main(self):
     # j.servers.zdb.start_test_instance()
 
     def start():
-        #Load schema used for testing to the client process
-        cmd = j.tools.startupcmd.get("gedis_test", serverscript, cmd_stop='', path='/tmp', timeout=30,
-                                     env={}, ports=[8888], process_strings=[], interpreter='jumpscale', daemon=True)
+        # Load schema used for testing to the client process
+        cmd = j.tools.startupcmd.get(
+            "gedis_test",
+            serverscript,
+            cmd_stop="",
+            path="/tmp",
+            timeout=30,
+            env={},
+            ports=[8888],
+            process_strings=[],
+            interpreter="jumpscale",
+            daemon=True,
+        )
         cmd.start()
 
         res = j.sal.nettools.waitConnectionTest("localhost", 8888, timeoutTotal=30)
@@ -32,14 +42,13 @@ def main(self):
     start()
 
     print("[*] testing echo")
-    client = j.clients.gedis.get("gedis_test", port=8888, namespace='ibiza')
+    client = j.clients.gedis.get("gedis_test", port=8888, namespace="ibiza")
 
     client.actors
 
     # assert client.actors.painter.echo("s") == b"s"
     print("- done")
     print("[*] testing set with schemas")
-
 
     print("[1] schema_in as schema url")
     wallet_out1 = client.actors.painter.example1(addr="testaddr")
@@ -59,8 +68,8 @@ def main(self):
     print("[2] Done")
 
     print("[3] inline schema in and inline schema out")
-    res = client.actors.painter.example3(a='a', b=True, c=2)
-    assert res.a == 'a'
+    res = client.actors.painter.example3(a="a", b=True, c=2)
+    assert res.a == "a"
     assert res.b is True
     assert res.c == 2
 
@@ -77,7 +86,6 @@ def main(self):
     assert s.actors.system.ping().lower() == b"pong"
 
     assert client.actors.painter.echo("s") == b"s"
-
 
     print("[5] Done")
 

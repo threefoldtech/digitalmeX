@@ -32,8 +32,8 @@ class painter(JSBASE):
     def echo(self, msg):
         return msg
 
-    def count(self, a,b):
-        return int(a)+int(b)
+    def count(self, a, b):
+        return int(a) + int(b)
 
     def example1(self, addr, schema_out):
         """

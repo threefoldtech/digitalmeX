@@ -4,7 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class WIC_Factory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.wic"
         self.defPassword = "rooter"
@@ -20,7 +19,9 @@ class WIC_Factory(j.application.JSBaseClass):
         wics e.g. wics="192.168.16.106,192.168.16.117,192.168.16.159,192.168.16.116,192.168.16.181,192.168.16.161,192.168.16.158"
         """
         if wics == "":
-            wics = "192.168.16.106,192.168.16.159,192.168.16.116,192.168.16.161"  # 192.168.16.117,192.168.16.181,192.168.16.158  "
+            wics = (
+                "192.168.16.106,192.168.16.159,192.168.16.116,192.168.16.161"
+            )  # 192.168.16.117,192.168.16.181,192.168.16.158  "
 
         wicips = [item.strip() for item in wics.split(",")]
 
@@ -78,12 +79,12 @@ class WIC_Factory(j.application.JSBaseClass):
             e.sshclient.execute("opkg install bash")
             e.sshclient.execute("opkg install fastd")
 
-
         # wics=[]
         for wicip in wicips:
             # j.actions.add(update, kwargs={"ipaddr":wicip}, die=True, stdOutput=True, errorOutput=True, force=False, actionshow=True)
-            j.actions.add(sw, kwargs={"ipaddr": wicip}, die=True, stdOutput=True,
-                          errorOutput=True, force=False, actionshow=True)
+            j.actions.add(
+                sw, kwargs={"ipaddr": wicip}, die=True, stdOutput=True, errorOutput=True, force=False, actionshow=True
+            )
 
             # wic=self.get(wicip)
             # wics.append(wic)
@@ -99,13 +100,14 @@ class WIC(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
         from IPython import embed
+
         self._log_debug("DEBUG NOW get prefab")
         embed()
 
         self._prefab
 
     def update(self):
-        '''
+        """
         opkg update
-        '''
+        """
         pass

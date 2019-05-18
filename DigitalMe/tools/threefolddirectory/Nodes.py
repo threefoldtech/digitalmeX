@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 
@@ -78,10 +77,8 @@ class Node(j.application.JSBaseConfigClass):
 
         """
 
-
     def _init(self):
         pass
-
 
     @staticmethod
     def _ping(ipaddr):
@@ -135,8 +132,7 @@ class Node(j.application.JSBaseConfigClass):
         # ZOSCLIENT
         zos = None
         try:
-            zos = j.clients.zos.get(data={"password_": jwt, "host": ipaddr},
-                                    instance="sysadmin_%s" % ipaddr)
+            zos = j.clients.zos.get(data={"password_": jwt, "host": ipaddr}, instance="sysadmin_%s" % ipaddr)
         except Exception as e:
             if "Connection refused" in str(e):
                 error = "connection refused zosclient"
@@ -167,7 +163,6 @@ class Node(j.application.JSBaseConfigClass):
         if self.error is not "zerotier lost the connection to the node":
             self.error = error
 
-
         robot = self.robot_get(o)
         if False and robot:
             if len(robot.templates.uids.keys()) > 0:
@@ -187,7 +182,7 @@ class Node(j.application.JSBaseConfigClass):
         if dir_item is not None:
             self.farmer_id = dir_item["farmer_id"]
             self.node_zos_id = dir_item["node_id"]
-            self.node_robot = dir_item['robot_address']
+            self.node_robot = dir_item["robot_address"]
             if dir_item["reserved_resources"]:
                 self.capacity_reserved.cru = dir_item["reserved_resources"]["cru"]
                 self.capacity_reserved.hru = dir_item["reserved_resources"]["hru"]
@@ -228,4 +223,5 @@ class Nodes(j.application.JSBaseConfigsClass):
     """
     ...
     """
+
     _CHILDCLASS = Node
