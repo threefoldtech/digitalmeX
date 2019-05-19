@@ -15,7 +15,7 @@ class model(JSBASE):
         JSBASE.__init__(self)
         self.name = "{{obj.name}}"
         self.url = "{{obj.url}}"
-        self.schema = j.data.schema.get(url=self.url)
+        self.schema = j.data.schema.get_from_url_latest(url=self.url)
         self.client = client
         self.redis = client.redis
 
@@ -29,7 +29,7 @@ class model(JSBASE):
     def get(self, id):
         res = self.redis.execute_command("model_%s.get" % self.name, str(id))
         id, data = j.data.serializers.msgpack.loads(res)
-        obj = self.schema.get(capnpbin=data)
+        obj = self.schema.get(data=data)
         obj.id = id
         return obj
 
@@ -41,7 +41,7 @@ class model(JSBASE):
 
         for item in items:
             id, data = j.data.serializers.msgpack.loads(item)
-            obj = self.schema.get(capnpbin=data)
+            obj = self.schema.get(data=data)
             obj.id = id
             result.append(obj)
         return result

@@ -54,7 +54,7 @@ class WorldSystem(JSFactoryBase):
 
         JSFactoryBase.__init__(self)
         self._bcdb = j.data.bcdb.new("world")
-        self._schema_service_state = j.data.schema.get(SCHEMA_SERVICE_STATE)
+        self._schema_service_state = j.data.schema.get_from_text(SCHEMA_SERVICE_STATE)
         self._schema_service_action = self._bcdb.model_get_from_schema(SCHEMA_SERVICE_ACTION)
 
     def test(self):

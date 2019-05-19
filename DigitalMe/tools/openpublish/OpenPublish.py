@@ -19,27 +19,27 @@ class OpenPublish(JSConfigClient):
         wikis = (LO) !jumpscale.open_publish.wiki.1
         gedis = (O) !jumpscale.open_publish.gedis.1
         zdb = (O) !jumpscale.open_publish.zdb.1
-        
+
         @url = jumpscale.open_publish.zdb.1
         name = "main"
         host = "127.0.0.1" (ipaddr)
         port = 9900 (I)
         mode = "seq" (S)
         adminsecret_ = "password"
-        
+
         @url = jumpscale.open_publish.gedis.1
         name = "main"
         host = "0.0.0.0" (ipaddr)
         port = 8888 (I),
         ssl = False
         password_ = ""
-            
+
         @url = jumpscale.open_publish.website.1
         name = "" (S)
         repo_url = "" (S)
         domain = "" (S)
         ip = "" (ipaddr)
-        
+
         @url = jumpscale.open_publish.wiki.1
         name = "" (S)
         repo_url = "" (S)

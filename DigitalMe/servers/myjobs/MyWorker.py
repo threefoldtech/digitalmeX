@@ -1,6 +1,5 @@
 def myworker(id=999999, onetime=False, showout=False):
     """
-    js_shell "j.servers.myjobs.worker()"
     :return:
     """
 

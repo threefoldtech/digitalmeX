@@ -44,7 +44,7 @@ class Community(JSBASE):
         self.service_dna = {}  # are the classes for services (which can run inside coordinators)
         self.knowledge = []  # are paths to the knowledge to learn
 
-        # self.schema_state = j.data.schema.get(SCHEMA)
+        # self.schema_state = j.data.schema.get_from_text(SCHEMA)
 
         self._key = None
 
@@ -65,7 +65,7 @@ class Community(JSBASE):
                 raise RuntimeError("did not find coordinator dna:%s" % name)
             schema_obj = self.coordinator_dna[name].schema_obj
             if capnp_data is not None:
-                data = schema_obj.get(capnpbin=capnp_data)
+                data = schema_obj.get(data=capnp_data)
             else:
                 data = schema_obj.new()
             self.coordinators[name] = self.coordinator_dna[name].Coordinator(community=self, name=name, data=data)
@@ -165,7 +165,7 @@ class Community(JSBASE):
             SCHEMA2 += 'state = "new,active,error,halted,deleted" (S)\n'  # TODO: *1 needs enumeration
         print(SCHEMA2)
         try:
-            module.schema_obj = j.data.schema.get(SCHEMA2)[0]
+            module.schema_obj = j.data.schema.get_from_text(SCHEMA2)[0]
         except Exception as e:
             self.error_raise("cannot parse schema:%s" % SCHEMA2, e=e)
 

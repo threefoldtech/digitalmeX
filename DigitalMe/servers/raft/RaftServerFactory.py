@@ -21,7 +21,7 @@ class RaftServerFactory(JSConfigBase):
         members="localhost:4441,localhost:4442,localhost:4443",
         cmd="j.servers.raftserver.example_server_class_get()",
     ):
-
+        # TODO: use new style config management
         data = {}
         data["secret_"] = secret
         data["members"] = members

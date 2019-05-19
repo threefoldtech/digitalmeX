@@ -25,18 +25,18 @@ class GedisCmd(JSBASE):
         self.name = cmd.name
 
         if cmd.schema_in_url != "":
-            if cmd.schema_in_url not in j.data.schema.schemas:
+            if cmd.schema_in_url not in j.data.schema.url_to_md5:
                 j.shell()
                 w
-            self.schema_in = j.data.schema.get(url=cmd.schema_in_url)
+            self.schema_in = j.data.schema.get_from_url_latest(url=cmd.schema_in_url)
         else:
             self.schema_in = None
 
         if cmd.schema_out_url != "":
-            if cmd.schema_out_url not in j.data.schema.schemas:
+            if cmd.schema_out_url not in j.data.schema.url_to_md5:
                 j.shell()
                 w
-            self.schema_out = j.data.schema.get(url=cmd.schema_out_url)
+            self.schema_out = j.data.schema.get_from_url_latest(url=cmd.schema_out_url)
         else:
             self.schema_out = None
 
