@@ -54,7 +54,7 @@ class RaftCluster(JSConfigBase):
             if addr in ["localhost", "127.0.0.1", "local"]:
                 sstart(port)
 
-        if not j.core.platformtype.myplatform.isMac:
+        if not j.core.platformtype.myplatform.platform_is_osx:
             raise Exception(
                 "issue #33 - implement to find local ipaddr and "
                 "then based on own addr decide to start locally or not"
