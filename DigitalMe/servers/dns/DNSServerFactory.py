@@ -26,7 +26,7 @@ class DNSServerFactory(JSBASE):
         js_shell 'j.servers.dns.start()'
         """
         if background:
-            if j.core.platformtype.myplatform.isMac and port < 1025:
+            if j.core.platformtype.myplatform.platform_is_osx and port < 1025:
                 pprint("PLEASE GO TO TMUX SESSION, GIVE IN PASSWD FOR SUDO, do tmux a")
                 cmd = "sudo js_shell 'j.servers.dns.start(background=False,port=%s)'" % port
             else:
