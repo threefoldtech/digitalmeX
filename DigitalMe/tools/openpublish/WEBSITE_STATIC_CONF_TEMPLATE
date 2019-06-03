@@ -1,0 +1,19 @@
+server {
+    server_name ~^(www\.)?{{domain}}$;
+    listen 8080;
+
+    location / {
+        default_type text/html;
+        alias {{root_path}}/;
+    }
+}
+
+server {
+    server_name www2.{{domain}};
+    listen 8080;
+
+    location / {
+        default_type text/html;
+        alias {{root_path}}_dev/;
+    }
+}

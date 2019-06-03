@@ -8,6 +8,7 @@ DEV_BRANCH = "development"
 DEV_SUFFIX = "_dev"
 WIKI_CONFIG_TEMPLATE = "WIKI_CONF_TEMPLATE"
 WEBSITE_CONFIG_TEMPLATE = "WEBSITE_CONF_TEMPLATE"
+WEBSITE_STATIC_CONFIG_TEMPLATE = "WEBSITE_STATIC_CONF_TEMPLATE"
 OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
 
@@ -60,11 +61,11 @@ class OpenPublish(JSConfigClient):
                 self.load_site(obj, DEV_BRANCH, DEV_SUFFIX)
 
         # ensure nginx config files generated
-        for obj in self.wikis:
-            self.generate_nginx_conf(obj)
+        # for obj in self.wikis:
+        #     self.generate_nginx_conf(obj)
 
-        for obj in self.websites:
-            self.generate_nginx_conf(obj)
+        # for obj in self.websites:
+        #     self.generate_nginx_conf(obj)
         self.reload_server()
         while True:
             update(self.wikis)
@@ -146,15 +147,19 @@ class OpenPublish(JSConfigClient):
         cmd = "cd {0} && moonc . && lapis build".format(self.open_publish_path)
         j.tools.executorLocal.execute(cmd)
 
-    def generate_nginx_conf(self, obj, reload=False):
+    def generate_nginx_conf(self, obj, reload=False, static_website=False):
         conf_base_path = j.sal.fs.getDirName(os.path.abspath(__file__))
+        root_path = j.clients.git.getGitRepoArgs(obj.repo_url)[-3]
         if "website" in obj._schema.key:
-            path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_CONFIG_TEMPLATE)
+            if static_website:
+                config_path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_STATIC_CONFIG_TEMPLATE)
+            else:
+                config_path = j.sal.fs.joinPaths(conf_base_path, WEBSITE_CONFIG_TEMPLATE)
         else:
-            path = j.sal.fs.joinPaths(conf_base_path, WIKI_CONFIG_TEMPLATE)
+            config_path = j.sal.fs.joinPaths(conf_base_path, WIKI_CONFIG_TEMPLATE)
         dest = j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(obj.domain))
-        args = {"name": obj.name, "domain": obj.domain}
-        j.tools.jinja2.file_render(path=path, dest=dest, **args)
+        args = {"name": obj.name, "domain": obj.domain, "root_path": root_path}
+        j.tools.jinja2.file_render(path=config_path, dest=dest, **args)
         # handle if the tool used without using dns server
         if self.dns_server and obj.domain:
             if "wiki" in obj._schema.key:
@@ -171,7 +176,7 @@ class OpenPublish(JSConfigClient):
         wiki = self.wikis.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
 
         # Generate md files for master and dev branches
-        for branch in [DEV_BRANCH and MASTER_BRANCH]:
+        for branch in [DEV_BRANCH, MASTER_BRANCH]:
             suffix = DEV_SUFFIX if branch == DEV_BRANCH else ""
             self.load_site(wiki, branch, suffix)
 
@@ -183,13 +188,23 @@ class OpenPublish(JSConfigClient):
         website = self.websites.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
 
         # Generate md files for master and dev branches
-        for branch in [DEV_BRANCH and MASTER_BRANCH]:
+        for branch in [DEV_BRANCH, MASTER_BRANCH]:
             suffix = DEV_SUFFIX if branch == DEV_BRANCH else ""
             self.load_site(website, branch, suffix)
 
         # link website files into open publish dir
         repo_path = j.sal.fs.joinPaths(j.clients.git.getGitRepoArgs(repo_url)[-3])
         lapis_path = j.sal.fs.joinPaths(repo_path, "lapis")
+        # If lapis dir not found, so the website is a pure static html website
+        if not j.sal.fs.exists(lapis_path):
+            # Generate nginx config file for website
+            self.generate_nginx_conf(website, static_website=True, reload=True)
+            self.save()
+            return
+
+        moon_files_path = j.sal.fs.joinPaths(lapis_path, "applications", name + ".moon")
+        dest_path = j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon")
+        j.sal.fs.symlink(moon_files_path, dest_path, overwriteTarget=False)
 
         static_path = j.sal.fs.joinPaths(lapis_path, "static", name)
         if j.sal.fs.exists(static_path):
@@ -201,11 +216,6 @@ class OpenPublish(JSConfigClient):
             dest_path = j.sal.fs.joinPaths(self.open_publish_path, "views", name)
             j.sal.fs.symlink(views_path, dest_path, overwriteTarget=False)
 
-        moon_files_path = j.sal.fs.joinPaths(lapis_path, "applications", name + ".moon")
-        if j.sal.fs.exists(moon_files_path):
-            dest_path = j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon")
-            j.sal.fs.symlink(moon_files_path, dest_path, overwriteTarget=False)
-
         # Load actors and chatflows if exists
         if self.gedis_server:
             actors_path = j.sal.fs.joinPaths(repo_path, "actors")
@@ -216,9 +226,8 @@ class OpenPublish(JSConfigClient):
             if j.sal.fs.exists(chatflows_path):
                 self.gedis_server.chatbot.chatflows_load(chatflows_path)
 
-        if website.domain:
-            # Generate nginx config file for website
-            self.generate_nginx_conf(website, reload=True)
+        # Generate nginx config file for website
+        self.generate_nginx_conf(website, static_website=False, reload=True)
         self.save()
 
     def remove_wiki(self, name):
@@ -247,14 +256,20 @@ class OpenPublish(JSConfigClient):
                 j.sal.fs.remove(dest)
                 j.sal.fs.remove(dest + DEV_SUFFIX)
                 try:
+                    j.sal.fs.remove(
+                        j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(website.domain))
+                    )
                     j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", website.name))
                     j.sal.fs.remove(j.sal.fs.joinPaths(j.dirs.VARDIR, "docsites", website.name + DEV_SUFFIX))
                 except ValueError:
                     self._log_info("This website doesn't contain docsite to remove")
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "vhosts", "{}.conf".format(website.domain)))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "static", name))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "views", name))
-                j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon"))
+
+                try:
+                    j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "static", name))
+                    j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "views", name))
+                    j.sal.fs.remove(j.sal.fs.joinPaths(self.open_publish_path, "applications", name + ".moon"))
+                except ValueError:
+                    self._log_info("This website doesn't contain lapis files to remove")
                 self.websites.remove(website)
                 self.save()
                 self.reload_server()
