@@ -7,6 +7,10 @@ from pyblake2 import blake2b
 JSBASE = j.application.JSBaseClass
 
 
+class RegisterError(RuntimeError):
+    pass
+
+
 class notary_actor(JSBASE):
     def __init__(self):
         self.bcdb = j.data.bcdb.bcdb_instances["notary_bcdb"]
@@ -38,12 +42,23 @@ class notary_actor(JSBASE):
         hash = "" (S)
         ```
         """
-        verify_key, threebot_identifier = self._bot_verify_key(threebot_id)
+        try:
+            verify_key, threebot_identifier = self._bot_verify_key(threebot_id)
+        except j.clients.tfchain.errors.ExplorerServerError as err:
+            raise RegisterError(str(err))
+
         _verify_signature(content, content_signature, verify_key)
 
         content_hash = _hash_content(threebot_identifier, content)
 
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
+
+        result = model.get_by_hash(content_hash)
+        if result:
+            raise KeyError(
+                "reservation already exists in the notary. This should never happens, make sure you set include a unique field in your content"
+            )
+
         model_obj = model.new()
         model_obj.hash = content_hash
         model_obj.threebot_id = threebot_id

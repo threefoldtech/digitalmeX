@@ -235,7 +235,6 @@ class Handler(JSBASE):
                 self._log_info("connection error: %s" % str(err), context="%s:%s" % address)
                 return
             except Exception as e:
-                raise e
                 self._log_error(str(e), context="%s:%s" % address)
                 if not gedis_socket.closed:
                     gedis_socket.writer.error(str(e))
@@ -387,7 +386,6 @@ class Handler(JSBASE):
 
         # check cmd exists in the metadata
         if cmd not in meta.cmds:
-            j.shell()
             raise j.exceptions.Input("Cannot find method with name:%s in namespace:%s" % (cmd, namespace))
 
         cmd_obj = meta.cmds[cmd]
