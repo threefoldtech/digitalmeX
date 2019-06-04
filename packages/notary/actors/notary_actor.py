@@ -52,6 +52,13 @@ class notary_actor(JSBASE):
         content_hash = _hash_content(threebot_identifier, content)
 
         model = self.bcdb.models.get("threefold.grid.notary.reservation")
+
+        result = model.get_by_hash(content_hash)
+        if result:
+            raise KeyError(
+                "reservation already exists in the notary. This should never happens, make sure you set include a unique field in your content"
+            )
+
         model_obj = model.new()
         model_obj.hash = content_hash
         model_obj.threebot_id = threebot_id
