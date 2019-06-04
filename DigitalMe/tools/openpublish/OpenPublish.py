@@ -85,7 +85,7 @@ class OpenPublish(JSConfigClient):
 
     def servers_start(self):
         # TODO Move lapis to a seperate server and just call it from here
-        j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=True)
+        j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=False)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
         j.sal.fs.symlink(
