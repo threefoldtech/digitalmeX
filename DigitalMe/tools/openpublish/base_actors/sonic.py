@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class sonic(j.application.JSBaseClass):
     def _init(self):
-        self.sonic_client = j.clients.sonic.get()
+        self.sonic_client = j.clients.sonic.default
 
     def query(self, collection, bucket, text, schema_out):
         """

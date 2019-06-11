@@ -118,6 +118,11 @@ class OpenPublish(JSConfigClient):
         self.dns_server = j.servers.dns.get(bcdb=bcdb)
         gevent.spawn(self.dns_server.serve_forever)
 
+        # Start Sonic Server
+        sonic_server = j.servers.sonic.default
+        sonic_server.start()
+        j.tools.markdowndocs.sonic_client_set(sonic_server.default_client)
+
         # Start Gedis Server
         self._log_info("Starting Gedis Server")
         self.gedis_server = j.servers.gedis.configure(
