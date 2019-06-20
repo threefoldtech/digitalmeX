@@ -11,7 +11,7 @@ def main(self):
     gedis = self.get(name="test")
 
     zdb_cl = j.clients.zdb.testdb_server_start_client_get(reset=False)
-    bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name="test")
+    bcdb = j.data.bcdb.get(zdbclient=zdb_cl, name="test")
     path = j.clients.git.getContentPathFromURLorPath(
         "https://github.com/threefoldtech/digital_me/tree/master/packages/examples/models"
     )

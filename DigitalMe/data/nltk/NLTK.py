@@ -46,7 +46,7 @@ class NLTKFactory(JSBASE):
         JSBASE.__init__(self)
 
     def install(self):
-        j.builder.runtimes.pip.install("nltk,nameparser,unidecode")
+        j.builders.runtimes.pip.install("nltk,nameparser,unidecode")
         self.download_nltk()
 
     def download_nltk(self):

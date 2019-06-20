@@ -80,7 +80,7 @@ class OpenPublish(JSConfigClient):
                 addr=self.zdb.host, port=self.zdb.port, secret=self.zdb.adminsecret_, mode=self.zdb.mode
             )
             zdb_std_client = zdb_admin_client.namespace_new(name, secret)
-        bcdb = j.data.bcdb.new(name, zdb_std_client)
+        bcdb = j.data.bcdb.get(name, zdb_std_client)
         return bcdb
 
     def servers_start(self):

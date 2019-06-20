@@ -15,14 +15,14 @@ class GedisFactory(JSConfigFactory):
 
     def geventserver_get(self, instance=""):
         """
-        return redis_server
+        return gedis_server
 
         j.servers.gedis.geventserver_get("test")
 
 
         """
         server = self.get(instance=instance)
-        return server.redis_server
+        return server.gedis_server
 
     def configure(self, name="test", port=8889, host="127.0.0.1", ssl=False, password="", configureclient=False):
 

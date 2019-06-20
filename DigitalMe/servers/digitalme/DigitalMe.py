@@ -252,7 +252,7 @@ class DigitalMe(JSBASE):
         self.rack.add("gedis", geventserver.redis_server)  # important to do like this, otherwise 2 servers started
 
         key = "%s_%s_%s" % (addr, port, namespace)
-        self.bcdb = j.data.bcdb.new("digitalme_%s" % key, zdbclient=self.zdbclient, cache=True)
+        self.bcdb = j.data.bcdb.get("digitalme_%s" % key, zdbclient=self.zdbclient, cache=True)
 
         self.web_reload()
 

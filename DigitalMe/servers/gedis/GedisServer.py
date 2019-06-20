@@ -274,17 +274,41 @@ class GedisServer(JSBaseConfig):
             self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
             # Server always supports SSL
             # client can use to talk to it in SSL or not
-            self.redis_server = StreamServer(
+            self.gedis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
-                handle=handler.handle_redis,
+                handle=handler.handle_gedis,
                 keyfile=self.ssl_priv_key_path,
                 certfile=self.ssl_cert_path,
             )
         else:
-            self.redis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=handler.handle_redis)
+            self.gedis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=handler.handle_gedis)
+
+        # ADD WEBDAV SERVER
+        # from Jumpscale.bcdb... BCDBWebDavProvider
+        # provider = BCDBWebDavProvider(args.path)
+        # config = DEFAULT_CONFIG.copy()
+        # config.update({
+        #               "provider_mapping": {"/": provider},
+        #               "port": args.port,
+        #               "host": args.host,
+        #               "verbose": args.verbose,
+        #               "propsmanager": True,
+        #               "locksmanager": True,
+        #               })
+        # print('config:')
+        # print(config)
+        # app = WsgiDAVApp(config)
+        #
+        # server = WSGIServer((args.host, args.port), application=app)
+        # server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/{} ".format(__version__) +
+        #                                        server.base_env["SERVER_SOFTWARE"]})
+
+        # ADD BCDB REDIS SERVER
+        # self.redis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handle_redis)
+
         self._log_info("%s RUNNING", str(self))
-        self.redis_server.serve_forever()
+        self.gedis_server.serve_forever()
 
     def stop(self):
         """
@@ -300,7 +324,7 @@ class GedisServer(JSBaseConfig):
             h.cancel()
 
         self._log_info("stopping server")
-        self.redis_server.stop()
+        self.gedis_server.stop()
 
     def test(self, name=""):
         if name:
