@@ -24,7 +24,8 @@ any website/wiki
 [OpenPublish](https://github.com/threefoldtech/OpenPublish) repo.
 - [0-DB](https://github.com/threefoldtech/0-db). Note that you need to have zdb installed firstly, you can install it
 by running `kosmos 'j.builders.db.zdb.install()'`
-
+- [sonic](https://github.com/valeriansaliou/sonic). Note that you need to have sonic installed firstly, you can install it
+by running `kosmos 'j.builders.apps.sonic.install()'`
 ##### 3 - Start the following servers in the same gevent loop (will be in tmux if used `background` option)
 - [Gedis](https://github.com/threefoldtech/digitalmeX/tree/master/docs/Gedis): which loads the base actors 
 (chatbot, open_publish, sonic search, gdrive) and base chatflows
