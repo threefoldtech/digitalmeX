@@ -32,7 +32,7 @@ class ServerRack(JSBASE):
         REMARK: make sure that subprocesses are run before adding gevent servers
 
         """
-        monkey.patch_all(subprocess=False)
+        self._monkeypatch()
         self.servers[name] = server
 
     def _monkeypatch(self):
@@ -61,12 +61,31 @@ class ServerRack(JSBASE):
         else:
             monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def zrobot_start(self):
-        # get zrobot instance
-        self._monkeypatch()
-        self.zrobot = j.servers.zrobot.get(
-            name, data={"template_repo": "git@github.com:threefoldtech/0-templates.git", "block": False}
+    def webdav(self):
+        from wsgidav.fs_dav_provider import FilesystemProvider
+        from wsgidav.version import __version__
+        from wsgidav.wsgidav_app import DEFAULT_CONFIG, WsgiDAVApp
+        from gevent.pywsgi import WSGIServer
+
+        provider = FilesystemProvider(args.path)
+        config = DEFAULT_CONFIG.copy()
+        config.update(
+            {
+                "provider_mapping": {"/": provider},
+                "port": 8887,
+                "host": "0.0.0.0",
+                "verbose": True,
+                "propsmanager": True,
+                "locksmanager": False,
+            }
         )
+        print("config:")
+        print(config)
+        app = WsgiDAVApp(config)
+
+        server = WSGIServer((args.host, args.port), application=app)
+        server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/{} ".format(__version__) + server.base_env["SERVER_SOFTWARE"]})
+        print("Running {} on http://{}:{}".format(server.get_environ()["SERVER_SOFTWARE"], args.host, args.port))
 
     def start(self):
         self._monkeypatch()

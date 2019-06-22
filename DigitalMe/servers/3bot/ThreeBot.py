@@ -18,9 +18,9 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
-class DigitalMe(JSBASE):
+class ThreeBot(JSBASE):
     def __init__(self):
-        self.__jslocation__ = "j.servers.digitalme"
+        self.__jslocation__ = "j.servers.threebot"
         JSBASE.__init__(self)
         self.filemonitor = None
         # self.community = Community()
