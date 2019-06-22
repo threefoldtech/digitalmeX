@@ -23,7 +23,7 @@ class model_{{schema.key}}(JSBASE):
         if j.servers.gedis.latest.serializer:
             # e.g. for json
             ddict = j.servers.gedis.latest.return_serializer.loads(data_in)
-            obj = self.schema.get(data=ddict)
+            obj = self.schema.get(datadict=ddict)
             data = self.schema.data
         else:
             id, data = j.data.serializers.msgpack.loads(data_in)

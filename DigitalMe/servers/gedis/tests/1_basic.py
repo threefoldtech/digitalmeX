@@ -20,7 +20,7 @@ def main(self):
 
     def start():
         # Load schema used for testing to the client process
-        cmd = j.tools.startupcmd.get(
+        cmd = j.servers.startupcmd.get(
             "gedis_test",
             serverscript,
             cmd_stop="",

@@ -6,9 +6,9 @@ JSConfigClient = j.application.JSBaseConfigClass
 MASTER_BRANCH = "master"
 DEV_BRANCH = "development"
 DEV_SUFFIX = "_dev"
-WIKI_CONFIG_TEMPLATE = "WIKI_CONF_TEMPLATE"
-WEBSITE_CONFIG_TEMPLATE = "WEBSITE_CONF_TEMPLATE"
-WEBSITE_STATIC_CONFIG_TEMPLATE = "WEBSITE_STATIC_CONF_TEMPLATE"
+WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
+WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
+WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
 OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
 
@@ -18,22 +18,7 @@ class OpenPublish(JSConfigClient):
         name* = "" (S)
         websites = (LO) !jumpscale.open_publish.website.1
         wikis = (LO) !jumpscale.open_publish.wiki.1
-        gedis = (O) !jumpscale.open_publish.gedis.1
-        zdb = (O) !jumpscale.open_publish.zdb.1
 
-        @url = jumpscale.open_publish.zdb.1
-        name = "main"
-        host = "127.0.0.1" (ipaddr)
-        port = 9900 (I)
-        mode = "seq" (S)
-        adminsecret_ = "password"
-
-        @url = jumpscale.open_publish.gedis.1
-        name = "main"
-        host = "0.0.0.0" (ipaddr)
-        port = 8888 (I),
-        ssl = False
-        password_ = ""
 
         @url = jumpscale.open_publish.website.1
         name = "" (S)
@@ -95,7 +80,7 @@ class OpenPublish(JSConfigClient):
         # Start Lapis Server
         self._log_info("Starting Lapis Server")
         cmd = "moonc . && lapis server".format(self.open_publish_path)
-        lapis = j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path)
+        lapis = j.servers.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path)
         if lapis.running:
             self.reload_server()
         else:

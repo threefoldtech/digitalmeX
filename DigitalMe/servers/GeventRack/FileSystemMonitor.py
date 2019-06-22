@@ -13,7 +13,7 @@ def monitor_changes_parent(gedis_instance_name):
 
 def monitor_changes_subprocess(gedis_instance_name,):
     """
-    js_shell 'j.servers.digitalme.monitor_changes("test")'
+    js_shell 'j.servers.rack.monitor_changes("test")'
     """
     import time
 

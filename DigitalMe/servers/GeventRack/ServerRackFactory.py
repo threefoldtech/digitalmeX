@@ -18,105 +18,23 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
-class ThreeBot(JSBASE):
+class ServerRackFactory(JSBASE):
     def __init__(self):
-        self.__jslocation__ = "j.servers.threebot"
+        self.__jslocation__ = "j.servers.rack"
         JSBASE.__init__(self)
         self.filemonitor = None
         # self.community = Community()
         self.packages = {}
 
-    # def packages_add(self,path,zdbclients):
-    #     """
-    #
-    #     :param path: path of packages, will look for dm_package.toml
-    #     :return:
-    #     """
-    #     graphql_dir = ''
-    #     for item in j.sal.fs.listFilesInDir(path, recursive=True, filter="dm_package.toml",
-    #                             followSymlinks=False, listSymlinks=False):
-    #         pdir = j.sal.fs.getDirName(item)
-    #         # don't lopad now! defer as last package
-    #         if pdir.endswith('graphql/'):
-    #             graphql_dir = pdir
-    #             continue
-    #         self.package_add(pdir,zdbclients=zdbclients)
-    #
-    #     # load graphql as latest package.
-    #     # this ensures all schemas are loaded, so auto generation of queries for all loaded schemas
-    #     # can be acheieved!
-    #     if graphql_dir:
-    #         self.package_add(graphql_dir, zdbclients=zdbclients)
-    #     # Generate js client code
-    #     j.servers.gedis.latest.code_generate_webclient()
-
-    def package_add(self, path, bcdb):
+    def start(self, secret, namespace="rack", restart=False, destroydata=False, zdbinternal=True):
         """
-
-        :param path: directory where there is a dm_package.toml inside = a package for digital me
-        has blueprints, ...
-        :return:
-        """
-        if not j.sal.fs.exists(path):
-            raise j.exceptions.Input("could not find:%s" % path)
-        p = Package(path_config=path, bcdb=bcdb)
-        if p.name not in self.packages:
-            self.packages[p.name] = p
-
-    def _run_exec(self, cmd):
-        # need better way to return the result, how to use the socket well???
-        # https://github.com/jprjr/sockexec
-        args = cmd.split(" ")
-        path = "/sandbox/var/exec.sock"
-        if not os.path.exists(path):
-            raise RuntimeError("cannot find exec socket path:%s" % path)
-        client = socket.socket(socket.AF_UNIX)
-        client.connect(path)
-        s = netstr.encode(str(len(args)).encode())
-        for cmd in args:
-            s += netstr.encode(cmd.encode())
-        s += netstr.encode(b"")
-        client.sendall(s)
-        while True:
-            r = client.recv(1024)
-            if r != b"":
-                print(r.decode())  # doing line breaks, should not, also not using netstring for return, has too
-            time.sleep(0.01)
-
-    def _socket_check(self, path, msg=""):
-        if os.path.exists(path):
-            client = socket.socket(socket.AF_UNIX)
-            client.connect(path)
-            return True
-        return False
-
-    def start(self, secret, namespace="digitalme", restart=False, destroydata=False, zdbinternal=True):
-        """
-        js_shell 'j.servers.digitalme.start(secret="1234")'
-        js_shell 'j.servers.digitalme.start(secret="1234",destroydata=True)'
-
-
-        the secret is the real secret of your digitalme, it needs also an ssh-agent loaded
-        the combination delivers all required security
-
-        :param secret:
-        :param namespace: is the namespace as used on ZDB
-        :param destroydata: if used will remove all data before starting, be carefull
-        :param restart, will restart the tmux
-        :return:
-
-        window in tmux: digitalme
-        pannels in tmux:
-           - 12 = redis
-           - 13 = zdb
-           - 14 = execsocket
-           - 21 = openresty
-           - 22 = digitalme
+        kosmos 'j.servers.rack.start(secret="1234")'
+        kosmos 'j.servers.rack.start(secret="1234",destroydata=True)'
 
         """
 
         if restart:
-            j.tools.panes_digitalme_create(reset=restart)
+            j.shell()
 
         # make sure we have redis running
         j.clients.redis.core_get()
@@ -137,12 +55,12 @@ class ThreeBot(JSBASE):
         )  # to make sure we don't have to store the secret as plain text somewhere
 
         self.nacl = j.data.nacl.get(
-            name="digitalme", secret=j.data.hash.md5_string(secret + "digitalme")
+            name="rack", secret=j.data.hash.md5_string(secret + "rack")
         )  # just to make sure secret in nacl is not same as namespace
 
         if zdbinternal:
             j.servers.zdb.adminsecret = self.nacl.ssh_hash(secret + "admin")
-            j.servers.zdb.name = "digitalme"
+            j.servers.zdb.name = "rack"
 
             if destroydata or restart:
                 j.servers.zdb.stop()
@@ -186,8 +104,8 @@ class ThreeBot(JSBASE):
         env["port"] = "9900"
         env["namespace"] = namespace
         env["secret"] = secret
-        cmd_ = "js_shell 'j.servers.digitalme.start_from_zdb()'"
-        cmd = j.tools.tmux.cmd_get(name="digitalme", pane="p22", cmd=cmd_, env=env, process_strings=[])
+        cmd_ = "js_shell 'j.servers.rack.start_from_zdb()'"
+        cmd = j.tools.tmux.cmd_get(name="rack", pane="p22", cmd=cmd_, env=env, process_strings=[])
 
         cmd.stop()
         cmd.start()
@@ -200,12 +118,12 @@ class ThreeBot(JSBASE):
 
         return gedisclient
 
-    def start_from_zdb(self, addr="localhost", port=9900, namespace="digitalme", secret="1234"):
+    def start_from_zdb(self, addr="localhost", port=9900, namespace="rack", secret="1234"):
         """
 
         examples:
 
-        js_shell 'j.servers.digitalme.start_from_zdb()'
+        js_shell 'j.servers.rack.start_from_zdb()'
 
         :param addr: addr of starting zerodb namespace
         :param port: port
@@ -234,7 +152,7 @@ class ThreeBot(JSBASE):
             secret = j.data.hash.md5_string(secret)
 
         self.nacl = j.data.nacl.get(
-            name="digitalme", secret=j.data.hash.md5_string(secret + "digitalme")
+            name="rack", secret=j.data.hash.md5_string(secret + "rack")
         )  # just to make sure secret in nacl is not same as namespace
 
         secretns = self.nacl.ssh_hash(
@@ -252,35 +170,11 @@ class ThreeBot(JSBASE):
         self.rack.add("gedis", geventserver.redis_server)  # important to do like this, otherwise 2 servers started
 
         key = "%s_%s_%s" % (addr, port, namespace)
-        self.bcdb = j.data.bcdb.get("digitalme_%s" % key, zdbclient=self.zdbclient, cache=True)
+        self.bcdb = j.data.bcdb.get("rack_%s" % key, zdbclient=self.zdbclient, cache=True)
 
         self.web_reload()
 
         self.rack.start()
-
-    def web_reload(self):
-
-        # add configuration to openresty
-
-        j.servers.openresty.configs_add(
-            j.sal.fs.joinPaths(self._dirpath, "web_config"), args={"staticpath": staticpath}
-        )
-
-        bcdb = self.bcdb
-
-        # the core packages, always need to be loaded
-        toml_path = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/digital_me/tree/development960/packages/system/base"
-        )
-        self.package_add(toml_path, bcdb=bcdb)
-        toml_path = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/digital_me/tree/development960/packages/system/chat"
-        )
-        self.package_add(toml_path, bcdb=bcdb)
-        toml_path = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/digital_me/tree/development960/packages/system/example"
-        )
-        self.package_add(toml_path, bcdb=bcdb)
 
     def server_rack_get(self):
 
@@ -288,7 +182,7 @@ class ThreeBot(JSBASE):
         returns a server rack
 
         to start the server manually do:
-        js_shell 'j.servers.digitalme.start(namespace="test", secret="1234")'
+        js_shell 'j.servers.rack.start(namespace="test", secret="1234")'
 
         """
 
@@ -296,10 +190,10 @@ class ThreeBot(JSBASE):
 
     def test(self, manual=False):
         """
-        js_shell 'j.servers.digitalme.test()'
-        js_shell 'j.servers.digitalme.test(manual=True)'
+        js_shell 'j.servers.rack.test()'
+        js_shell 'j.servers.rack.test(manual=True)'
 
-        :param manual means the server is run manually using e.g. js_shell 'j.servers.digitalme.start()'
+        :param manual means the server is run manually using e.g. js_shell 'j.servers.rack.start()'
 
         """
         admincl = j.servers.zdb.start_test_instance(destroydata=True)

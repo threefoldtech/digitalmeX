@@ -1,7 +1,9 @@
 from Jumpscale import j
-import os
+
+# import os
 import sys
-from importlib import import_module
+
+# from importlib import import_module
 
 JSBASE = j.application.JSBaseClass
 from gevent import spawn
@@ -50,7 +52,7 @@ class ServerRack(JSBASE):
         """
         @param gedis_instance_name: gedis instance name that will be monitored
 
-        js_shell 'j.servers.digitalme.filemonitor_start("test",subprocess=False)'
+        js_shell 'j.servers.rack.filemonitor_start("test",subprocess=False)'
 
         """
         self._nomonkeypatch_check()
