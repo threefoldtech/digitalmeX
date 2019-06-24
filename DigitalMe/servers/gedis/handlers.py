@@ -415,7 +415,7 @@ def _result_encode(cmd, response_type, item):
             return item._json
     else:
 
-        if isinstance(item, j.data.schema.DataObjBase):
+        if isinstance(item, j.data.schema._JSXObjectClass):
             if response_type == "json":
                 return item._json
             else:
