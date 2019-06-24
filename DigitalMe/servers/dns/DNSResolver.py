@@ -39,7 +39,7 @@ class DNSResolver:
         """
         # Get zone name from domain, then get the object from database or create a new one
         zone = ".".join(domain.split(".")[-2:])
-        obj = self.model.get_by_zone(zone)
+        obj = self.model.find(zone=zone)
         if obj:
             obj = obj[0]
         else:
@@ -112,7 +112,7 @@ class DNSResolver:
         domain_parts = domain.split(".")[-2:]
         if len(domain_parts) > 1:
             zone = ".".join(domain_parts)
-            obj = self.model.get_by_zone(zone)
+            obj = self.model.find(zone=zone)
             if obj:
                 name = "%s_%s" % (domain, record_type)
                 for domain_obj in obj[0].domains:
@@ -132,7 +132,7 @@ class DNSResolver:
         domain_parts = domain.split(".")[-2:]
         if len(domain_parts) > 1:
             zone = ".".join(domain_parts)
-            obj = self.model.get_by_zone(zone)
+            obj = self.model.find(zone=zone)
             if obj:
                 obj = obj[0]
                 name = "%s_%s" % (domain, record_type)
