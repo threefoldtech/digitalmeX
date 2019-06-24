@@ -11,7 +11,7 @@ class chatbot(JSBASE):
 
     def __init__(self):
         JSBASE.__init__(self)
-        self.chatbot = j.servers.gedis.latest.chatbot
+        self.chatbot = self.server_gedis.chatbot
 
         # check self.chatbot.chatflows for the existing chatflows
         # all required commands are here
@@ -48,4 +48,4 @@ class chatbot(JSBASE):
         topic = "" (S)
         ```
         """
-        return json.dumps({"sessionid": j.servers.gedis.latest.chatbot.session_new(topic)})
+        return json.dumps({"sessionid": self.server_gedis.chatbot.session_new(topic)})

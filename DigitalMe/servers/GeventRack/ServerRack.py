@@ -7,7 +7,9 @@ import sys
 
 JSBASE = j.application.JSBaseClass
 from gevent import spawn
-from gevent import monkey
+
+# from gevent import monkey
+# monkey.patch_all(subprocess=False)
 import gevent
 from gevent import event
 
@@ -20,7 +22,8 @@ class ServerRack(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
         self.servers = {}
-        self._monkeypatch_done = False
+        self._logger_enable()
+        # self._monkeypatch_done = False
 
     def add(self, name, server):
         """
@@ -34,63 +37,171 @@ class ServerRack(JSBASE):
         REMARK: make sure that subprocesses are run before adding gevent servers
 
         """
-        self._monkeypatch()
+        # self._monkeypatch()
+        assert server
         self.servers[name] = server
 
-    def _monkeypatch(self):
-        if not self._monkeypatch_done:
-            monkey.patch_all(subprocess=False)
-            self._monkeypatch_done = True
+    # def _monkeypatch(self):
+    #     if not self._monkeypatch_done:
+    #         monkey.patch_all(subprocess=False)
+    #         self._monkeypatch_done = True
 
-    def _nomonkeypatch_check(self):
-        if self._monkeypatch_done:
-            raise RuntimeError(
-                "cannot start workers because gevent has been inited already, make sure you do gevent later"
-            )
+    # def _nomonkeypatch_check(self):
+    #     if self._monkeypatch_done:
+    #         raise RuntimeError(
+    #             "cannot start workers because gevent has been inited already, make sure you do gevent later"
+    #         )
 
-    def filemonitor_start(self, gedis_instance_name=None, subprocess=True):
+    # def filemonitor_start(self, gedis_instance_name=None, subprocess=True):
+    #     """
+    #     @param gedis_instance_name: gedis instance name that will be monitored
+    #
+    #     js_shell 'j.servers.rack.filemonitor_start("test",subprocess=False)'
+    #
+    #     """
+    #     self._nomonkeypatch_check()
+    #     from .FileSystemMonitor import monitor_changes_subprocess, monitor_changes_parent
+    #
+    #     if subprocess:
+    #         self.filemonitor = monitor_changes_parent(gedis_instance_name=gedis_instance_name)
+    #     else:
+    #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
+
+    def bottle_server_add(self, name="bottle", port=4442, app=None):
+
+        from gevent.pywsgi import WSGIServer
+        from geventwebsocket.handler import WebSocketHandler
+
+        if not app:
+
+            from bottle import route, template, request, Bottle, abort, template
+
+            app = Bottle()
+
+            @app.route("/")
+            def index():
+                return "<b>Hello World</b>!"
+
+            @app.route("/hello/<name>")
+            def hello(name):
+                return template("<b>Hello {{name}}</b>!", name=name)
+
+            @app.route("/stream")
+            def stream():
+                yield "START"
+                yield "MIDDLE"
+                yield "END"
+
+        server = WSGIServer(("0.0.0.0", port), app)
+
+        self.add(name=name, server=server)
+
+    def webdav_server_add(self, name="webdav", path="/tmp", port=4443, webdavprovider=None, user_mapping={}):
         """
-        @param gedis_instance_name: gedis instance name that will be monitored
+        to test manually: wsgidav --root . --server gevent -p 8888 -H 0.0.0.0 --auth anonymous
+        don't forget to install first using: kosmos 'j.servers.rack._server_test_start()'
 
-        js_shell 'j.servers.rack.filemonitor_start("test",subprocess=False)'
+        can use cyberduck to test
 
+        to implement custom backend: https://github.com/mar10/wsgidav/blob/master/wsgidav/samples/virtual_dav_provider.py
+
+        :param name:
+        :param path:
+        :param port:
+        :param webdavprovider:
+        :return:
         """
-        self._nomonkeypatch_check()
-        from .FileSystemMonitor import monitor_changes_subprocess, monitor_changes_parent
 
-        if subprocess:
-            self.filemonitor = monitor_changes_parent(gedis_instance_name=gedis_instance_name)
-        else:
-            monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
-
-    def webdav(self):
-        from wsgidav.fs_dav_provider import FilesystemProvider
-        from wsgidav.version import __version__
-        from wsgidav.wsgidav_app import DEFAULT_CONFIG, WsgiDAVApp
+        # from wsgidav.version import __version__
+        # from wsgidav.wsgidav_app import DEFAULT_CONFIG, WsgiDAVApp
+        from wsgidav.wsgidav_app import WsgiDAVApp
         from gevent.pywsgi import WSGIServer
 
-        provider = FilesystemProvider(args.path)
-        config = DEFAULT_CONFIG.copy()
-        config.update(
-            {
-                "provider_mapping": {"/": provider},
-                "port": 8887,
-                "host": "0.0.0.0",
-                "verbose": True,
-                "propsmanager": True,
-                "locksmanager": False,
-            }
-        )
-        print("config:")
-        print(config)
+        if not webdavprovider:
+            from wsgidav.fs_dav_provider import FilesystemProvider
+
+            webdavprovider = FilesystemProvider(path)
+
+        def addUser(realmName, user, password, description, roles=[]):
+            realmName = "/" + realmName.strip(r"\/")
+            userDict = user_mapping.setdefault(realmName, {}).setdefault(user, {})
+            userDict["password"] = password
+            userDict["description"] = description
+            userDict["roles"] = roles
+
+        if user_mapping == {}:
+            addUser("", "root", "root", "")
+
+        config = {
+            "host": "0.0.0.0",
+            "port": port,
+            "provider_mapping": {"/": webdavprovider},
+            "verbose": 1,
+            "simple_dc": {"user_mapping": user_mapping},
+        }
+
         app = WsgiDAVApp(config)
 
-        server = WSGIServer((args.host, args.port), application=app)
-        server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/{} ".format(__version__) + server.base_env["SERVER_SOFTWARE"]})
-        print("Running {} on http://{}:{}".format(server.get_environ()["SERVER_SOFTWARE"], args.host, args.port))
+        # server_args = {"bind_addr": (config["host"], config["port"]), "wsgi_app": app}
+        # server = wsgi.Server(**server_args)
+        # server.start()
+
+        server = WSGIServer(("0.0.0.0", port), application=app)
+        # server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/9999 " + server.base_env["SERVER_SOFTWARE"]})
+
+        self.add(name=name, server=server)
+
+    def websocket_server_add(self, name="websocket", port=4444, appclass=None):
+
+        from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
+        from collections import OrderedDict
+
+        if not appclass:
+
+            class EchoApplication(WebSocketApplication):
+                def on_open(self):
+                    print("Connection opened")
+
+                def on_message(self, message):
+                    self.ws.send(message)
+
+                def on_close(self, reason):
+                    print(reason)
+
+            appclass = EchoApplication
+
+        server = WebSocketServer(("", port), Resource(OrderedDict([("/", appclass)])))
+
+        self.add(name=name, server=server)
+
+    def websocket_bottle_server_add(self, name="websocket", port=4444, appclass=None):
+
+        from bottle import request, Bottle, abort
+
+        app = Bottle()
+
+        @app.route("/websocket")
+        def handle_websocket():
+            wsock = request.environ.get("wsgi.websocket")
+            if not wsock:
+                abort(400, "Expected WebSocket request.")
+
+            while True:
+                try:
+                    message = wsock.receive()
+                    wsock.send("Your message was: %r" % message)
+                except WebSocketError:
+                    break
+
+        from gevent.pywsgi import WSGIServer
+        from geventwebsocket import WebSocketError
+        from geventwebsocket.handler import WebSocketHandler
+
+        server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
+        self.add(name=name, server=server)
 
     def start(self):
-        self._monkeypatch()
+        # self._monkeypatch()
         started = []
         try:
             for key, server in self.servers.items():

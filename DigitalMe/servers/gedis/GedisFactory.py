@@ -13,25 +13,18 @@ class GedisFactory(JSConfigFactory):
     __jslocation__ = "j.servers.gedis"
     _CHILDCLASS = GedisServer
 
-    def geventserver_get(self, instance=""):
+    def get_gevent_server(self, name="", **kwargs):
         """
-        return gedis_server
+        return gedis_server as gevent server
 
-        j.servers.gedis.geventserver_get("test")
+        j.servers.gedis.get("test")
 
 
         """
-        server = self.get(instance=instance)
+        self.new(name=name, **kwargs)
+        server = self.get(name=name)
+
         return server.gedis_server
-
-    def configure(self, name="test", port=8889, host="127.0.0.1", ssl=False, password="", configureclient=False):
-
-        data = {"port": port, "host": host, "password_": password, "ssl": ssl, "name": name}
-
-        server = self.get(**data)
-        if configureclient:
-            server.client_configure()  # configures the client
-        return server
 
     def _cmds_get(self, key, data):
         """
@@ -46,4 +39,7 @@ class GedisFactory(JSConfigFactory):
         kosmos 'j.servers.gedis.test()'
 
         """
+        j.servers.rack._server_test_start()  # makes sure we have a gevent serverrack which runs a gevent service
+        # now can run the rest of the tests
+
         self._test_run(name=name)

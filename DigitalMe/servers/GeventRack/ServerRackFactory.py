@@ -1,12 +1,16 @@
+# from gevent import monkey
+#
+# monkey.patch_all(subprocess=False)
+
 from Jumpscale import j
 
 import gevent
 
-from gevent import monkey
 
 # from .Community import Community
 from .ServerRack import ServerRack
-from .Package import Package
+
+# from .Package import Package
 import time
 from gevent import event, sleep
 import os
@@ -22,193 +26,183 @@ class ServerRackFactory(JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.servers.rack"
         JSBASE.__init__(self)
-        self.filemonitor = None
-        # self.community = Community()
-        self.packages = {}
+        self._logger_enable()
 
-    def start(self, secret, namespace="rack", restart=False, destroydata=False, zdbinternal=True):
-        """
-        kosmos 'j.servers.rack.start(secret="1234")'
-        kosmos 'j.servers.rack.start(secret="1234",destroydata=True)'
+    def get(self):
 
         """
-
-        if restart:
-            j.shell()
-
-        # make sure we have redis running
-        j.clients.redis.core_get()
-
-        if restart or not j.sal.nettools.tcpPortConnectionTest("localhost", 8081):
-            j.servers.openresty.start()
-
-        # #get sockexec to run
-        if restart or not self._socket_check("/sandbox/var/exec.sock"):
-            cmd = j.tools.tmux.cmd_get(
-                name="runner", pane="p14", cmd="rm -f /sandbox/var/exec.sock;sockexec /sandbox/var/exec.sock"
-            )
-            cmd.stop()
-            cmd.start()
-
-        secret = j.data.hash.md5_string(
-            secret
-        )  # to make sure we don't have to store the secret as plain text somewhere
-
-        self.nacl = j.data.nacl.get(
-            name="rack", secret=j.data.hash.md5_string(secret + "rack")
-        )  # just to make sure secret in nacl is not same as namespace
-
-        if zdbinternal:
-            j.servers.zdb.adminsecret = self.nacl.ssh_hash(secret + "admin")
-            j.servers.zdb.name = "rack"
-
-            if destroydata or restart:
-                j.servers.zdb.stop()
-                zdbrunning = False
-            else:
-                zdbrunning = j.servers.zdb.isrunning()
-
-            if not zdbrunning:
-                j.servers.zdb.start(destroydata=destroydata)
-
-            try:
-                cladmin = j.servers.zdb.client_admin_get()
-            except Exception as e:
-                if str(e).find("Access denied") != -1:
-                    print(
-                        "\nERROR:\n    cannot connect to ZDB, admin secret different, restart without ZDB init or destroy ZDB data\n"
-                    )
-                    sys.exit(1)
-                raise e
-
-            if not cladmin.namespace_exists(namespace):
-                secretns = self.nacl.ssh_hash(
-                    namespace + secret
-                )  # will generate a unique hash which will only be relevant when right ssh-agent loaded
-                zdbcl = cladmin.namespace_new(namespace, secret=secretns, maxsize=0, die=True)
-
-        # self._run_exec("find /")
-        # j.shell()
-        # ws
-
-        # def install_zrobot():
-        #     path = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/0-robot")
-        #     j.sal.process.execute("cd %s;pip3 install -e ." % path)
-        #
-        # if "_zrobot" not in j.servers.__dict__.keys():
-        #     # means not installed yet
-        #     install_zrobot()
-
-        env = {}
-        env["addr"] = "localhost"
-        env["port"] = "9900"
-        env["namespace"] = namespace
-        env["secret"] = secret
-        cmd_ = "js_shell 'j.servers.rack.start_from_zdb()'"
-        cmd = j.tools.tmux.cmd_get(name="rack", pane="p22", cmd=cmd_, env=env, process_strings=[])
-
-        cmd.stop()
-        cmd.start()
-
-        gedisclient = j.clients.gedis.configure(
-            namespace, namespace="system", port=8001, secret=secret, host="localhost"
-        )
-
-        assert gedisclient.system.ping() == b"PONG"
-
-        return gedisclient
-
-    def start_from_zdb(self, addr="localhost", port=9900, namespace="rack", secret="1234"):
-        """
-
-        examples:
-
-        js_shell 'j.servers.rack.start_from_zdb()'
-
-        :param addr: addr of starting zerodb namespace
-        :param port: port
-        :param namespace: name of the namespace
-        :param secret: the secret of the namespace
-
-        can also pass the arguments as env variables
-
-        :return:
-
-
-
-
-        """
-
-        if "addr" in os.environ:
-            addr = os.environ["addr"]
-        if "port" in os.environ:
-            port = int(os.environ["port"])
-        if "namespace" in os.environ:
-            namespace = os.environ["namespace"]
-        if "secret" in os.environ:
-            secret = os.environ["secret"]
-
-        if len(secret) != 32:
-            secret = j.data.hash.md5_string(secret)
-
-        self.nacl = j.data.nacl.get(
-            name="rack", secret=j.data.hash.md5_string(secret + "rack")
-        )  # just to make sure secret in nacl is not same as namespace
-
-        secretns = self.nacl.ssh_hash(
-            namespace + secret
-        )  # will generate a unique hash which will only be relevant when right ssh-agent loaded
-
-        self.zdbclient = j.clients.zdb.client_get(nsname=namespace, addr=addr, port=port, secret=secretns, mode="seq")
-
-        self.rack = self.server_rack_get()
-
-        geventserver = j.servers.gedis.configure(
-            host="localhost", port="8001", ssl=False, adminsecret=secret, instance=namespace
-        )
-
-        self.rack.add("gedis", geventserver.redis_server)  # important to do like this, otherwise 2 servers started
-
-        key = "%s_%s_%s" % (addr, port, namespace)
-        self.bcdb = j.data.bcdb.get("rack_%s" % key, zdbclient=self.zdbclient, cache=True)
-
-        self.web_reload()
-
-        self.rack.start()
-
-    def server_rack_get(self):
-
-        """
-        returns a server rack
+        returns a gevent rack
 
         to start the server manually do:
         js_shell 'j.servers.rack.start(namespace="test", secret="1234")'
 
         """
-
         return ServerRack()
 
-    def test(self, manual=False):
+    def install(self):
         """
-        js_shell 'j.servers.rack.test()'
-        js_shell 'j.servers.rack.test(manual=True)'
+        kosmos 'j.servers.rack._server_test_start()'
+        :return:
+        """
+        j.builders.runtimes.python.pip_package_install("bottle,webdavclient3")
+        j.builders.runtimes.python.pip_package_install("git+https://github.com/mar10/wsgidav.git")
+
+    def _server_test_start(
+        self, background=False, gedis=True, gedis_ssl=True, webdav=True, bottle=True, websockets=True
+    ):
+        """
+        kosmos 'j.servers.rack._server_test_start()'
+
+        :param manual means the server is run manually using e.g. kosmos 'j.servers.rack.start(background=True)'
+
+        """
+
+        if not background:
+
+            self.install()
+
+            admincl = j.servers.zdb.start_test_instance(destroydata=True)
+            cl = admincl.namespace_new("test", secret="1234")
+
+            if gedis:
+
+                gedis = j.servers.gedis.get_gevent_server("test", port=8900)
+
+            rack = self.get()
+            rack.add("gedis", gedis)
+
+            if gedis_ssl:
+                gedis_ssl = j.servers.gedis.get_gevent_server("test", ssl=True, port=8901)
+                rack.add("gedis_ssl", gedis_ssl)
+
+            if webdav:
+                rack.webdav_server_add()
+
+            if websockets:
+                rack.websocket_server_add()
+                # rack.websocket_bottle_server_add
+
+            if bottle:
+                rack.bottle_server_add()
+
+            rack.start()
+
+        else:
+            ports = []
+            args = {}
+            if gedis:
+                ports.append(8900)
+                args["gedis"] = "True"
+            else:
+                args["gedis"] = "False"
+            if gedis_ssl:
+                # ports.append(8901)
+                args["gedis_ssl"] = "True"
+            else:
+                args["gedis_ssl"] = "False"
+            if webdav:
+                # ports.append(4443)
+                args["webdav"] = "True"
+            else:
+                args["webdav"] = "False"
+            if bottle:
+                # ports.append(4442)
+                args["bottle"] = "True"
+            else:
+                args["bottle"] = "False"
+            if websockets:
+                # ports.append(4444)
+                args["websockets"] = "True"
+            else:
+                args["websockets"] = "False"
+
+            S = """
+            from gevent import monkey
+            monkey.patch_all(subprocess=False)
+            from Jumpscale import j
+            j.servers.rack._server_test_start(gedis={gedis},gedis_ssl={gedis_ssl},webdav={webdav}, bottle={bottle}, websockets={websockets})
+            """
+
+            S = j.core.tools.text_replace(S, args)
+
+            s = j.servers.startupcmd.gedis_test
+            s.cmd_start = S
+            # the MONKEY PATCH STATEMENT IS A WEIRD ONE, will make sure that before starting monkeypatching will be done
+            s.executor = "tmux"
+            s.interpreter = "python"
+            s.timeout = 10
+            s.ports = ports
+            if not s.is_running():
+                s.stop()
+            s.start()
+
+    def test(self, start=True, gedis=True, gedis_ssl=False, webdav=True, bottle=True, websockets=False):
+        """
+        kosmos 'j.servers.rack.test()'
+        kosmos 'j.servers.rack.test(ssl=False)'
+        kosmos 'j.servers.rack.test(start=True)'
 
         :param manual means the server is run manually using e.g. js_shell 'j.servers.rack.start()'
 
         """
-        admincl = j.servers.zdb.start_test_instance(destroydata=True)
-        cl = admincl.namespace_new("test", secret="1234")
 
-        if manual:
-            namespace = "system"
-            # if server manually started can use this
-            secret = "1234"
-            gedisclient = j.clients.gedis.configure(
-                namespace, namespace=namespace, port=8001, secret=secret, host="localhost"
+        if start:
+            self._server_test_start(
+                background=True, gedis=gedis, gedis_ssl=gedis_ssl, webdav=webdav, bottle=bottle, websockets=websockets
             )
-        else:
-            # gclient will be gedis client
-            gedisclient = self.start(addr=cl.addr, port=cl.port, namespace=cl.nsname, secret=cl.secret, background=True)
 
-        # ns=gedisclient.core.namespaces()
-        j.shell()
+        namespace = "system"
+        secret = "1234"
+        cl = j.clients.gedis.new(namespace, namespace=namespace, port=8900, secret=secret, host="localhost")
+        assert cl.ping()
+        cl.actors
+        assert cl.actors.system.ping() == b"PONG"
+
+        if gedis_ssl:
+            cl2 = j.clients.gedis.new(
+                namespace, namespace=namespace, port=8901, secret=secret, host="localhost", ssl=True
+            )
+            assert cl2.ping()
+            cl.actors
+            assert cl.actors.system.ping() == b"PONG"
+
+        if webdav:
+            # how to use see https://github.com/ezhov-evgeny/webdav-client-python-3/blob/da46592c6f1cc9fb810ca54019763b1e7dce4583/webdav3/client.py#L197
+            options = {"webdav_hostname": "http://127.0.0.1:4443", "webdav_login": "root", "webdav_password": "root"}
+            from webdav3.client import Client
+
+            cl = Client(options)
+            cl.check()
+            assert len(cl.list("")) > 0
+
+        if websockets:
+            # TODO: does not work yet
+            from websocket import create_connection
+
+            ws = create_connection("ws://localhost:4444")
+            ws.send("Hello, World")
+            result = ws.recv()
+            print(result)
+            # ws.close()
+
+        if bottle:
+            import requests
+
+            # https://realpython.com/python-requests/#the-get-request
+
+            r1 = requests.get("http://localhost:4442/")
+            self._log(r1.status_code)
+            self._log(r1.content)
+            assert r1.content == b"<b>Hello World</b>!"
+            assert r1.status_code == 200
+            self._log_info("hello kds")
+            r2 = requests.get("http://localhost:4442/hello/kds")
+            assert r2.status_code == 200
+            self._log(r2.status_code)
+            self._log_info("stream")
+            r3 = requests.get("http://localhost:4442/stream")
+            assert r3.status_code == 200
+            self._log(r3.status_code)
+            self._log(r3.content)
+
+        print("tests are ok")
