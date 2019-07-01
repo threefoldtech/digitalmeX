@@ -355,7 +355,7 @@ class MyJobs(JSBASE):
         jid, data_ret = j.data.serializers.msgpack.loads(data)
         j.shell()
         w
-        job = self.model_job.schema.get(data=data_ret)
+        job = self.model_job.schema.new(datadict=data_ret)
         job.id = jid
         return job
 

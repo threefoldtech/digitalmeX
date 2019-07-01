@@ -1,9 +1,9 @@
 from Jumpscale import j
 
 
-class CoordinatorBase(j.application.JSFactoryBaseClass):
+class CoordinatorBase(j.application.JSFactoryConfigsBaseClass):
     def __init__(self):
-        j.application.JSFactoryBaseClass.__init__(self)
+        j.application.JSFactoryConfigsBaseClass.__init__(self)
         self.services = {}
         self._name = self.__jslocation__.replace("j.world.", "")
 

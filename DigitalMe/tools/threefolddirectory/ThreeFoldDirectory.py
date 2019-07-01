@@ -3,7 +3,7 @@ from .Farmers import *
 from .Nodes import *
 
 
-class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
+class ThreeFoldDirectory(j.application.JSFactoryConfigsBaseClass):
 
     __jslocation__ = "j.tools.threefold_directory"
     _CHILDCLASSES = [Farmers, Nodes]
