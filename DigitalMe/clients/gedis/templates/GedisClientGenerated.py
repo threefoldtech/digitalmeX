@@ -52,7 +52,7 @@ class GedisClientGenerated():
         if isinstance(res, list):
             res2 = list(map(lambda x: schema_out.get(data=x), res))
         else:
-            res2 = schema_out.get(data=res)
+            res2 = schema_out.get(serializeddata=res)
         {% else %}
         res2 = res
         {% endif %}
