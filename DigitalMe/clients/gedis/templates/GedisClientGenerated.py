@@ -50,7 +50,7 @@ class GedisClientGenerated():
         # print("{{cmd.schema_out.url}}")
         schema_out = j.data.schema.get_from_url_latest(url="{{cmd.schema_out.url}}")
         if isinstance(res, list):
-            res2 = list(map(lambda x: schema_out.get(data=x), res))
+            res2 = list(map(lambda x: schema_out.get(serializeddata=x), res))
         else:
             res2 = schema_out.get(serializeddata=res)
         {% else %}
