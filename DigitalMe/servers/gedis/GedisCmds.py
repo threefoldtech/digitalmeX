@@ -47,7 +47,7 @@ class GedisCmds(JSBASE):
         self._cmds = {}
 
         if data:
-            self.data = self.schema.get(data=data)
+            self.data = self.schema.get(serializeddata=data)
             self.cmds
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
