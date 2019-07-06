@@ -23,7 +23,7 @@ class ZOSInstance(j.application.JSFactoryConfigsBaseClass):
 
     _CHILDCLASSES = [ZOSContainers]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._zos_client_ = None
 
     @property

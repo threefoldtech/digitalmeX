@@ -33,7 +33,7 @@ class OpenPublish(JSConfigClient):
         ip = "" (ipaddr)
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.open_publish_path = j.clients.git.getGitRepoArgs(OPEN_PUBLISH_REPO)[-3]
         self.gedis_server = None
         self.dns_server = None

@@ -31,7 +31,7 @@ class GedisServer(JSBaseConfig):
         secret_ = "" (S)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._sig_handler = []
 
         self.cmds_meta = {}  # is the metadata of the actor

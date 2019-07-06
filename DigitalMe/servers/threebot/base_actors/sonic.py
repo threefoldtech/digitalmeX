@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class sonic(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         self.sonic_client = j.clients.sonic.default
 
     def query(self, collection, bucket, text, schema_out):

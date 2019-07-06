@@ -77,7 +77,7 @@ class Node(j.application.JSBaseConfigClass):
 
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     @staticmethod

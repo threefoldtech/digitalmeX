@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class KosmosUniverse(j.application.JSBaseClass):
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def __getattr__(self, attr):

@@ -29,7 +29,7 @@ class GedisClient(JSConfigBase):
     
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # j.clients.gedis.latest = self
         self._namespace = self.data.namespace
 
