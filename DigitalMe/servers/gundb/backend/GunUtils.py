@@ -103,13 +103,13 @@ def ham_mix(change, graph):
     return diff
 
 
-def lex_from_graph(lex, graph):
+def lex_from_graph(lex, db):
     """
     Graph or backend..
     """
     soul = lex[SOUL]
     key = lex.get(".", None)
-    node = graph.get(soul, None)
+    node = db.get(soul, None)
     tmp = None
     if not node:
         return {}

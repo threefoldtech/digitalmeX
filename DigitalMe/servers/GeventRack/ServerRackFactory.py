@@ -23,9 +23,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class ServerRackFactory(JSBASE):
-    def __init__(self):
-        self.__jslocation__ = "j.servers.rack"
-        JSBASE.__init__(self)
+
+    __jslocation__ = "j.servers.rack"
+
+    def _init(self):
         self._logger_enable()
 
     def get(self):

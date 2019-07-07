@@ -40,17 +40,5 @@ def cltest():
 ```
 
 
-### test client
-
-There're multiple targets in the Makefile to use client with different backends
-
-- `make clientdummy`
-- `make clientmem`
-- `make clientredis`
-- `make clientudb`
-- `make clientpickle`
-
-## Examples
-
 ### Todo
 There is a basic `todo.html` demo in the repo

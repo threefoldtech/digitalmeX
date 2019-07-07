@@ -1,7 +1,7 @@
-from ..consts import STATE, METADATA, SOUL
+from .consts import STATE, METADATA, SOUL
 
 
-class Memory:
+class MemoryDB:
     def __init__(self):
         self.db = {}
 
