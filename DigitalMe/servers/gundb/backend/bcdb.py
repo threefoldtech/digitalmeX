@@ -7,7 +7,7 @@ import json
 from Jumpscale import j
     
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
-bcdb = j.data.bcdb.get(name="test4")
+bcdb = j.data.bcdb.get(name="test")
 bcdb.reset()
 j.data.schema.add_from_text("""
 @url = proj.todo
@@ -40,6 +40,24 @@ email* = "" !proj.email
 """)
 
 
+j.data.schema.add_from_text("""
+@url = proj.os
+name* = "" (S)
+""")
+
+
+j.data.schema.add_from_text("""
+@url = proj.phone
+model* = "" (S)
+os* = "" !proj.os
+""")
+
+
+j.data.schema.add_from_text("""
+@url = proj.human
+name* = "" (S)
+phone* = "" !proj.phone
+""")
 
 
 def get_schema_by_url(url):
@@ -97,11 +115,10 @@ class BCDB:
                 
         def search(k, graph):
             # DON'T CHANGE: CHECK WITH ME OR ANDREW
-            visited = []
             roots = list(rootobjects)
 
             def inner(k, current_key, current_node, graph, path=None):
-                print("path in inner: ", path)
+                # print("path in inner: ", path)
             
                 if not isinstance(current_node, dict):
                     return []   
@@ -113,8 +130,8 @@ class BCDB:
 
                 for key, node in current_node.items():
                     
-                    print("node: {} ".format(node))
-                    print("key {}".format(key))
+                    # print("node: {} ".format(node))
+                    # print("key {}".format(key))
                     if key in ">_":
                         continue
 
@@ -127,7 +144,8 @@ class BCDB:
                     if res:
                         return res
                     else:
-                        print("path now : ", path)
+                        pass
+                        # print("path now : ", path)
                         
                 if current_key:
                     path.pop()
@@ -140,7 +158,7 @@ class BCDB:
         def do(soul, key, value, graph):
             if is_root_soul(soul):
                 schema, obj_id = parse_schema_and_id(soul)
-                print("soul <- {} schema <- {} ".format(soul, schema))
+                # print("soul <- {} schema <- {} ".format(soul, schema))
                 model = get_model_by_schema_url(schema)
                 try:
                     obj = model.get(obj_id)
@@ -157,6 +175,9 @@ class BCDB:
                 objcontent = path + [{"#":soul}, graph]
 
                 schema, obj_id = parse_schema_and_id(objpath[0])
+                if not schema:
+                    return 
+                print("*****schema:", schema)
                 model = get_model_by_schema_url(schema)
                 
 
@@ -172,8 +193,10 @@ class BCDB:
                     obj = model.get(obj_id)
                 except:
                     obj = model.new()
-
+                
+                print(dir(obj))
                 attr = None
+                print("objpath: ", objpath)
                 while objpath:
                     attr = objpath.pop(0)
                     obj = getattr(obj, attr)

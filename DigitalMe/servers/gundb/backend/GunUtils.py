@@ -117,7 +117,7 @@ def lex_from_graph(lex, db):
         tmp = node.get(key, None)
         if not tmp:
             return
-        node = {METADATA: node[METADATA]}
+        node = ensure_state(node)
         node[key] = tmp
         tmp = node[METADATA][STATE]
         node[METADATA][STATE][key] = tmp[key]

@@ -2,6 +2,7 @@ import json
 from Jumpscale import j
 from .backend.GunUtils import *
 from .backend.MemoryDB import MemoryDB
+from .backend.bcdb import BCDB
 from geventwebsocket import WebSocketApplication
 import uuid
 
@@ -19,7 +20,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
     def _init(self, **kwargs):
-        self.db = MemoryDB()
+        self.db = BCDB() # MemoryDB()
         self.graph = {}  # sometimes te MemoryDB is used sometimes the graph? whats difference
         self.peers = []
         self.trackedids = []
@@ -80,7 +81,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
                             if k == "_":
                                 continue
                             val = json.dumps(v)
-                            self.db.put(soul, k, v, diff[soul]["_"][">"][k])
+                            self.db.put(soul, k, v, diff[soul]["_"][">"][k], self.graph)
 
                 elif "get" in payload:
                     get = payload["get"]
