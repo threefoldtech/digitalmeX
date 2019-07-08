@@ -166,6 +166,7 @@ class BCDB:
                     obj = model.new()
                 print(":::=> object update setting attr {} with value {}".format(key, value))
                 setattr(obj, key, resolve_v(value, graph))
+                obj.save()
                 return obj
             else:
                 objpath = path = search(soul, graph)
