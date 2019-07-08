@@ -2,17 +2,26 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+
 class GraphQLFactory(JSBASE):
 
     __jslocation__ = "j.servers.graphql"
+    _SCHEMA_TEXT = """
+        @url = graphql.posts.schema
+        info_id* = (I)
+        title = (S) 
+        author = (S)
+        name = (S)
+        """
 
     def _init(self):
         self._logger_enable()
 
     @property
     def ip(self):
-        if not hasattr(self, '_ip'):
+        if not hasattr(self, "_ip"):
             import socket
+
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             self._ip = s.getsockname()[0]
@@ -30,7 +39,6 @@ class GraphQLFactory(JSBASE):
         j.builders.runtimes.python.pip_package_install("tox")
         j.builders.runtimes.python.pip_package_install("graphql-ws")
         j.builders.runtimes.python.pip_package_install("rx")
-
 
     def _server_test_start(self, background=False):
         """
@@ -52,11 +60,10 @@ class GraphQLFactory(JSBASE):
             from .schema import schema
             from graphql_ws.gevent import GeventSubscriptionServer
 
-
             app = Bottle()
 
             # expose graphql end point
-            graphql_middleware(app, '/graphql', schema)
+            graphql_middleware(app, "/graphql", schema)
 
             # expose graphiql
             @app.route("/graphiql")
@@ -66,7 +73,8 @@ class GraphQLFactory(JSBASE):
             # simple test, making sure websocket protocol is running
             @app.route("/websocket")
             def websockets():
-                return template("""
+                return template(
+                    """
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -81,40 +89,55 @@ class GraphQLFactory(JSBASE):
                   </script>
                 </head>
                 </html>
-                """, ip=self.ip)
+                """,
+                    ip=self.ip,
+                )
 
-            # vue.js example using graphql posts query
-            @app.route('/posts')
+            # expose posts example
+            # add post from simple for to save in bcdb
+            @app.route("/posts", method="GET")
+            @app.route("/posts", method="POST")
             def posts():
+                model_objects = None
+                if request.method == "POST":
+                    data = self.parse_data(request.body)
+                    # Create a model with the data and save the model for later retrieval
+                    model = j.application.bcdb_system.model_get_from_schema(self._SCHEMA_TEXT)
+                    model_objects = model.new()
+                    model_objects.info_id = data["id"]
+                    model_objects.title = data["title"]
+                    model_objects.name = data["name"]
+                    model_objects.author = data["author"]
+                    model_objects.save()
+
                 with open(self._dirpath + "/html/posts.html") as s:
-                    return s.read().replace('{ip_address}', self.ip)
+                    return s.read().replace("{ip_address}", self.ip)
 
             # test graphql subscriptions
             @app.route("/counter")
             def counter():
                 with open(self._dirpath + "/html/counter.html") as s:
-                    return s.read().replace('{ip_address}', self.ip)
-
+                    return s.read().replace("{ip_address}", self.ip)
 
             # websockets app
             websockets_app = Bottle()
             subscription_server = GeventSubscriptionServer(schema)
-            websockets_app.app_protocol = lambda environ_path_info: 'graphql-ws'
+            websockets_app.app_protocol = lambda environ_path_info: "graphql-ws"
 
-            @websockets_app.route('/subscriptions')
+            @websockets_app.route("/subscriptions")
             def echo_socket():
-                wsock = request.environ.get('wsgi.websocket')
+                wsock = request.environ.get("wsgi.websocket")
                 if not wsock:
-                    abort(400, 'Expected WebSocket request.')
+                    abort(400, "Expected WebSocket request.")
 
                 subscription_server.handle(wsock)
                 return []
 
-            @websockets_app.route('/websockets')
+            @websockets_app.route("/websockets")
             def handle_websocket():
-                wsock = request.environ.get('wsgi.websocket')
+                wsock = request.environ.get("wsgi.websocket")
                 if not wsock:
-                    abort(400, 'Expected WebSocket request.')
+                    abort(400, "Expected WebSocket request.")
 
                 while True:
                     try:
@@ -153,6 +176,17 @@ class GraphQLFactory(JSBASE):
                 s.stop()
             s.start()
 
+    # parse data from the form in the request body
+    def parse_data(self, raw_data):
+        byte_str = raw_data.read()
+        raw_data = byte_str.decode("utf-8")
+        out_data = {}
+        temp = raw_data.split("&")
+        for item in temp:
+            info = item.split("=")
+            out_data[info[0]] = info[1]
+        return out_data
+
     def test(self):
         """
         kosmos 'j.servers.gundb.test()'
@@ -160,6 +194,5 @@ class GraphQLFactory(JSBASE):
         """
 
         self._server_test_start(background=True)
-        
 
         print("tests are ok")
