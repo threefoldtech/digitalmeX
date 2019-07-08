@@ -30,6 +30,9 @@ class GraphQLFactory(JSBASE):
         j.builders.runtimes.python.pip_package_install("graphene >= 2.0.dev20170802065539")
         j.builders.runtimes.python.pip_package_install("flake8")
         j.builders.runtimes.python.pip_package_install("tox")
+        j.builders.runtimes.python.pip_package_install("graphql-ws")
+        j.builders.runtimes.python.pip_package_install("rx")
+
 
     def _server_test_start(self, background=False):
         """
@@ -49,6 +52,8 @@ class GraphQLFactory(JSBASE):
             from .GraphqlBottle import graphql_middleware
             from geventwebsocket import WebSocketError
             from .schema import schema
+            from graphql_ws.gevent import GeventSubscriptionServer
+
 
             app = Bottle()
 
@@ -86,6 +91,13 @@ class GraphQLFactory(JSBASE):
                 with open(self._dirpath + "/html/posts.html") as s:
                     return s.read().replace('{ip_address}', self.ip)
 
+            # expose test subscriptions
+            @app.route("/counter")
+            def counter():
+                with open(self._dirpath + "/html/counter.html") as s:
+                    return s.read().replace('{ip_address}', self.ip)
+
+
             # websockets app
             websockets_app = Bottle()
 
@@ -101,6 +113,19 @@ class GraphQLFactory(JSBASE):
                         wsock.send("Your message was: %r" % message)
                     except WebSocketError:
                         break
+
+            subscription_server = GeventSubscriptionServer(schema)
+            websockets_app.app_protocol = lambda environ_path_info: 'graphql-ws'
+            websockets_app.app_protocol = lambda environ_path_info: 'graphql-ws'
+
+            @websockets_app.route('/subscriptions')
+            def echo_socket():
+                wsock = request.environ.get('wsgi.websocket')
+                if not wsock:
+                    abort(400, 'Expected WebSocket request.')
+
+                subscription_server.handle(wsock)
+                return []
 
             # add a bottle webserver to it
             rack.bottle_server_add(name="graphql", port=7777, app=app)
