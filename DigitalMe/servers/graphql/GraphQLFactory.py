@@ -2,8 +2,6 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-from bottle import route, template, request, Bottle, abort, template, static_file
-
 class GraphQLFactory(JSBASE):
 
     __jslocation__ = "j.servers.graphql"
@@ -65,7 +63,7 @@ class GraphQLFactory(JSBASE):
             def graphiql():
                 return static_file("graphiql.html", root="%s/html" % self._dirpath)
 
-            # expose test websockets app
+            # simple test, making sure websocket protocol is running
             @app.route("/websocket")
             def websockets():
                 return template("""
@@ -85,13 +83,13 @@ class GraphQLFactory(JSBASE):
                 </html>
                 """, ip=self.ip)
 
-            # expose posts example
+            # vue.js example using graphql posts query
             @app.route('/posts')
             def posts():
                 with open(self._dirpath + "/html/posts.html") as s:
                     return s.read().replace('{ip_address}', self.ip)
 
-            # expose test subscriptions
+            # test graphql subscriptions
             @app.route("/counter")
             def counter():
                 with open(self._dirpath + "/html/counter.html") as s:
@@ -100,22 +98,7 @@ class GraphQLFactory(JSBASE):
 
             # websockets app
             websockets_app = Bottle()
-
-            @websockets_app.route('/websockets')
-            def handle_websocket():
-                wsock = request.environ.get('wsgi.websocket')
-                if not wsock:
-                    abort(400, 'Expected WebSocket request.')
-
-                while True:
-                    try:
-                        message = wsock.receive()
-                        wsock.send("Your message was: %r" % message)
-                    except WebSocketError:
-                        break
-
             subscription_server = GeventSubscriptionServer(schema)
-            websockets_app.app_protocol = lambda environ_path_info: 'graphql-ws'
             websockets_app.app_protocol = lambda environ_path_info: 'graphql-ws'
 
             @websockets_app.route('/subscriptions')
@@ -152,7 +135,7 @@ class GraphQLFactory(JSBASE):
             s.executor = "tmux"
             s.interpreter = "python"
             s.timeout = 10
-            s.ports = 7766
+            s.ports = 7777
             if not s.is_running():
                 s.stop()
             s.start()
