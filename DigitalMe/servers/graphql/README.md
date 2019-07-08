@@ -30,13 +30,15 @@ open browser on `http://localhost:7777/websocket`, you should see
 
    ![](docs/assets/websocket.png)
 
-#### Vuejs Graphql integration
+#### Vuejs Graphql bcdb integration
 
 open browser on `http://localhost:7777/posts`, you should see
 
-![](docs/assets/posts_vue.png)
+![](docs/assets/blog_main.png)
 
+All records you are making are saved and retrieved from bcdb
 
+![](docs/assets/blog_writing.png)
 
 #### Vuejs Graphql subscriptions using websockets
 
