@@ -48,6 +48,14 @@ open browser on `http://localhost:7777/counter`, you should see
 
 
 
+## Python client!
 
+- `client = j.clients.graphql.get()`
+- `print(client)`
+    ![](docs/assets/client.png)
+- `client.query("{posts{id\ntitle}}")`
+    ![](docs/assets/data.png)
+
+    
 
 
