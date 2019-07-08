@@ -154,16 +154,9 @@ class GraphQLFactory(JSBASE):
         else:
 
             S = """
-            from gevent import monkey
-            monkey.patch_all(subprocess=False)
-            from Jumpscale import j
-            
-            #start the graphql server using gevent rack
-            j.servers.graphql._server_test_start()
-                        
+            . /sandbox/env.sh;
+            kosmos 'j.servers.graphql._server_test_start()'
             """
-
-            S = j.core.tools.text_replace(S, args)
 
             s = j.servers.startupcmd.new(name="graphql_test")
             s.cmd_start = S
