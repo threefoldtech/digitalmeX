@@ -158,16 +158,7 @@ class GraphQLFactory(JSBASE):
             kosmos 'j.servers.graphql._server_test_start()'
             """
 
-            s = j.servers.startupcmd.new(name="graphql_test")
-            s.cmd_start = S
-            # the MONKEY PATCH STATEMENT IS A WEIRD ONE, will make sure that before starting monkeypatching will be done
-            s.executor = "tmux"
-            s.interpreter = "python"
-            s.timeout = 10
-            s.ports = 7777
-            if not s.is_running():
-                s.stop()
-            s.start()
+            j.servers.tmux.execute(S)
 
     # parse data from the form in the request body
     def parse_data(self, raw_data):
