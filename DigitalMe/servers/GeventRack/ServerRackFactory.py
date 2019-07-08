@@ -126,7 +126,7 @@ class ServerRackFactory(JSBASE):
 
             S = j.core.tools.text_replace(S, args)
 
-            s = j.servers.startupcmd.gedis_test
+            s = j.servers.startupcmd.new(name="gedis_test")
             s.cmd_start = S
             # the MONKEY PATCH STATEMENT IS A WEIRD ONE, will make sure that before starting monkeypatching will be done
             s.executor = "tmux"
@@ -137,7 +137,7 @@ class ServerRackFactory(JSBASE):
                 s.stop()
             s.start()
 
-    def test(self, start=True, gedis=True, gedis_ssl=False, webdav=True, bottle=True, websockets=False):
+    def test(self, start=True, gedis=True, gedis_ssl=False, webdav=False, bottle=True, websockets=False):
         """
         kosmos 'j.servers.rack.test()'
         kosmos 'j.servers.rack.test(ssl=False)'
