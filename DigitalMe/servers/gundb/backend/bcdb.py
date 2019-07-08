@@ -156,6 +156,8 @@ class BCDB:
         rootobjects = list(filter_root_objects(graph))
         # find its parent to get
         def do(soul, key, value, graph):
+            obj = None
+            model = None
             if is_root_soul(soul):
                 schema, obj_id = parse_schema_and_id(soul)
                 # print("soul <- {} schema <- {} ".format(soul, schema))
@@ -200,8 +202,10 @@ class BCDB:
                 print("objpath: ", objpath)
                 while objpath:
                     attr = objpath.pop(0)
-                    obj = getattr(obj, attr)
-                
+                    try:
+                        obj = getattr(obj, attr)
+                    except:
+                        import ipdb; ipdb.set_trace()
                 obj = objdata
                 obj.save()
                 print("success.....!!!!!", obj)
