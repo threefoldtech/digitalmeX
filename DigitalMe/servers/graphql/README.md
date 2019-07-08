@@ -6,8 +6,14 @@
 j.servers.graphq._server_test_start()
 ```
 
-#### Test
+### Test
+
+
+**GRAPHIQL**
 
 - open browser on localhost:7777/graphiql
-- ![](docs/assets/graphiql.png)
+  ![](docs/assets/graphiql.png)
+
+**Websockets**
+- open browser on localhost:7777/websocket
 

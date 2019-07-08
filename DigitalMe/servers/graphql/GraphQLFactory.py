@@ -11,6 +11,14 @@ class GraphQLFactory(JSBASE):
     def _init(self):
         self._logger_enable()
 
+    @property
+    def ip(self):
+        if not hasattr(self, '_ip'):
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            self._ip = s.getsockname()[0]
+        return self._ip
 
     def install(self):
         """
@@ -42,8 +50,6 @@ class GraphQLFactory(JSBASE):
             from geventwebsocket import WebSocketError
             from .schema import schema
 
-
-
             app = Bottle()
 
             # expose graphql end point
@@ -62,7 +68,7 @@ class GraphQLFactory(JSBASE):
                 <html>
                 <head>
                   <script type="text/javascript">
-                    var ws = new WebSocket("ws://172.17.0.2:7778/websockets");
+                    var ws = new WebSocket("ws://{{ip}}:7778/websockets");
                     ws.onopen = function() {
                         ws.send("Hello, world");
                     };
@@ -72,8 +78,13 @@ class GraphQLFactory(JSBASE):
                   </script>
                 </head>
                 </html>
-                """)
+                """, ip=self.ip)
 
+            # expose posts example
+            @app.route('/posts')
+            def posts():
+                with open(self._dirpath + "/html/posts.html") as s:
+                    return s.read().replace('{ip_address}', self.ip)
 
             # websockets app
             websockets_app = Bottle()
@@ -90,8 +101,6 @@ class GraphQLFactory(JSBASE):
                         wsock.send("Your message was: %r" % message)
                     except WebSocketError:
                         break
-
-
 
             # add a bottle webserver to it
             rack.bottle_server_add(name="graphql", port=7777, app=app)
