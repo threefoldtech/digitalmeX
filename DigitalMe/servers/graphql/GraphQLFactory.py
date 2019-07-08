@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from .schema import schema
+from DigitalMe.servers.graphql.test_app.schema import schema
 
 JSBASE = j.application.JSBaseClass
 
@@ -38,20 +38,45 @@ class GraphQLFactory(JSBASE):
 
             rack = j.servers.rack.get()
 
-            from bottle import route, template, request, Bottle, abort, template, static_file
+            from bottle import request, Bottle, abort, static_file
             from .GraphqlBottle import graphql_middleware
+            from geventwebsocket import WebSocketError
+            from .test_app import TestApp
+
+
 
             app = Bottle()
 
-            graphql_middleware(app, '/graphql', schema)
+            # expose test functionalities to the app
+            Test = TestApp(app)
+            Test()
+            graphql_middleware(app, '/graphql', Test.schema)
 
             @app.route("/graphiql")
             def graphiql():
                 # import ipdb; ipdb.set_trace()
                 return static_file("graphiql.html", root="%s/html" % self._dirpath)
 
+            # websockets app
+            app2 = Bottle()
+
+            @app2.route('/subscriptions')
+            def handle_websocket():
+                wsock = request.environ.get('wsgi.websocket')
+                if not wsock:
+                    abort(400, 'Expected WebSocket request.')
+
+                while True:
+                    try:
+                        message = wsock.receive()
+                        wsock.send("Your message was: %r" % message)
+                    except WebSocketError:
+                        break
+
+
             # add a bottle webserver to it
-            rack.bottle_server_add(name="bottle", port=7777, app=app)
+            rack.bottle_server_add(name="graphql", port=7777, app=app)
+            rack.bottle_server_add(name="graphql_subscriptions", port=7778, app=app, websocket=True)
             rack.start()
 
         else:
@@ -86,6 +111,6 @@ class GraphQLFactory(JSBASE):
         """
 
         self._server_test_start(background=True)
-        j.shell()
+        
 
         print("tests are ok")

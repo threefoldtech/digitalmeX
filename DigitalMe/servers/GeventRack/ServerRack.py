@@ -66,7 +66,7 @@ class ServerRack(JSBASE):
     #     else:
     #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def bottle_server_add(self, name="bottle", port=4442, app=None):
+    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
@@ -91,7 +91,10 @@ class ServerRack(JSBASE):
                 yield "MIDDLE"
                 yield "END"
 
-        server = WSGIServer(("0.0.0.0", port), app)
+        if not websocket:
+            server = WSGIServer(("0.0.0.0", port), app)
+        else:
+            server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
 
         self.add(name=name, server=server)
 
