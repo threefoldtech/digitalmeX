@@ -110,6 +110,19 @@ class GraphQLFactory(JSBASE):
                 subscription_server.handle(wsock)
                 return []
 
+            @websockets_app.route('/websockets')
+            def handle_websocket():
+                wsock = request.environ.get('wsgi.websocket')
+                if not wsock:
+                    abort(400, 'Expected WebSocket request.')
+
+                while True:
+                    try:
+                        message = wsock.receive()
+                        wsock.send("Your message was: %r" % message)
+                    except WebSocketError:
+                        break
+
             # add a bottle webserver to it
             rack.bottle_server_add(name="graphql", port=7777, app=app)
             rack.bottle_server_add(name="graphql_subscriptions", port=7778, app=websockets_app, websocket=True)
