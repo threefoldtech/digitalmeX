@@ -1,9 +1,8 @@
 from Jumpscale import j
 
-from DigitalMe.servers.graphql.test_app.schema import schema
-
 JSBASE = j.application.JSBaseClass
 
+from bottle import route, template, request, Bottle, abort, template, static_file
 
 class GraphQLFactory(JSBASE):
 
@@ -38,29 +37,48 @@ class GraphQLFactory(JSBASE):
 
             rack = j.servers.rack.get()
 
-            from bottle import request, Bottle, abort, static_file
+            from bottle import request, Bottle, abort, static_file, template
             from .GraphqlBottle import graphql_middleware
             from geventwebsocket import WebSocketError
-            from .test_app import TestApp
+            from .schema import schema
 
 
 
             app = Bottle()
 
-            # expose test functionalities to the app
-            Test = TestApp(app)
-            Test()
-            graphql_middleware(app, '/graphql', Test.schema)
+            # expose graphql end point
+            graphql_middleware(app, '/graphql', schema)
 
+            # expose graphiql
             @app.route("/graphiql")
             def graphiql():
-                # import ipdb; ipdb.set_trace()
                 return static_file("graphiql.html", root="%s/html" % self._dirpath)
 
-            # websockets app
-            app2 = Bottle()
+            # expose test websockets app
+            @app.route("/websocket")
+            def websockets():
+                return template("""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <script type="text/javascript">
+                    var ws = new WebSocket("ws://172.17.0.2:7778/websockets");
+                    ws.onopen = function() {
+                        ws.send("Hello, world");
+                    };
+                    ws.onmessage = function (evt) {
+                        alert(evt.data);
+                    };
+                  </script>
+                </head>
+                </html>
+                """)
 
-            @app2.route('/subscriptions')
+
+            # websockets app
+            websockets_app = Bottle()
+
+            @websockets_app.route('/websockets')
             def handle_websocket():
                 wsock = request.environ.get('wsgi.websocket')
                 if not wsock:
@@ -74,9 +92,10 @@ class GraphQLFactory(JSBASE):
                         break
 
 
+
             # add a bottle webserver to it
             rack.bottle_server_add(name="graphql", port=7777, app=app)
-            rack.bottle_server_add(name="graphql_subscriptions", port=7778, app=app, websocket=True)
+            rack.bottle_server_add(name="graphql_subscriptions", port=7778, app=websockets_app, websocket=True)
             rack.start()
 
         else:
