@@ -4,6 +4,7 @@ SOUL = "#"
 import re
 import json
 
+import Jumpscale
 from Jumpscale import j
     
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
@@ -52,10 +53,17 @@ model* = "" (S)
 os* = "" !proj.os
 """)
 
+j.data.schema.add_from_text("""
+@url = proj.lang
+name* = ""
+""")
+
 
 j.data.schema.add_from_text("""
 @url = proj.human
 name* = "" (S)
+favnums = (LS)
+langs = (LO) !proj.lang
 phone* = "" !proj.phone
 """)
 
@@ -101,8 +109,9 @@ class BCDB:
         def resolve_v(v, graph):
             if not isinstance(v, dict):
                 return v
-            if not v["#"]:
-                return v
+            if "#" not in v: ## if not v["#"]
+                # :::=> object update setting attr langs with value {'jxve17bg05zBMKyWBZOf4a': {'name': 'python'}, 'jxve17bjxklRiW8q84rq': {'name': 'ruby'}, 'jxve1h7h5QHzPnZa5tdj': {'name': 'python'}, 'jxve1h7l01apCkvPlNoWmgS': {'name': 'ruby'}}
+                return list( map(dict, set(tuple(sorted(v.items())) for d in v.values())))
             else:
                 ret = {}
                 soul_id = v["#"]
@@ -156,6 +165,7 @@ class BCDB:
         rootobjects = list(filter_root_objects(graph))
         # find its parent to get
         def do(soul, key, value, graph):
+            print(json.dumps(graph, indent=4, sort_keys=True))
             obj = None
             model = None
             if is_root_soul(soul):
@@ -166,13 +176,65 @@ class BCDB:
                     obj = model.get(obj_id)
                 except:
                     obj = model.new()
-                print(":::=> object update setting attr {} with value {}".format(key, value))
-                setattr(obj, key, resolve_v(value, graph))
+                print(":::=> object update setting attr {} with value {}".format(key, resolve_v(value, graph)))
+
+                # # make sure it works allover
+                # if key.startwith("list/"):
+                #     listattr = key.lstrip("list/")
+                #     listattr = getattr(obj, listattr)
+                #     listattr.append(resolve_v(value, graph))
+                # else:
+                #     setattr(obj, key, resolve_v(value, graph))
+
+                # if key == "langs":
+                #     import ipdb; ipdb.set_trace()
+
+                theattr = getattr(obj, key)
+                if isinstance(theattr, Jumpscale.data.types.List.ListObject):
+                    thelist = theattr
+                    resolved_list = resolve_v(value, graph)
+                    # {'jxvey7l8056LxMFKOBIgsi': {'name': 'python'},
+                    # 'jxvey7lbTogKCSjiIWKq': {'name': 'ruby'},
+                    # 'jxve17bg05zBMKyWBZOf4a': {'name': 'python'},
+                    # 'jxve17bjxklRiW8q84rq': {'name': 'ruby'},
+                    # 'jxve1h7h5QHzPnZa5tdj': {'name': 'python'},
+                    # 'jxve1h7l01apCkvPlNoWmgS': {'name': 'ruby'}}
+                    d_as_list = resolved_list.values()
+                    unique_items = []
+                    try:
+                        unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list))) 
+                    except:
+                        # normal items. ["python", "ruby", "java"..]
+                        unique_items = list(set(d_as_list))
+                    thelist = unique_items
+                    setattr(obj, key, thelist)
+                else:
+                    setattr(obj, key, resolve_v(value, graph))
+                print("saved!!!")
+                print(obj)
                 obj.save()
                 return obj
             else:
                 objpath = path = search(soul, graph)
                 if not objpath:
+                    # FIXME doesn't work 
+
+                    """
+                        put bcdb => soul jxvd6ufqyCFeQ9mtcpwJ key jxvd6ufkPTDohIx value white state 1562649540756
+                        {
+                            "jxvd6ufqyCFeQ9mtcpwJ": {
+                                "_": {
+                                    "#": "jxvd6ufqyCFeQ9mtcpwJ",
+                                    ">": {
+                                        "jxvd6ufkPTDohIx": 1562649540756
+                                    }
+                                },
+                                "jxvd6ufkPTDohIx": "white"
+                            }
+                        }
+                        [---]can't find : jxvd6ufqyCFeQ9mtcpwJ jxvd6ufkPTDohIx white
+
+                    """
                     print("[---]can't find :", soul, key, value) 
                     return
                 objcontent = path + [{"#":soul}, graph]

@@ -81,6 +81,11 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
                             if k == "_":
                                 continue
                             val = json.dumps(v)
+                            self.graph[soul][k]=val
+                        for k, v in node.items():
+                            if k == "_":
+                                continue
+                            val = json.dumps(v)
                             self.db.put(soul, k, v, diff[soul]["_"][">"][k], self.graph)
 
                 elif "get" in payload:
