@@ -22,7 +22,7 @@
       //   name: "ahmed"
       // })
 
-      
+      /*
       gun.get("proj.person://1").put({
         "name": "ahmed"
       })
@@ -38,8 +38,7 @@
       gun.get("proj.person://2").get("email").put({
         "addr": "notdmdm@gmail.com",
       })
-      
-
+      */
 
       gun.get("proj.human://1").put({"name":"xmon"})
       gun.get("proj.human://1").get("phone").put({
@@ -56,6 +55,12 @@
       gun.get("proj.human://2").get("phone").get("os").put({
           "name":"ios"
       })
+      gun.get("proj.human://2").get("favnums").set("white")
+      gun.get("proj.human://2").get("favnums").set("red")
+      gun.get("proj.human://2").get("favnums").set("blue")
+    
+      gun.get("proj.human://2").get("langs").set({"name":"python"})
+      gun.get("proj.human://2").get("langs").set({"name":"ruby"})
 
       console.log("here now..")
     </script>
