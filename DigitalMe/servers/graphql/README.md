@@ -48,6 +48,20 @@ open browser on `http://localhost:7777/counter`, you should see
 
 
 
+## Svelete Apollo
+
+```
+cd html/svelte-apollo
+npm install
+npm run dev # build project
+```
+
+open browser on `http://localhost:7777/svelte`, you should see
+
+
+![](docs/assets/svelte.png)
+
+
 ## Python client!
 
 - `client = j.clients.graphql.get()`

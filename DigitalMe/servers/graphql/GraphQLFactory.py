@@ -146,6 +146,21 @@ class GraphQLFactory(JSBASE):
                     except WebSocketError:
                         break
 
+            # svelete apollo graphql APP
+
+            # -- START -- #
+            @app.route("/svelte")
+            def svelte():
+                return static_file("index.html", root="%s/html/svelte-apollo/public" % self._dirpath)
+
+            @app.route("/<name>")
+            def serve_static(name):
+                if name in ['global.css', 'bundle.css', 'bundle.js', 'bundle.js.map', 'bundle.css.map', 'favicon.png']:
+                    return static_file(name, root="%s/html/svelte-apollo/public" % self._dirpath)
+                abort(404)
+
+            # -- END -- #
+
             # add a bottle webserver to it
             rack.bottle_server_add(name="graphql", port=7777, app=app)
             rack.bottle_server_add(name="graphql_subscriptions", port=7778, app=websockets_app, websocket=True)
