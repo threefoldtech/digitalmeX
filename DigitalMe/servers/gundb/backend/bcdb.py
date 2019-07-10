@@ -109,24 +109,118 @@ class BCDB:
                 if "://" in kroot:
                     yield kroot, rootnode
 
-        ignore = ["_", "#", ">"]
+        ignore = ["_", ">", "#"]
 
-        def resolve_v(v, graph):
-            if not isinstance(v, dict):
-                return v
-            if "#" not in v: ## if not v["#"]
-                # :::=> object update setting attr langs with value {'jxve17bg05zBMKyWBZOf4a': {'name': 'python'}, 'jxve17bjxklRiW8q84rq': {'name': 'ruby'}, 'jxve1h7h5QHzPnZa5tdj': {'name': 'python'}, 'jxve1h7l01apCkvPlNoWmgS': {'name': 'ruby'}}
-                return list( map(dict, set(tuple(sorted(v.items())) for d in v.values())))
-            else:
-                ret = {}
-                soul_id = v["#"]
-                for subk,subv in graph[soul_id].items():
-                    if subk in ignore:
-                        continue
-                    res_v = resolve_v(subv, graph)
-                    ret[subk] = res_v
-            return ret
+        """
+        
+    ipdb> pp graph                                                                           
+                {'jxx4bm5c9mJ7d6xM0zrR': {
+                                        'os': 1562755703851}},
+                                        'model': 'samsung',
+                                        'os': {'#': 'jxx4bm5e01aLMvMwksIUd6v'}},
+                'jxx4bm5e01aLMvMwksIUd6v': {
+                                            'name': 'android'},
+                'jxx4bm5g01aHpOKytnzlTMn': {
+                                            'os': 1562755703853.003}},
+                                            'model': 'iphone',
+                                            'os': {'#': 'jxx4bm5hqjsfiXBFhmB5'}},
+                'jxx4bm5hqjsfiXBFhmB5': {
+                                            'name': 'ios'},
+                'jxx4bm5j01aCEUVFjxV53RN': {
+                                            'jxx4bm5k01akjDMfUi': 'red',
+                                            'jxx4bm5lFdmZD5x': 'blue',
+                                            'jxx4eaem01azsa3PVJ': 'white',
+                                            'jxx4eaep01a0A2zziC': 'red',
+                                            'jxx4eaeq57EPjzV': 'blue'},
+                'jxx4bm5l03tyhDK3weIdmVM': {
+                                            'name': 'python'},
+                'jxx4bm5m8awc9kMCAcvE': {
+                                        'jxx4bm5l03tyhDK3weIdmVM': '{"#": '
+                                                                    '"jxx4bm5l03tyhDK3weIdmVM"}',
+                                        'jxx4bm5n02jaUJ63X92M97V': '{"#": '
+                                                                    '"jxx4bm5n02jaUJ63X92M97V"}',
+                                        'jxx4eaeq03ts3IIXPmqBgXv': {'#': 'jxx4eaeq03ts3IIXPmqBgXv'},
+                                        'jxx4eaes01aEFkOwDh93MW5': {'#': 'jxx4eaes01aEFkOwDh93MW5'}},
+                'jxx4bm5n02jaUJ63X92M97V': {
+                                            'name': 'ruby'},
+                'jxx4eaeq03ts3IIXPmqBgXv': {
+                                            'name': 'python'},
+                'jxx4eaes01aEFkOwDh93MW5': {
+                                            'name': 'ruby'},
+                'proj.human://1': {
+                                    'name': 'xmon',
+                                    'phone': {'#': 'jxx4bm5c9mJ7d6xM0zrR'}},
+                'proj.human://2': {
+                                    'langs': {'#': 'jxx4bm5m8awc9kMCAcvE'},
+                                    'name': 'richxmon',
+                                    'phone': {'#': 'jxx4bm5g01aHpOKytnzlTMn'}}}
+                        
+        """
+        from pprint import pprint
+        import ast
+        def resolve_v(val, graph):
+
+            # def clean(d):
+            #     if "_" in val:
+            #         del val["_"]
+            #     return d
+            # val = clean(val)
+
+            # UGLY FIND ANOTHER TO FIX.
+            if not isinstance(val, dict):
+                try:
+                    newv = ast.literal_eval(val)
+                    if isinstance(newv, dict):
+                        return resolve_v(newv, graph)
+                    else:
+                        return val
+                except:
+                    return val # str
+                    
+            
+            if "#" in val:
                 
+                referenced_name = val["#"]
+                return resolve_v(graph[referenced_name], graph)
+
+            return {k: resolve_v(v, graph) for k, v in val.items() if k not in ignore}
+            # if "#" not in v: ## if not v["#"]
+            #     # :::=> object update setting attr langs with value {'jxve17bg05zBMKyWBZOf4a': {'name': 'python'}, 'jxve17bjxklRiW8q84rq': {'name': 'ruby'}, 'jxve1h7h5QHzPnZa5tdj': {'name': 'python'}, 'jxve1h7l01apCkvPlNoWmgS': {'name': 'ruby'}}
+            #     return list( map(dict, set(tuple(sorted(v.items())) for resolve_v(d, graph) in v.values())))
+            # else:
+            #     ret = {}
+            #     soul_id = v["#"]
+            #     for subk, subv in graph[soul_id].items():
+            #         if subk in ignore:
+            #             continue
+            #         res_v = resolve_v(subv, graph)
+            #         ret[subk] = res_v
+            # return ret
+
+        def search2(roots, key, graph):
+            def search_root(root, key, graph, attrpath=[]):
+                attrpath.append(root)
+                tree = graph[root]
+                for k,v in tree.items():
+                    if k == key:
+                        attrpath.append(k)
+                        return attrpath
+                    else:
+                       if isinstance(v, dict) and "#" in v:
+                           potential_root = v["#"]
+                           res = search_root(potential_root, key, graph, attrpath)
+                return []
+
+            
+            for root in roots:
+                thepath = search_root(root, key, graph)
+                if thepath:
+                    break
+            if thepath:
+                pass
+
+
+
         def search(k, graph):
             # DON'T CHANGE: CHECK WITH ME OR ANDREW
             roots = list(rootobjects)
@@ -170,7 +264,7 @@ class BCDB:
         rootobjects = list(filter_root_objects(graph))
         # find its parent to get
         def do(soul, key, value, graph):
-            print(json.dumps(graph, indent=4, sort_keys=True))
+            # print(json.dumps(graph, indent=4, sort_keys=True))
             obj = None
             model = None
             if is_root_soul(soul):
@@ -198,21 +292,56 @@ class BCDB:
                 if isinstance(theattr, Jumpscale.data.types.List.ListObject):
                     thelist = theattr
                     resolved_list = resolve_v(value, graph)
+                    # {'jxwyxsrf6ypor0y': 'white',
+                    # 'jxwyxsrmk1unEiD': 'red',
+                    # 'jxwyxsrnAx34iNB': 'blue',
+                    # 'jxwz0eqw96joiW3': 'white',
+                    # 'jxwz0eqz02jtIJg35P': 'red',
+                    # 'jxwz0er001awzA4vMe': 'blue',
+                    # 'jxwz3lfjqrlyOGD': 'white',
+                    # 'jxwz3lfn01aii1KMk9': 'red',
+                    # 'jxwz3lfox6FUgrt': 'blue',
+                    # 'jxwzgkisLiCO4kQ': 'white',
+                    # 'jxwzgkiv01a1HjRJhC': 'red',
+                    # 'jxwzgkiv05ma8DWt9': 'blue',
+                    # 'jxwzj1bwoDKfUUX': 'white',
+                    # 'jxwzj1c102jDW8ajdM': 'red',
+                    # 'jxwzj1c2J6LzAja': 'blue'}
+
                     # {'jxvey7l8056LxMFKOBIgsi': {'name': 'python'},
                     # 'jxvey7lbTogKCSjiIWKq': {'name': 'ruby'},
                     # 'jxve17bg05zBMKyWBZOf4a': {'name': 'python'},
                     # 'jxve17bjxklRiW8q84rq': {'name': 'ruby'},
                     # 'jxve1h7h5QHzPnZa5tdj': {'name': 'python'},
                     # 'jxve1h7l01apCkvPlNoWmgS': {'name': 'ruby'}}
+                    def hash_dict(adict):
+                        return str(adict)
+
                     d_as_list = resolved_list.values()
                     unique_items = []
-                    try:
-                        unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list))) 
-                    except:
-                        # normal items. ["python", "ruby", "java"..]
-                        unique_items = list(set(d_as_list))
+                    added = set()
+                    for k, v in resolved_list.items():
+                        if str(v) not in added:
+                            added.add(str(v))
+                            unique_items.append(v)
+
+                    # try:
+                    #     unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list))) 
+                    # except:
+                    #     unique_items = list(set(v for v in resolved_list.values()))
+                    # try:
+                    #     unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list))) 
+                    # except:
+                    #     # normal items. ["python", "ruby", "java"..]
+                    #     unique_items = list(set(d_as_list))
+                    # import ipdb; ipdb.set_trace()
                     thelist = unique_items
-                    setattr(obj, key, thelist)
+                    try:
+                        setattr(obj, key, thelist)
+                    except Exception as e:
+                        print(e)
+                        import ipdb; ipdb.set_trace()
+                        print("abc")
                 else:
                     setattr(obj, key, resolve_v(value, graph))
                 print("saved!!!")
@@ -281,7 +410,7 @@ class BCDB:
         do(soul, key, value, graph)
 
         graph[soul][key] = value
-        print(graph)
+        # print(graph)
 
         ## BUG: need to think about how are we gonna represent the state for conflict resoultion (they need to be encoded somehow)
         if soul not in self.db:

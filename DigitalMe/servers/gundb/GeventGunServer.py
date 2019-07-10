@@ -47,14 +47,15 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
     #         p.send(resp)
 
     def _loggraph(self):
-        for soul, node in self.graph.items():
-            self._log_debug("\nSoul: ", soul)
-            self._log_debug("\n\t\tNode: ", node)
-            for k, v in node.items():
-                self._log_debug("\n\t\t{} => {}".format(k, v))
+        pass
+        # for soul, node in self.graph.items():
+        #     self._log_debug("\nSoul: ", soul)
+        #     self._log_debug("\n\t\tNode: ", node)
+        #     for k, v in node.items():
+        #         self._log_debug("\n\t\t{} => {}".format(k, v))
 
-        self._log_debug("TRACKED: ", self.trackedids, " #", len(self.trackedids))
-        self._log_debug("\n\nBACKEND: ", self.db.list())
+        # self._log_debug("TRACKED: ", self.trackedids, " #", len(self.trackedids))
+        # self._log_debug("\n\nBACKEND: ", self.db.list())
 
     def on_open(self):
         self._log_debug("Got client connection")
