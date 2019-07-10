@@ -12,7 +12,7 @@ class settings(JSBASE):
         JSBASE.__init__(self)
 
         self._threebotsettings_model = None
-        self._bcdb = j.tools.open_publish.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
+        self._bcdb = j.servers.threebot.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
         self._bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
     @property

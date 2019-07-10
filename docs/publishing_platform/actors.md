@@ -7,11 +7,11 @@ Before starting open publish tool you can copy/link your actors or chatflows int
 in `openpublish` tool directory `/sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish`
 
 ![actors.jpg](images/actors.jpg)
- 
- 
+
+
 Note that you can easily use bcdb from your actors using:
 ```python
-j.tools.open_publish.bcdb_get(NAME, use_zdb=True)
+j.servers.threebot.bcdb_get(NAME, use_zdb=True)
 ```
 
 where:

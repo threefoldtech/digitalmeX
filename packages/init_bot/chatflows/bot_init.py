@@ -41,7 +41,7 @@ def get_init_token():
     # get initialization token from user 3bot
     BCDB_NAMESPACE = "threebotuser"
 
-    bcdb = j.tools.open_publish.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
+    bcdb = j.servers.threebot.bcdb_get(BCDB_NAMESPACE, use_zdb=True)
     bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")
 
     user_bot_model = bcdb.model_get("threebot.user.initialization")
