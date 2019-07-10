@@ -38,7 +38,7 @@ schema_worker = """
 @url = jumpscale.myjobs.worker
 timeout = 3600
 time_start = 0 (T)
-last_update = 0 (T) 
+last_update = 0 (T)
 current_job = (I)
 halt = false (B)
 running = false (B)
@@ -426,7 +426,7 @@ class MyJobs(JSBASE):
 
         def kill():
             # kill leftovers from last time, if any
-            session = j.tools.tmux.session_get("main")
+            session = j.servers.tmux.session_get("main")
             session.window_remove("myworker_worker")
             self.init(reset=True, start=False)
             jobs = self.model_job.find()
@@ -503,7 +503,7 @@ class MyJobs(JSBASE):
         def tmuxexec():
             # lets now run the job executor in tmux, see it runs well in process
             cmd = 'js_shell "j.servers.myjobs.worker_start_inprocess()"'
-            j.tools.tmux.execute(
+            j.servers.tmux.execute(
                 cmd, session="main", window="myworker_worker", pane="main", session_reset=False, window_reset=True
             )
 

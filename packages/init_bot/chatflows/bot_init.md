@@ -10,20 +10,20 @@ chatflow for initializing the 3bot [specs](https://github.com/threefoldfoundatio
 ln /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/* -s /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_actors/
 ```
 
-- link the chatflow 
+- link the chatflow
 ```
 ln /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/chatflows/*.py -s /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_chatflows/
 
 ```
 - make sure to run openpublish tool
-`js_shell 'j.tools.open_publish.default.servers_start()'`
+`js_shell 'j.servers.threebot.default.servers_start()'`
 
 
 
 ### notes
 - only one instance of `tfchain` client
 - only one instance of `tfchain.wallet`
-- access requires the initialization token 
+- access requires the initialization token
 
 Example on how to get the initialization token
 ```python
@@ -31,7 +31,7 @@ def get_init_token():
     # get initialization token from user 3bot
     BCDB_NAMESPACE = "threebotuser"
 
-    bcdb = j.tools.open_publish.bcdb_get(
+    bcdb = j.servers.threebot.bcdb_get(
         BCDB_NAMESPACE, use_zdb=True)
     bcdb.models_add(
         "/sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/models")

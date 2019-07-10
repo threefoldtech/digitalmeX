@@ -46,7 +46,7 @@ class RaftCluster(JSConfigBase):
                 secret,
             )
             print(cmd)
-            j.tools.tmux.execute(
+            j.servers.tmux.execute(
                 cmd, session="main", window="raft_%s" % port, pane="main", session_reset=False, window_reset=True
             )
 
