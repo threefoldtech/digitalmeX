@@ -8,7 +8,12 @@ import Jumpscale
 from Jumpscale import j
     
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
-bcdb = j.data.bcdb.get(name="test")
+bcdb = None
+try:
+    bcdb = j.data.bcdb.get(name="test")
+except:
+    bcdb = j.data.bcdb.new(name="test")
+
 bcdb.reset()
 j.data.schema.add_from_text("""
 @url = proj.todo
