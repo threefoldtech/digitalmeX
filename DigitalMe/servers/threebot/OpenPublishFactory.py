@@ -27,10 +27,10 @@ class OpenPublishFactory(JSConfigs):
 
     def start(self, background=True):
         """
-        kosmos 'j.tools.open_publish.start()'
+        kosmos 'j.servers.threebot.start()'
         """
         if background:
-            cmd = "kosmos 'j.tools.open_publish.start(background=False)'"
+            cmd = "kosmos 'j.servers.threebot.start(background=False)'"
             j.servers.tmux.execute(cmd, window="Open Publish", pane="main", reset=False)
             self._log_info("waiting for gedis to start on port {}".format(self.default.gedis.port))
             res = j.sal.nettools.waitConnectionTest("localhost", self.default.gedis_server.port, timeoutTotal=120)
