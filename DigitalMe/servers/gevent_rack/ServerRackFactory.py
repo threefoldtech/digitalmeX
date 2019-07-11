@@ -140,6 +140,7 @@ class ServerRackFactory(JSBASE):
     def test(self, start=True, gedis=True, gedis_ssl=False, webdav=False, bottle=True, websockets=False):
         """
         kosmos 'j.servers.rack.test()'
+        kosmos 'j.servers.rack.test(gedis_ssl=True)'
         kosmos 'j.servers.rack.test(ssl=False)'
         kosmos 'j.servers.rack.test(start=True)'
 
