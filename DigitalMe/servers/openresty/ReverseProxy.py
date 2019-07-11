@@ -5,11 +5,11 @@ JSConfigs = j.application.JSBaseConfigsClass
 
 class ReverseProxy(j.application.JSBaseConfigClass):
     """
-    Website hosted in openresty
+    Reverse Proxy using openresty server
     """
 
     _SCHEMATEXT = """
-        @url = jumpscale.openresty.website.1
+        @url = jumpscale.openresty.reverseproxy.1
         name* = (S)
         port_source = 80
         ipaddr_dest = "127.0.0.1"
@@ -19,30 +19,21 @@ class ReverseProxy(j.application.JSBaseConfigClass):
         
         """
 
-    # TODO: put new config in for proxy
     CONFIG = """
         server {
+            listen {{obj.port_source}};
+            listen [::]:{{obj.port_source}};
+            
             {% if obj.domain %}
             server_name ~^(www\.)?{{domain}}$;
             {% endif %}
-            listen {{obj.port}};
-            lua_code_cache on;
-        
-            include vhosts/static.conf.loc;
-            include vhosts/websocket.conf.loc;
-            include vhosts/docsites.conf.loc;
             
             location /{{obj.location}} {
-                default_type text/html;
-                root {{obj.path}};
+              proxy_pass http://{{obj.ipaddr_dest}}:{{obj.port_dest}}/;
             }
-
         }
-        
         """
 
-    def _init(self):
-        self.configure()
 
     def configure(self):
         """

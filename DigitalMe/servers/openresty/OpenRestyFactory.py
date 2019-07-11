@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 from .Website import Websites
 from .Wiki import Wikis
-from .ReverseProxies import ReverseProxies
+from .ReverseProxy import ReverseProxies
 
 
 class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
@@ -88,17 +88,29 @@ class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
         kosmos 'j.servers.openresty.test()'
         :return:
         """
-
-        ws = self.websites.new(name="test", path="html", port=81)
+        self.install()
+        self.start()
+        ip_addr = "0.0.0.0"
+        ws = self.websites.new(name="test", location=ip_addr, path="html", port=8080)
         ws.configure()
 
-        wiki = self.wikis.new(
-            name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
-        )
-        # will auto pull the content if not there yet
+        rp = self.reverseproxies.new(name="testrp", port_source=88, port_dest=8080, ipaddr_dest=ip_addr)
+        rp.configure()
 
-        rp = self.reverseproxies.new()
+        # wiki = self.wikis.new(
+        #     name="tfgrid", giturl="{}/examples/wiki".format(self._dirpath), branch="development", port=8088
+        # )
+        # wiki.update()
 
         self.reload()
+
+        import requests
+        website_response = requests.get("http://{}:8080".format(ip_addr)).text
+        assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
+        self._log_info("[+] test website response OK")
+        # test the reverse prosy port
+        reverse_response = requests.get("http://{}:88".format(ip_addr)).text
+        assert reverse_response == website_response
+        self._log_info("[+] test reverse proxy response OK")
 
         self._log_info("can now go to http://localhost:81/index.html")
