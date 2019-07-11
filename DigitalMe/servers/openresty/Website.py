@@ -1,5 +1,5 @@
 from Jumpscale import j
-from .OpenPublish import OpenPublish
+
 
 JSConfigs = j.application.JSBaseConfigsClass
 

@@ -2,13 +2,14 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
-WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
-WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
+# WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
+# WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
+# WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
 # OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
 from .Website import Websites
 from .Wiki import Wikis
+from .ReverseProxies import ReverseProxies
 
 
 class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
@@ -17,7 +18,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
     """
 
     __jslocation__ = "j.servers.openresty"
-    _CHILDCLASSES = [Websites, Wikis]
+    _CHILDCLASSES = [Websites, Wikis, ReverseProxies]
 
     def _init(self, **kwargs):
         self._cmd = None
@@ -27,7 +28,8 @@ class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
     def install(self):
 
         # copy the templates to the right location
-        j.sal.fs.copyDirTree("%s/webconfig/" % self._dirpath, self._web_path)
+        j.sal.fs.copyDirTree("%s/web_resources/" % self._dirpath, self._web_path)
+        # link individual files & create a directory TODO:*1
 
         # get weblib
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -94,6 +96,8 @@ class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
             name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
         )
         # will auto pull the content if not there yet
+
+        rp = self.reverseproxies.new()
 
         self.reload()
 

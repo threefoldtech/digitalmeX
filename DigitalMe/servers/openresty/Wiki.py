@@ -1,5 +1,5 @@
 from Jumpscale import j
-from .OpenPublish import OpenPublish
+
 
 JSConfigs = j.application.JSBaseConfigsClass
 
@@ -78,7 +78,7 @@ class Wiki(j.application.JSBaseConfigClass):
 
         self.update(pull=False)
 
-    def update(self, pull=True, docsgenerate=False):
+    def update(self, pull=True, markdown_processing=False):
         """
         update content from source
         :param pull: means will update content from github
@@ -86,7 +86,7 @@ class Wiki(j.application.JSBaseConfigClass):
         :return:
         """
         wikipath = j.clients.git.getContentPathFromURLorPath(urlOrPath=self.giturl, pull=pull)
-        if docsgenerate:
+        if markdown_processing:
             j.shell()
 
 
