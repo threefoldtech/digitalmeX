@@ -41,10 +41,10 @@ class GedisServer(JSBaseConfig):
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
 
-        self.host = self.data.host
-        self.port = self.data.port
+        self.host = self.host
+        self.port = self.port
         self.address = "{}:{}".format(self.host, self.port)
-        self.ssl = self.data.ssl
+        self.ssl = self.ssl
 
         self.web_client_code = None
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "server")
