@@ -139,7 +139,7 @@ class GedisServer(JSBaseConfig):
         res = []
         for key, cmds in self.cmds_meta.items():
             if not namespace or key.startswith("%s__" % namespace):
-                res.append({cmds, key})
+                res.append(key)
         return res
 
     def actors_methods_list(self, namespace="default"):
