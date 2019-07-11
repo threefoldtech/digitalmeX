@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 class open_publish(JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
-        self.open_publish_tool = j.tools.open_publish.default
+        self.open_publish_tool = j.servers.threebot.default
         gevent.spawn(self.open_publish_tool.auto_update)
 
     def publish_wiki(self, name, repo_url, domain, ip):

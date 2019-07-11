@@ -21,4 +21,4 @@ class Basetest(TestCase):
         j.sal.fs.createDir("/sandbox/var/gdrive/static/doc")
         j.sal.fs.createDir("/sandbox/var/gdrive/static/slide")
         j.sal.fs.createDir("/sandbox/var/gdrive/static/sheet")
-        j.tools.open_publish.start(background=True)
+        j.servers.threebot.start(background=True)
