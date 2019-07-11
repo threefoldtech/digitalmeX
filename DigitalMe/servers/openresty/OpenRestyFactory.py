@@ -2,136 +2,99 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
+WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
+WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
+# OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
-class OpenRestyFactory(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jslocation__ = "j.servers.openresty"
+from .Website import Websites
+from .Wiki import Wikis
 
-        JSBASE.__init__(self)
 
+class OpenRestyFactory(j.application.JSBaseConfigsFactoryClass):
+    """
+    Factory for openresty
+    """
+
+    __jslocation__ = "j.servers.openresty"
+    _CHILDCLASSES = [Websites, Wikis]
+
+    def _init(self, **kwargs):
         self._cmd = None
+        self._web_path = "/sandbox/var/web"
+        self.executor = None
 
-    def start(self, reset=False):
-        """
-        kosmos 'j.servers.openresty.start(reset=True)'
-        :return:
-        """
-        if reset:
-            self.cmd.stop()
-        self.cmd.start()
+    def install(self):
+
+        # copy the templates to the right location
+        j.sal.fs.copyDirTree("%s/webconfig/" % self._dirpath, self._web_path)
+
+        # get weblib
+        url = "https://github.com/threefoldtech/jumpscale_weblibs"
+        weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=False)
+        j.sal.fs.symlink("%s/static" % weblibs_path, "{}/static/weblibs".format(self._web_path), overwriteTarget=True)
 
     @property
-    def cmd(self):
-        if self._cmd == None:
-            assert j.core.isSandbox
-            self._cmd = j.tools.tmux.cmd_get(
-                name="openresty",k
-                window="digitalme",
-                pane="p21",
-                cmd="openresty",
-                path="/tmp",
-                ports=[8081],
-                stopcmd="openresty -s stop",
-                process_strings=["nginx:"],
+    def startup_cmd(self):
+        if not self._cmd:
+            # Start Lapis Server
+            self._log_info("Starting Lapis Server")
+            cmd = "lapis server"
+            self._cmd = j.servers.startupcmd.get(
+                name="lapis",
+                cmd_start=cmd,
+                path=self._web_path,
+                ports=[80, 443],
+                process_strings_regex="^nginx",
+                executor=self.executor,
             )
         return self._cmd
+
+    def start(self, reset=False, executor="tmux"):
+        """
+        kosmos 'j.servers.openresty.start(reset=True)'
+        kosmos 'j.servers.openresty.start(reset=False)'
+        :return:
+        """
+        self.executor = executor
+        self.install()
+        # compile all 1 time to lua, can do this at each start
+        j.sal.process.execute("cd %s;moonc ." % self._web_path)
+        if reset:
+            self.startup_cmd.stop()
+        if self.startup_cmd.is_running():
+            self.reload()
+        else:
+            self.startup_cmd.start()
 
     def stop(self):
         """
         kosmos 'j.servers.openresty.stop()'
         :return:
         """
-        self.cmd.stop()
+        self.startup_cmd.stop()
 
     def reload(self):
         """
         :return:
         """
-        cmd = "openresty -s reload"
+        cmd = "cd  %s;lapis build" % self._web_path
         j.sal.process.execute(cmd)
 
-    # def config_set(self,name,configstr):
-    #     """
-    #
-    #     :param name: name of the configuration string
-    #     :param configstr: the code of the config itself
-    #
-    #     e.g.
-    #     ```
-    #    location /static/ {
-    #         root   {j.dirs.VARDIR}/www;
-    #         index  index.html index.htm;
-    #     }
-    #
-    #     ```
-    #
-    #     :return:
-    #     """
-    #
-    #     j.shell()
+    def test(self):
+        """
+        kosmos 'j.servers.openresty.test()'
+        :return:
+        """
 
-    #
-    # def configs_add(self,path,args={}):
-    #     args["j"]=j
-    #
-    #     if j.core.platformtype.myplatform.isMac:
-    #         dest="/usr/local/etc/openresty/configs/"
-    #     else:
-    #         dest="/etc/openresty/configs/"
-    #
-    #     j.tools.jinja2.copy_dir_render(path,dest,overwriteFiles=True,reset=True,render=True,**args)
+        ws = self.websites.new(name="test", path="html", port=81)
+        ws.configure()
 
-    #
-    # def install(self):
-    #     """
-    #     kosmos 'j.servers.openresty.install()'
-    #
-    #     """
-    #     p = j.tools.prefab.local
-    #
-    #     if p.core.doneGet("openresty") is False:
-    #
-    #         if p.platformtype.isMac:
-    #
-    #             self._log_info("INSTALLING OPENRESTY")
-    #
-    #             # will make sure we have the lobs here for web
-    #             d = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/openresty_build_osx")
-    #
-    #             p.core.run("cd %s;bash install.sh"%d)
-    #
-    #         else:
-    #             C="""
-    #             wget -qO - https://openresty.org/package/pubkey.gpg | sudo apt-key add -
-    #             apt-get -y install software-properties-common
-    #             add-apt-repository -y "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main"
-    #             apt-get update
-    #             apt install openresty -y
-    #
-    #             ln -s /usr/local/openresty/luajit/bin/luajit /usr/local/bin/lua
-    #
-    #             apt install luarocks -y
-    #
-    #
-    #             apt install openresty-openssl-dev
-    #             luarocks install luaossl OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl
-    #             luarocks install lapis
-    #             luarocks install moonscript
-    #             luarocks install lapis-console
-    #
-    #             rm -rf /sandbox/openresty/luajit/lib/lua
-    #             rm -rf /sandbox/openresty/luajit/lib/luarocks
-    #             rm -rf /sandbox/openresty/luajit/lib/pkgconfig
-    #
-    #             """
-    #             p.core.execute_bash(C)
-    #
-    #             d = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/openresty_build_osx")
-    #
-    #             src_config_nginx = j.sal.fs.joinPaths(j.dirs.CODEDIR,"github/threefoldtech/openresty_build_osx/cfg")
-    #             j.sal.fs.copyDirTree(src_config_nginx, "/etc/openresty", keepsymlinks=False, deletefirst=True)
-    #
-    #             j.shell()
-    #             raise RuntimeError("only osx supported for now")
-    #
-    #         p.core.doneSet("openresty")
+        wiki = self.wikis.new(
+            name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+        )
+        # will auto pull the content if not there yet
+
+        self.reload()
+
+        self._log_info("can now go to http://localhost:81/index.html")
