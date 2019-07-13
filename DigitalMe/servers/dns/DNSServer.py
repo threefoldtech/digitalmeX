@@ -3,28 +3,49 @@ import dnslib
 
 from gevent.server import DatagramServer
 from .DNSResolver import DNSResolver
+from gevent import socket
 
-JSBASE = j.application.JSBaseClass
 
-soaexample = dnslib.SOA(
-    mname="ns1.example.com",  # primary name server
-    rname="info.example.com",  # email of the domain administrator
-    times=(
-        201307231,  # serial number
-        60 * 60 * 1,  # refresh
-        60 * 60 * 3,  # retry
-        60 * 60 * 24,  # expire
-        60 * 60 * 1,  # minimum
-    ),
-)
+# soaexample = dnslib.SOA(
+#     mname="ns1.example.com",  # primary name server
+#     rname="info.example.com",  # email of the domain administrator
+#     times=(
+#         201307231,  # serial number
+#         60 * 60 * 1,  # refresh
+#         60 * 60 * 3,  # retry
+#         60 * 60 * 24,  # expire
+#         60 * 60 * 1,  # minimum
+#     ),
+# )
 
 # see https://github.com/andreif/dnslib  for more info how to use the lib
 
 
-class DNSServer(DatagramServer, JSBASE):
-    def __init__(self, port=53, bcdb=None):
-        JSBASE.__init__(self)
-        DatagramServer.__init__(self, ":%s" % port, handle=self.handle)
+class DNSServer(DatagramServer, j.application.JSBaseConfigClass):
+
+    _SCHEMATEXT = """
+    @url = jumpscale.dnsserver.1
+    name* = ""
+    port = 53
+    addr = "127.0.0.1"
+    resolvername = "main"
+    """
+
+    def __init__(self, **kwargs):
+        j.application.JSBaseConfigClass.__init__(self, **kwargs)
+
+    def _init(self, **kwargs):
+
+        DatagramServer.__init__(self, ":%s" % self.port, handle=self.handle)
+
+        self.socket = self.get_listener(self.address, self.family)
+        self.address = self.socket.getsockname()
+        self._socket = self.socket
+        try:
+            self._socket = self._socket._sock
+        except AttributeError:
+            pass
+
         self.TTL = 60 * 5
 
         self.rtypes = {}
@@ -38,8 +59,13 @@ class DNSServer(DatagramServer, JSBASE):
         self.rdatatypes["AAAA"] = dnslib.AAAA
         self.rdatatypes["NS"] = dnslib.NS
         self.rdatatypes["MX"] = dnslib.MX
-        self.resolver = DNSResolver(bcdb)
-        # self.db = j.clients.redis.core_get()
+        self._resolver = None
+
+    @property
+    def resolver(self):
+        if not self._resolver:
+            self._resolver = j.servers.dns.resolvers.get(name=self.resolvername)
+        return self._resolver
 
     # def start(self):
     #     self.serve_forever()
@@ -94,8 +120,9 @@ class DNSServer(DatagramServer, JSBASE):
                     return ["192.168.1.1"]
                 # TODO: need to get DNS records from a source
 
-        res = self._cache.get(key="resolve_%s_%s" % (qname, type), method=do, expire=600, qname=qname, type=type)
         # self._cache.reset() #basically don't use cache, just for debugging later should disable this line
+        res = self._cache.get(key="resolve_%s_%s" % (qname, type), method=do, expire=600, qname=qname, type=type)
+
         return res
 
     def dns_response(self, data):
@@ -126,3 +153,24 @@ class DNSServer(DatagramServer, JSBASE):
             self._log_error("did not find type:\n%s" % request)
 
         return reply.pack()
+
+    def ping(self):
+
+        address = (self.addr, self.port)
+        message = b"PING"
+        sock = socket.socket(type=socket.SOCK_DGRAM)
+        sock.connect(address)
+        self._log_info("Sending %s bytes to %s:%s" % ((len(message),) + address))
+        sock.send(message)
+        try:
+            data, address = sock.recvfrom(8192)
+        except Exception as e:
+            if "refused" in str(e):
+                return False
+            raise RuntimeError("unexpected result")
+        return True
+
+
+class DNSServers(j.application.JSBaseConfigsClass):
+    _name = "servers"
+    _CHILDCLASS = DNSServer
