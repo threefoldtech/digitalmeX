@@ -35,7 +35,7 @@ class Farmer(JSBASE):
     @property
     def zdb(self):
         if not self._zdb:
-            self._zdb = j.clients.zdb.testdb_server_start_client_get(reset=False)
+            self._zdb = j.servers.zdb.test_instance_start(reset=False)
         return self._zdb
 
     @property
