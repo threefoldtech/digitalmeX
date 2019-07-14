@@ -155,7 +155,7 @@ class GraphQLFactory(JSBASE):
 
             @app.route("/<name>")
             def serve_static(name):
-                if name in ['global.css', 'bundle.css', 'bundle.js', 'bundle.js.map', 'bundle.css.map', 'favicon.png']:
+                if name in ["global.css", "bundle.css", "bundle.js", "bundle.js.map", "bundle.css.map", "favicon.png"]:
                     return static_file(name, root="%s/html/svelte-apollo/public" % self._dirpath)
                 abort(404)
 

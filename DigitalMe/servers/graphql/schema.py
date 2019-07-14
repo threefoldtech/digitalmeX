@@ -36,16 +36,18 @@ class CreateAuthor(graphene.Mutation):
                        """
         model = j.application.bcdb_system.model_get_from_schema(_SCHEMA_TEXT)
         model_objects = model.new()
-        model_objects.name = kwargs['name']
+        model_objects.name = kwargs["name"]
         model_objects.save()
 
         ok = True
         affected_rows = 1
-        author = Author(name=kwargs['name'], id=model_objects.id)
+        author = Author(name=kwargs["name"], id=model_objects.id)
         return CreateAuthor(author=author, ok=ok, affected_rows=affected_rows)
+
 
 class Mutations(graphene.ObjectType):
     create_author = CreateAuthor.Field()
+
 
 class Query(graphene.ObjectType):
     posts = graphene.List(Post)
@@ -54,7 +56,7 @@ class Query(graphene.ObjectType):
     article = graphene.List(Article)
 
     def resolve_article(self, info):
-        return [Article(id=1, title='article1', author=Author(id=1, name='author1'))]
+        return [Article(id=1, title="article1", author=Author(id=1, name="author1"))]
 
     def resolve_author(self, info):
         _SCHEMA_TEXT = """
@@ -102,10 +104,10 @@ class Subscription(graphene.ObjectType):
 
     def resolve_author(root, info):
         import json
-        authors =  [Author(id=1, name="a"), Author(id=2, name="b")]
+
+        authors = [Author(id=1, name="a"), Author(id=2, name="b")]
 
         class PrintObserver(Observer):
-
             def on_next(self, value):
                 pass
 
@@ -118,5 +120,6 @@ class Subscription(graphene.ObjectType):
         source = Observable.from_list(authors)
         source.subscribe(PrintObserver())
         return source
+
 
 schema = graphene.Schema(query=Query, subscription=Subscription, mutation=Mutations)
