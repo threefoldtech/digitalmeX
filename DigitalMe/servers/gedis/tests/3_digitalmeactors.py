@@ -10,7 +10,8 @@ def main(self):
     """
     gedis = self.get(name="test")
 
-    zdb_cl = j.servers.zdb.test_instance_start(reset=False)
+    zdb = j.servers.zdb.test_instance_start(reset=False)
+    zdb_cl = zdb.client_admin_get()
     bcdb = j.data.bcdb.get(zdbclient=zdb_cl, name="test")
     path = j.clients.git.getContentPathFromURLorPath(
         "https://github.com/threefoldtech/digital_me/tree/master/packages/examples/models"

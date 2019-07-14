@@ -41,7 +41,7 @@ class ReverseProxy(j.application.JSBaseConfigClass):
 
         """
         r = j.tools.jinja2.template_render(text=self.CONFIG, obj=self)
-        j.sal.fs.writeFile("%s/servers/proxy_%s.conf" % (j.servers.openresty._web_path, self.name), r)
+        j.sal.fs.writeFile("%s/servers/proxy_%s.conf" % (self._parent._parent._web_path, self.name), r)
 
 
 class ReverseProxies(j.application.JSBaseConfigsClass):

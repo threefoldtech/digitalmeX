@@ -9,10 +9,10 @@ JSBASE = j.application.JSBaseClass
 
 from .Website import Websites
 from .Wiki import Wikis
-from .ReverseProxies import ReverseProxies
+from .ReverseProxy import ReverseProxies
 
 
-class OpenRestyServer(j.application.JSBaseConfigsFactoryClass):
+class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
     """
     Factory for openresty
     """
@@ -88,6 +88,12 @@ class OpenRestyServer(j.application.JSBaseConfigsFactoryClass):
         :return:
         """
         self.startup_cmd.stop()
+
+    def is_running(self):
+        """
+        :return:
+        """
+        self.startup_cmd.is_running()
 
     def reload(self):
         """

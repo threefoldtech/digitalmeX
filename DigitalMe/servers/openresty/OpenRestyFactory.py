@@ -25,7 +25,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
     @property
     def default(self):
         if not self._default:
-            self._default = self.new(name="default")
+            self._default = self.get(name="default")
         return self._default
 
     def build(self):
@@ -42,24 +42,23 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         openresty = self.default
 
         ip_addr = "0.0.0.0"
-        ws = self.websites.new(name="test", location=ip_addr, path="html", port=8080)
+        ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
         ws.configure()
 
-        # wiki = openresty.wikis.new(
-        #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
-        # )
-
-        rp = self.reverseproxies.new(name="testrp", port_source=88, port_dest=8080, ipaddr_dest=ip_addr)
+        rp = openresty.reverseproxies.new(name="testrp", port_source=88, port_dest=8080, ipaddr_dest=ip_addr)
         rp.configure()
 
-        # wiki = self.wikis.new(
-        #     name="tfgrid", giturl="{}/examples/wiki".format(self._dirpath), branch="development", port=8088
-        # )
-        # wiki.update()
+        if openresty.is_running():
+            openresty.reload()
+        else:
+            openresty.start()
 
-        openresty.reload()
+        # keep on 8080 otherwise issue on osx
+        openresty._log_info("can now go to http://localhost:8080/index.html")
 
-        openresty._log_info("can now go to http://localhost:81/index.html")
+        wiki = openresty.wikis.new(
+            name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+        )
 
         # TODO: we have a client for http in JSX use that one please
         import requests
@@ -72,4 +71,4 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         assert reverse_response == website_response
         self._log_info("[+] test reverse proxy response OK")
 
-        self._log_info("can now go to http://localhost:81/index.html")
+        self._log_info("can now go to http://localhost:8080/index.html")

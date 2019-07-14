@@ -78,7 +78,7 @@ class Website(j.application.JSBaseConfigClass):
             raise ValueError("port or domain needs to be set")
 
         r = j.tools.jinja2.template_render(text=self.CONFIG, obj=self)
-        j.sal.fs.writeFile("%s/servers/%s.conf" % (j.servers.openresty._web_path, self.name), r)
+        j.sal.fs.writeFile("%s/servers/%s.conf" % (self._parent._parent._web_path, self.name), r)
 
 
 class Websites(j.application.JSBaseConfigsClass):
