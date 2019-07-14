@@ -41,10 +41,7 @@ class GedisServer(JSBaseConfig):
         self.ssl_priv_key_path = None
         self.ssl_cert_path = None
 
-        self.host = self.data.host
-        self.port = self.data.port
         self.address = "{}:{}".format(self.host, self.port)
-        self.ssl = self.data.ssl
 
         self.web_client_code = None
         self.code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "server")
@@ -142,7 +139,7 @@ class GedisServer(JSBaseConfig):
         res = []
         for key, cmds in self.cmds_meta.items():
             if not namespace or key.startswith("%s__" % namespace):
-                res.append(cmds)
+                res.append(key)
         return res
 
     def actors_methods_list(self, namespace="default"):

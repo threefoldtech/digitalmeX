@@ -1,25 +1,29 @@
 from Jumpscale import j
 
 
-class DNSResolver:
-    def __init__(self, bcdb):
-        schema_text = """
-        @url = jumpscale.dnsItem.1
-        name* = ""
-        zone* = "" (S)
-        domains = (LO) !jumpscale.dnsItem.record.1
+class DNSResolver(j.application.JSBaseConfigClass):
 
-        @url = jumpscale.dnsItem.record.1
-        name = "" (S)
-        domain = "" (S)
-        record_type = "A,AAAA,CNAME,TXT,NS,MX,SRV,SOA" (E)
-        value = "127.0.0.1" (S)
-        ttl = 100 (I)
-        priority = 10 (I)
-        """
-        schema_text = j.core.text.strip(schema_text)
-        schema = j.data.schema.get_from_text(schema_text)
-        self.model = bcdb.model_get_from_schema(schema)
+    _SCHEMATEXT = """
+    @url = jumpscale.resolver.1
+    name* = ""
+    zone* = "" (S)
+    domains = (LO) !jumpscale.resolver.domain.1
+    
+    @url = jumpscale.resolver.domain.1
+    name = "" (S)
+    domains = (LO) !jumpscale.resolver.domain.record.1
+    
+
+    @url = jumpscale.resolver.domain.record.1
+    name = "" (S)
+    record_type = "A,AAAA,CNAME,TXT,NS,MX,SRV,SOA" (E)
+    value = "127.0.0.1" (S)
+    ttl = 100 (I)
+    priority = 10 (I)
+    """
+
+    def _init(self, **kwargs):
+        pass
 
     def create_record(self, domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
         """Create a new dns object and save to db using bcdb.
@@ -39,11 +43,11 @@ class DNSResolver:
         """
         # Get zone name from domain, then get the object from database or create a new one
         zone = ".".join(domain.split(".")[-2:])
-        obj = self.model.find(zone=zone)
+        obj = self._model.find(zone=zone)
         if obj:
             obj = obj[0]
         else:
-            obj = self.model.new()
+            obj = self._model.new()
 
         obj.name = zone
         obj.zone = zone
@@ -58,7 +62,7 @@ class DNSResolver:
     def add_domain(self, dns_item, **kwargs):
         """Add a new/ update existing domain data in dns_item record
 
-        :param dns_item: dns_item created using schema -> jumpscale.dnsItem.1
+        :param dns_item: dns_item created using schema -> jumpscale.resolver.1
         :**kwargs : same parameters passed to create_item (domain, record_type, value, ttl, priority)
         """
         domain_obj = None
@@ -68,7 +72,7 @@ class DNSResolver:
                 break
 
         if not domain_obj:
-            model2 = j.data.schema.get_from_url_latest(url="jumpscale.dnsItem.record.1")
+            model2 = j.data.schema.get_from_url_latest(url="jumpscale.resolver.record.1")
             domain_obj = model2.new()
 
         domain_obj = self.update_domain(domain_obj, **kwargs)
@@ -77,7 +81,7 @@ class DNSResolver:
     def update_domain(self, domain_obj, name="", domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
         """Update a domain object with the parameters needed
 
-        :param domain_obj: object that consists of the dns record data using schema -> jumpscale.dnsItem.record.1
+        :param domain_obj: object that consists of the dns record data using schema -> jumpscale.resolver.record.1
         :param name:name of record used to store in bcdb
         :type name: str
         :param domain: domain name of entry
@@ -112,8 +116,9 @@ class DNSResolver:
         domain_parts = domain.split(".")[-2:]
         if len(domain_parts) > 1:
             zone = ".".join(domain_parts)
-            obj = self.model.find(zone=zone)
+            obj = self._model.find(zone=zone)
             if obj:
+                j.shell()
                 name = "%s_%s" % (domain, record_type)
                 for domain_obj in obj[0].domains:
                     if name == domain_obj.name:
@@ -132,7 +137,7 @@ class DNSResolver:
         domain_parts = domain.split(".")[-2:]
         if len(domain_parts) > 1:
             zone = ".".join(domain_parts)
-            obj = self.model.find(zone=zone)
+            obj = self._model.find(zone=zone)
             if obj:
                 obj = obj[0]
                 name = "%s_%s" % (domain, record_type)
@@ -147,3 +152,8 @@ class DNSResolver:
                 obj.delete()
             else:
                 obj.save()
+
+
+class DNSResolvers(j.application.JSBaseConfigsClass):
+    _name = "resolvers"
+    _CHILDCLASS = DNSResolver

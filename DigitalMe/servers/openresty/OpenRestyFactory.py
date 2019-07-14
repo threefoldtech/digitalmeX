@@ -2,136 +2,74 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+# WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
+# WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
+# WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
+# OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
 
-class OpenRestyFactory(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jslocation__ = "j.servers.openresty"
 
-        JSBASE.__init__(self)
+from .OpenRestyServer import OpenRestyServer
 
-        self._cmd = None
 
-    def start(self, reset=False):
-        """
-        kosmos 'j.servers.openresty.start(reset=True)'
-        :return:
-        """
-        if reset:
-            self.cmd.stop()
-        self.cmd.start()
+class OpenRestyFactory(j.application.JSBaseConfigsClass):
+    """
+    Factory for openresty
+    """
+
+    __jslocation__ = "j.servers.openresty"
+    _CHILDCLASS = OpenRestyServer
+
+    def _init(self, **kwargs):
+        self._default = None
 
     @property
-    def cmd(self):
-        if self._cmd == None:
-            assert j.core.isSandbox
-            self._cmd = j.servers.tmux.cmd_get(
-                name="openresty",k
-                window="digitalme",
-                pane="p21",
-                cmd="openresty",
-                path="/tmp",
-                ports=[8081],
-                stopcmd="openresty -s stop",
-                process_strings=["nginx:"],
-            )
-        return self._cmd
+    def default(self):
+        if not self._default:
+            self._default = self.new(name="default")
+        return self._default
 
-    def stop(self):
+    def build(self):
+        j.builders.runtimes.lua.build()  # also gets the openresty
+
+    def test(self):
         """
-        kosmos 'j.servers.openresty.stop()'
+        kosmos 'j.servers.openresty.test()'
         :return:
         """
-        self.cmd.stop()
 
-    def reload(self):
-        """
-        :return:
-        """
-        cmd = "openresty -s reload"
-        j.sal.process.execute(cmd)
+        self.build()
 
-    # def config_set(self,name,configstr):
-    #     """
-    #
-    #     :param name: name of the configuration string
-    #     :param configstr: the code of the config itself
-    #
-    #     e.g.
-    #     ```
-    #    location /static/ {
-    #         root   {j.dirs.VARDIR}/www;
-    #         index  index.html index.htm;
-    #     }
-    #
-    #     ```
-    #
-    #     :return:
-    #     """
-    #
-    #     j.shell()
+        openresty = self.default
 
-    #
-    # def configs_add(self,path,args={}):
-    #     args["j"]=j
-    #
-    #     if j.core.platformtype.myplatform.isMac:
-    #         dest="/usr/local/etc/openresty/configs/"
-    #     else:
-    #         dest="/etc/openresty/configs/"
-    #
-    #     j.tools.jinja2.copy_dir_render(path,dest,overwriteFiles=True,reset=True,render=True,**args)
+        ip_addr = "0.0.0.0"
+        ws = self.websites.new(name="test", location=ip_addr, path="html", port=8080)
+        ws.configure()
 
-    #
-    # def install(self):
-    #     """
-    #     kosmos 'j.servers.openresty.install()'
-    #
-    #     """
-    #     p = j.tools.prefab.local
-    #
-    #     if p.core.doneGet("openresty") is False:
-    #
-    #         if p.platformtype.isMac:
-    #
-    #             self._log_info("INSTALLING OPENRESTY")
-    #
-    #             # will make sure we have the lobs here for web
-    #             d = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/openresty_build_osx")
-    #
-    #             p.core.run("cd %s;bash install.sh"%d)
-    #
-    #         else:
-    #             C="""
-    #             wget -qO - https://openresty.org/package/pubkey.gpg | sudo apt-key add -
-    #             apt-get -y install software-properties-common
-    #             add-apt-repository -y "deb http://openresty.org/package/ubuntu $(lsb_release -sc) main"
-    #             apt-get update
-    #             apt install openresty -y
-    #
-    #             ln -s /usr/local/openresty/luajit/bin/luajit /usr/local/bin/lua
-    #
-    #             apt install luarocks -y
-    #
-    #
-    #             apt install openresty-openssl-dev
-    #             luarocks install luaossl OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl
-    #             luarocks install lapis
-    #             luarocks install moonscript
-    #             luarocks install lapis-console
-    #
-    #             rm -rf /sandbox/openresty/luajit/lib/lua
-    #             rm -rf /sandbox/openresty/luajit/lib/luarocks
-    #             rm -rf /sandbox/openresty/luajit/lib/pkgconfig
-    #
-    #             """
-    #             p.core.execute_bash(C)
-    #
-    #             d = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/openresty_build_osx")
-    #
-    #             src_config_nginx = j.sal.fs.joinPaths(j.dirs.CODEDIR,"github/threefoldtech/openresty_build_osx/cfg")
-    #             j.sal.fs.copyDirTree(src_config_nginx, "/etc/openresty", keepsymlinks=False, deletefirst=True)
-    #
-    #             j.shell()
-    #             raise RuntimeError("only osx supported for now")
-    #
-    #         p.core.doneSet("openresty")
+        # wiki = openresty.wikis.new(
+        #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+        # )
+
+        rp = self.reverseproxies.new(name="testrp", port_source=88, port_dest=8080, ipaddr_dest=ip_addr)
+        rp.configure()
+
+        # wiki = self.wikis.new(
+        #     name="tfgrid", giturl="{}/examples/wiki".format(self._dirpath), branch="development", port=8088
+        # )
+        # wiki.update()
+
+        openresty.reload()
+
+        openresty._log_info("can now go to http://localhost:81/index.html")
+
+        # TODO: we have a client for http in JSX use that one please
+        import requests
+
+        website_response = requests.get("http://{}:8080".format(ip_addr)).text
+        assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
+        self._log_info("[+] test website response OK")
+        # test the reverse prosy port
+        reverse_response = requests.get("http://{}:88".format(ip_addr)).text
+        assert reverse_response == website_response
+        self._log_info("[+] test reverse proxy response OK")
+
+        self._log_info("can now go to http://localhost:81/index.html")

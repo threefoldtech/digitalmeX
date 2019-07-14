@@ -41,12 +41,6 @@ class OpenPublish(JSConfigClient):
                 self.load_site(obj, MASTER_BRANCH)
                 self.load_site(obj, DEV_BRANCH, DEV_SUFFIX)
 
-        # ensure nginx config files generated
-        # for obj in self.wikis:
-        #     self.generate_nginx_conf(obj)
-
-        # for obj in self.websites:
-        #     self.generate_nginx_conf(obj)
         self.reload_server()
         while True:
             update(self.wikis)
