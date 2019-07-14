@@ -41,20 +41,35 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
 
         openresty = self.default
 
-        ws = openresty.websites.new(name="test", path="html", port=81)
+        ip_addr = "0.0.0.0"
+        ws = self.websites.new(name="test", location=ip_addr, path="html", port=8080)
         ws.configure()
 
-        wiki = openresty.wikis.new(
-            name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
-        )
-        # will auto pull the content if not there yet
+        # wiki = openresty.wikis.new(
+        #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+        # )
 
-        rp = openresty.reverseproxies.new()
+        rp = self.reverseproxies.new(name="testrp", port_source=88, port_dest=8080, ipaddr_dest=ip_addr)
+        rp.configure()
 
-        # TODO: implement some reverse proxie tests
-        # run 2 openresties, one at back on other port one at front
-        assert False
+        # wiki = self.wikis.new(
+        #     name="tfgrid", giturl="{}/examples/wiki".format(self._dirpath), branch="development", port=8088
+        # )
+        # wiki.update()
 
         openresty.reload()
 
         openresty._log_info("can now go to http://localhost:81/index.html")
+
+        # TODO: we have a client for http in JSX use that one please
+        import requests
+
+        website_response = requests.get("http://{}:8080".format(ip_addr)).text
+        assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
+        self._log_info("[+] test website response OK")
+        # test the reverse prosy port
+        reverse_response = requests.get("http://{}:88".format(ip_addr)).text
+        assert reverse_response == website_response
+        self._log_info("[+] test reverse proxy response OK")
+
+        self._log_info("can now go to http://localhost:81/index.html")

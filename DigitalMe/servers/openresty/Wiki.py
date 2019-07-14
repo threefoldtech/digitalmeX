@@ -86,6 +86,7 @@ class Wiki(j.application.JSBaseConfigClass):
         :return:
         """
         wikipath = j.clients.git.getContentPathFromURLorPath(urlOrPath=self.giturl, pull=pull)
+        j.shell()
         if markdown_processing:
             j.shell()
 
