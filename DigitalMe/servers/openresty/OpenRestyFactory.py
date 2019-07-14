@@ -30,7 +30,20 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
 
     def build(self):
         j.builders.runtimes.lua.build()  # also gets the openresty
-
+        j.builders.runtimes.lua.lua_rock_install('lua-resty-auto-ssl')
+        j.sal.unix.addSystemGroup("www")
+        j.sal.unix.addSystemUser("www", "www")
+        j.sal.fs.createDir("/etc/resty-auto-ssl")
+        j.sal.fs.chown("/etc/resty-auto-ssl", "www", "www")
+        j.sal.fs.chmod("/etc/resty-auto-ssl", 0o755)
+        # Generate a self signed fallback certificate
+        cmd = """
+        openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
+            -subj '/CN=sni-support-required-for-valid-ssl' \
+            -keyout /etc/ssl/resty-auto-ssl-fallback.key \
+            -out /etc/ssl/resty-auto-ssl-fallback.crt
+        """
+        j.tools.executor.local.execute(cmd)
     def test(self):
         """
         kosmos 'j.servers.openresty.test()'
@@ -40,6 +53,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         self.build()
 
         openresty = self.default
+        openresty.install()
 
         ip_addr = "0.0.0.0"
         ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
@@ -56,18 +70,16 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         # keep on 8080 otherwise issue on osx
         openresty._log_info("can now go to http://localhost:8080/index.html")
 
-        wiki = openresty.wikis.new(
-            name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
-        )
+        # wiki = openresty.wikis.new(
+        #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+        # )
 
-        # TODO: we have a client for http in JSX use that one please
-        import requests
 
-        website_response = requests.get("http://{}:8080".format(ip_addr)).text
+        website_response = j.clients.http.get("http://{}:8080".format(ip_addr))
         assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
         self._log_info("[+] test website response OK")
         # test the reverse prosy port
-        reverse_response = requests.get("http://{}:88".format(ip_addr)).text
+        reverse_response = j.clients.http.get("http://{}:88".format(ip_addr))
         assert reverse_response == website_response
         self._log_info("[+] test reverse proxy response OK")
 
