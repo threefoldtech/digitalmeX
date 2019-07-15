@@ -20,7 +20,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
     def _init(self, **kwargs):
-        self.db = BCDB()  # MemoryDB()
+        self.db = BCDB() # MemoryDB()
         self.graph = {}  # sometimes te MemoryDB is used sometimes the graph? whats difference
         self.peers = []
         self.trackedids = []
@@ -82,7 +82,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
                             if k == "_":
                                 continue
                             val = json.dumps(v)
-                            self.graph[soul][k] = val
+                            self.graph[soul][k]=val
                         for k, v in node.items():
                             if k == "_":
                                 continue

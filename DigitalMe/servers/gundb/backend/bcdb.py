@@ -6,7 +6,7 @@ import json
 
 import Jumpscale
 from Jumpscale import j
-
+    
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
 bcdb = None
 try:
@@ -15,102 +15,80 @@ except:
     bcdb = j.data.bcdb.new(name="test")
 
 bcdb.reset()
-j.data.schema.add_from_text(
-    """
-@url = proj.todo
+j.data.schema.add_from_text("""
+@url = proj.todoitem
 title* = "" (S)
 done* = False (B)
 
-"""
-)
+""")
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.todolist
 name* = "" (S)
-todos* = (LO) !proj.todo
+list_todos* = (LO) !proj.todoitem
 
-"""
-)
-j.data.schema.add_from_text(
-    """
+""")
+j.data.schema.add_from_text("""
 @url = proj.simple
 attr1* = "" (S)
 attr2* = 0 (I)
-mychars* = (LS) 
-"""
-)
+list_mychars* = (LS) 
+""")
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.email
 addr* = "" (S)
-"""
-)
-j.data.schema.add_from_text(
-    """
+""")
+j.data.schema.add_from_text("""
 @url = proj.person
 name* = "" (S)
 email* = "" !proj.email
-"""
-)
+""")
 
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.os
 name* = "" (S)
-"""
-)
+""")
 
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.phone
 model* = "" (S)
 os* = "" !proj.os
-"""
-)
+""")
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.lang
 name* = ""
-"""
-)
+""")
 
 
-j.data.schema.add_from_text(
-    """
+j.data.schema.add_from_text("""
 @url = proj.human
 name* = "" (S)
-favnums = (LS)
-langs = (LO) !proj.lang
+list_favcolors = (LS)
+list_langs = (LO) !proj.lang
 phone* = "" !proj.phone
-"""
-)
+""")
 
 
 def get_schema_by_url(url):
     schema = j.data.schema.get_from_url_latest(url=url)
     return schema
 
-
 def get_model_by_schema_url(schema_url):
-    return bcdb.model_get_from_url(schema_url)
-
+    return bcdb.model_get_from_url(schema_url)   
 
 def parse_schema_and_id(s):
     m = re.match(SCHEME_UID_PAT, s)
     if m:
-        return m.groupdict()["schema"], int(m.groupdict()["id"])
+        return m.groupdict()['schema'], int(m.groupdict()['id']) 
     return None, None
-
-
 class BCDB:
     def __init__(self):
         self.db = {}
-
+    
     def put(self, soul, key, value, state, graph):
         print("put bcdb => soul {} key {} value {} state {}".format(soul, key, value, state))
 
@@ -180,7 +158,6 @@ class BCDB:
         """
         from pprint import pprint
         import ast
-
         def resolve_v(val, graph):
 
             # def clean(d):
@@ -198,10 +175,11 @@ class BCDB:
                     else:
                         return val
                 except:
-                    return val  # str
-
+                    return val # str
+                    
+            
             if "#" in val:
-
+                
                 referenced_name = val["#"]
                 return resolve_v(graph[referenced_name], graph)
 
@@ -223,16 +201,17 @@ class BCDB:
             def search_root(root, key, graph, attrpath=[]):
                 attrpath.append(root)
                 tree = graph[root]
-                for k, v in tree.items():
+                for k,v in tree.items():
                     if k == key:
                         attrpath.append(k)
                         return attrpath
                     else:
-                        if isinstance(v, dict) and "#" in v:
-                            potential_root = v["#"]
-                            res = search_root(potential_root, key, graph, attrpath)
+                       if isinstance(v, dict) and "#" in v:
+                           potential_root = v["#"]
+                           res = search_root(potential_root, key, graph, attrpath)
                 return []
 
+            
             for root in roots:
                 thepath = search_root(root, key, graph)
                 if thepath:
@@ -240,23 +219,25 @@ class BCDB:
             if thepath:
                 pass
 
+
+
         def search(k, graph):
             # DON'T CHANGE: CHECK WITH ME OR ANDREW
             roots = list(rootobjects)
 
             def inner(k, current_key, current_node, graph, path=None):
                 # print("path in inner: ", path)
-
+            
                 if not isinstance(current_node, dict):
-                    return []
+                    return []   
                 if not path:
                     path = []
-
+            
                 if current_key:
                     path.append(current_key)
 
                 for key, node in current_node.items():
-
+                    
                     # print("node: {} ".format(node))
                     # print("key {}".format(key))
                     if key in ">_":
@@ -265,19 +246,19 @@ class BCDB:
                     if isinstance(node, dict) and node.get("#") == k:
                         path.append(key)
                         return path
-
+                    
                     res = inner(k, key, node, graph, path)
-
+                    
                     if res:
                         return res
                     else:
                         pass
                         # print("path now : ", path)
-
+                        
                 if current_key:
                     path.pop()
                 return []
-
+                
             return inner(k, None, graph, roots, None)
 
         rootobjects = list(filter_root_objects(graph))
@@ -344,25 +325,11 @@ class BCDB:
                             added.add(str(v))
                             unique_items.append(v)
 
-                    # try:
-                    #     unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list)))
-                    # except:
-                    #     unique_items = list(set(v for v in resolved_list.values()))
-                    # try:
-                    #     unique_items = list(map(dict, set(tuple(sorted(di.items())) for di in d_as_list)))
-                    # except:
-                    #     # normal items. ["python", "ruby", "java"..]
-                    #     unique_items = list(set(d_as_list))
-                    # import ipdb; ipdb.set_trace()
                     thelist = unique_items
                     try:
                         setattr(obj, key, thelist)
                     except Exception as e:
                         print(e)
-                        import ipdb
-
-                        ipdb.set_trace()
-                        print("abc")
                 else:
                     setattr(obj, key, resolve_v(value, graph))
                 print("saved!!!")
@@ -372,7 +339,7 @@ class BCDB:
             else:
                 objpath = path = search(soul, graph)
                 if not objpath:
-                    # FIXME doesn't work
+                    # FIXME doesn't work 
 
                     """
                         put bcdb => soul jxvd6ufqyCFeQ9mtcpwJ key jxvd6ufkPTDohIx value white state 1562649540756
@@ -390,15 +357,16 @@ class BCDB:
                         [---]can't find : jxvd6ufqyCFeQ9mtcpwJ jxvd6ufkPTDohIx white
 
                     """
-                    print("[---]can't find :", soul, key, value)
+                    print("[---]can't find :", soul, key, value) 
                     return
-                objcontent = path + [{"#": soul}, graph]
+                objcontent = path + [{"#":soul}, graph]
 
                 schema, obj_id = parse_schema_and_id(objpath[0])
                 if not schema:
-                    return
+                    return 
                 print("*****schema:", schema)
                 model = get_model_by_schema_url(schema)
+                
 
                 objdata = do(*objcontent)
 
@@ -412,7 +380,7 @@ class BCDB:
                     obj = model.get(obj_id)
                 except:
                     obj = model.new()
-
+                
                 print(dir(obj))
                 attr = None
                 print("objpath: ", objpath)
@@ -421,12 +389,11 @@ class BCDB:
                     try:
                         obj = getattr(obj, attr)
                     except:
-                        import ipdb
-
-                        ipdb.set_trace()
+                        import ipdb; ipdb.set_trace()
                 obj = objdata
                 obj.save()
                 print("success.....!!!!!", obj)
+
 
         do(soul, key, value, graph)
 
@@ -435,14 +402,16 @@ class BCDB:
 
         ## BUG: need to think about how are we gonna represent the state for conflict resoultion (they need to be encoded somehow)
         if soul not in self.db:
-            self.db[soul] = {METADATA: {}}
+            self.db[soul] = {METADATA:{}}
         self.db[soul][key] = value
         self.db[soul][METADATA][key] = state
+
+
 
     def get(self, soul, key=None):
         print(" get bcdb => soul {} key {} ".format(soul, key))
 
-        ret = {SOUL: soul, METADATA: {SOUL: soul, STATE: {}}}
+        ret = {SOUL: soul, METADATA:{SOUL:soul, STATE:{}}}
         try:
             schema, obj_id = parse_schema_and_id(soul)
             model = get_model_by_schema_url(schema)
@@ -451,13 +420,16 @@ class BCDB:
 
             obj_dict = obj._ddict
 
+
             if key:
-                return {**ret, key: obj_ddict[key]}
+                return {**ret, key:obj_ddict[key]}
             else:
-                return {**ret, **obj_dict}
+                return {**ret,  **obj_dict}
         except Exception as e:
             print("Err get: ", e)
             return ret
+
+
 
         ## TODO: if we are going to enable caching.
         # res = None
@@ -468,6 +440,7 @@ class BCDB:
         #     else:
         #         res = {**ret, **self.db.get(soul)}
         #         return res
+
 
     def __setitem__(self, k, v):
         self.db[k] = v
