@@ -35,8 +35,10 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         """
         j.builders.runtimes.lua.build()  # also gets the openresty
         j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")
-        # this is a hack shouldn't be done if the paths are correct see https://github.com/threefoldtech/jumpscaleX/pull/692
-        j.sal.fs.copyDirTree("/sandbox/openresty/luarocks/bin/resty-auto-ssl/", "/bin", rsyncdelete=False)
+        # This is a hack shouldn't be done if the paths are correct see
+        # https://github.com/threefoldtech/jumpscaleX/pull/692
+        if j.sal.fs.exists("/sandbox/openresty/luarocks/bin/resty-auto-ssl/"):
+            j.sal.fs.copyDirTree("/sandbox/openresty/luarocks/bin/resty-auto-ssl/", "/bin", rsyncdelete=False)
         j.sal.unix.addSystemGroup("www")
         j.sal.unix.addSystemUser("www", "www")
         j.sal.fs.createDir("/etc/resty-auto-ssl")
