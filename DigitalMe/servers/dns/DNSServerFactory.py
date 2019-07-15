@@ -126,3 +126,7 @@ class DNSServerFactory(JSBASE):
 
         record = records[0]
         assert len(record.domains) == 1
+
+        dns.resolver.delete_record('one.test.com')
+        records = dns.resolver.model.find(zone='test.com')
+        assert len(records) == 0

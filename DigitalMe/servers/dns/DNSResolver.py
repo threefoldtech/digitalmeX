@@ -10,7 +10,7 @@ class DNSResolver:
         domains = (LO) !jumpscale.dnsItem.record.1
 
         @url = jumpscale.dnsItem.record.1
-        name* = "" (S)
+        name = "" (S)
         domain = "" (S)
         record_type = "A,AAAA,CNAME,TXT,NS,MX,SRV,SOA" (E)
         value = "127.0.0.1" (S)
@@ -44,14 +44,15 @@ class DNSResolver:
             obj = obj[0]
         else:
             obj = self.model.new()
-            obj.name = zone
-            obj.zone = zone
 
+        obj.name = zone
+        obj.zone = zone
         # Create domain object and add to list of domains of relative zone
         name = "%s_%s" % (domain, record_type)
         domain_obj = self.add_domain(
             obj, name=name, domain=domain, record_type=record_type, value=value, ttl=ttl, priority=priority
         )
+        obj.domains.append(domain_obj)
         obj.save()
 
     def add_domain(self, dns_item, **kwargs):
@@ -67,12 +68,10 @@ class DNSResolver:
                 break
 
         if not domain_obj:
-            # new domain
-            domain_obj = dns_item.domains.new()
-            domain_obj = self.update_domain(domain_obj, **kwargs)
-        else:
-            # updating existing domain
-            domain_obj = self.update_domain(domain_obj, **kwargs)
+            model2 = j.data.schema.get_from_url_latest(url="jumpscale.dnsItem.record.1")
+            domain_obj = model2.new()
+
+        domain_obj = self.update_domain(domain_obj, **kwargs)
         return domain_obj
 
     def update_domain(self, domain_obj, name="", domain="", record_type="A", value="127.0.0.1", ttl=100, priority=10):
@@ -137,11 +136,10 @@ class DNSResolver:
             if obj:
                 obj = obj[0]
                 name = "%s_%s" % (domain, record_type)
-
                 # Find domain_+record_type record in zone object, if found remove it from the list
-                for domain_obj in obj.domains:
+                for i, domain_obj in enumerate(obj.domains):
                     if name == domain_obj.name:
-                        domain_obj.delete()
+                        obj.domains.pop(i)
             else:
                 return
             # if inner domains list is empty remove zone from dns
