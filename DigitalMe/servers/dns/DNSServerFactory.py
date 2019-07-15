@@ -1,3 +1,4 @@
+from gevent import socket
 from pprint import pprint
 
 from Jumpscale import j
@@ -6,7 +7,6 @@ from .DNSServer import DNSServer
 import os
 
 JSBASE = j.application.JSBaseClass
-from gevent import socket
 
 # http://mirror1.malwaredomains.com/files/justdomains  domains we should not query, lets download & put in redis core
 # https://blog.cryptoaustralia.org.au/2017/12/05/build-your-private-dns-server/
@@ -31,7 +31,7 @@ class DNSServerFactory(JSBASE):
                 cmd = "sudo js_shell 'j.servers.dns.start(background=False,port=%s)'" % port
             else:
                 cmd = "js_shell 'j.servers.dns.start(background=False,port=%s)'" % port
-            j.tools.tmux.execute(cmd, window="dnsserver", pane="main", reset=False)
+            j.servers.tmux.execute(cmd, window="dnsserver", pane="main", reset=False)
             self._log_info("waiting for uidserver to start on port %s" % port)
             res = j.sal.nettools.waitConnectionTest("localhost", port)
         else:
@@ -97,3 +97,32 @@ class DNSServerFactory(JSBASE):
 
         pprint(ns.namerecords_get("google.com"))
         pprint(ns.namerecords_get("info.despiegk"))
+
+        bcdb = j.data.bcdb.new('test_dns')
+        dns = self.get(port, bcdb)
+        obj = dns.resolver.model.find(zone='test.com')
+        if obj:
+            obj[0].delete()
+
+        dns.resolver.create_record(domain='one.test.com')
+        assert 'one.test.com' == dns.resolver.get_record(domain='one.test.com').domain
+
+        dns.resolver.create_record(domain='two.test.com')
+        assert 'two.test.com' == dns.resolver.get_record(domain='two.test.com').domain
+
+        dns.resolver.create_record(domain='one.test.com', ttl=360)
+        assert 360 == dns.resolver.get_record(domain='one.test.com').ttl
+
+        records = dns.resolver.model.find(zone='test.com')
+        assert len(records) == 1
+
+        record = records[0]
+        assert len(record.domains) == 2
+
+        dns.resolver.delete_record('two.test.com')
+
+        records = dns.resolver.model.find(zone='test.com')
+        assert len(records) == 1
+
+        record = records[0]
+        assert len(record.domains) == 1
