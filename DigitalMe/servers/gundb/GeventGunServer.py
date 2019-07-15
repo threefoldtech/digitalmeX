@@ -1,7 +1,7 @@
 import json
 from Jumpscale import j
 from .backend.GunUtils import *
-from .backend.MemoryDB import MemoryDB
+from .backend.memory import MemoryDB
 from .backend.bcdb import BCDB
 from geventwebsocket import WebSocketApplication
 import uuid
@@ -13,6 +13,12 @@ import uuid
 # import time
 # from time import sleep
 
+class App:
+    def __init__(self, backend):
+        self.backend = backend
+
+
+app = App(BCDB())
 
 class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
     def __init__(self, ws):
@@ -20,7 +26,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
     def _init(self, **kwargs):
-        self.db = BCDB() # MemoryDB()
+        self.db = MemoryDB()
         self.graph = {}  # sometimes te MemoryDB is used sometimes the graph? whats difference
         self.peers = []
         self.trackedids = []
@@ -46,7 +52,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
     #         self._log_debug("Sending resp: ", resp, " to ", p)
     #         p.send(resp)
 
-    def _loggraph(self):
+    def _loggraph(self, graph):
         pass
         # for soul, node in self.graph.items():
         #     self._log_debug("\nSoul: ", soul)
@@ -58,44 +64,48 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         # self._log_debug("\n\nBACKEND: ", self.db.list())
 
     def on_open(self):
-        self._log_debug("Got client connection")
+        print("Got client connection")
 
     def on_message(self, message):
-        resp = {"ok": True}
-        if message is not None:
-            msg = json.loads(message)
+        resp = {'ok':True}
+        msgstr = message
+        resp = {'ok':True}
+        if msgstr is not None:
+            msg = json.loads(msgstr)
+            print("\n\n\n received {} \n\n\n".format(msg))
             if not isinstance(msg, list):
                 msg = [msg]
             for payload in msg:
+                # print("payload: {}\n\n".format(payload))
                 if isinstance(payload, str):
                     payload = json.loads(payload)
-                if "put" in payload:
-                    change = payload["put"]
-                    soul = payload["#"]
+                if 'put' in payload:
+                    change = payload['put']
+                    msgid = payload['#']
                     diff = ham_mix(change, self.graph)
                     uid = self._trackid(str(uuid.uuid4()))
-                    self._loggraph()
-                    resp = {"@": soul, "#": uid, "ok": True}
-                    self._log_debug("DIFF:", diff)
+                    self._loggraph(self.graph)
+                    # make sure to send error too in case of failed ham_mix
+
+                    resp = {'@':msgid, '#':uid, 'ok':True}
+                    # print("DIFF:", diff)
                     for soul, node in diff.items():
                         for k, v in node.items():
-                            if k == "_":
+                            if k == METADATA:
                                 continue
-                            val = json.dumps(v)
-                            self.graph[soul][k]=val
+                            self.graph[soul][k]=v
                         for k, v in node.items():
-                            if k == "_":
+                            if k == METADATA:
                                 continue
-                            val = json.dumps(v)
-                            self.db.put(soul, k, v, diff[soul]["_"][">"][k], self.graph)
+                            app.backend.put(soul, k, v, diff[soul][METADATA][STATE][k], self.graph)
 
-                elif "get" in payload:
-                    get = payload["get"]
-                    soul = get["#"]
-                    ack = lex_from_graph(get, self.db)
+                elif 'get' in payload:
                     uid = self._trackid(str(uuid.uuid4()))
-                    self._loggraph()
-                    resp = {"put": ack, "@": soul, "#": uid, "ok": True}
+                    get = payload['get']
+                    msgid = payload['#']
+                    ack = lex_from_graph(get, app.backend)
+                    self._loggraph(self.graph)
+                    resp = {'put': ack, '@':msgid, '#':uid, 'ok':True}
 
                 self.sendall(resp)
                 self.sendall(msg)
@@ -103,7 +113,7 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         self.ws.send(message)
 
     def on_close(self, reason):
-        self._log_debug(reason)
+        print(reason)
 
     def sendall(self, resp):
         for client in self.ws.handler.server.clients.values():

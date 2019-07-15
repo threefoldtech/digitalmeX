@@ -1,3 +1,3 @@
-METADATA = "_"
-STATE = ">"
-SOUL = "#"
+METADATA = '_'
+STATE = '>'
+SOUL = '#'

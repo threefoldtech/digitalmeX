@@ -1,8 +1,9 @@
 import dbm
+import json
 import os
-from ..consts import METADATA, STATE, SOUL
 
-# unix db
+def format_object_id(schema, id):
+    return "{}://{}".format(schema, id)
 class UDB:
     def __init__(self, path="/tmp/gun.db"):
         if os.path.exists(path):
@@ -10,41 +11,30 @@ class UDB:
         else:
             self.db = dbm.open(path, "c")
 
-    def put(self, soul, key, value, state):
-        print("SETTING SOUL KEY VAL STATE TO :", soul, key, value, state, type(state))
-        self.db["{soul}:{key}:{state}".format(**locals())] = value
+    def get_object_by_id(self, obj_id, schema=None):
+        full_id = format_object_id(schema, obj_id)
+        try:
+            return json.loads(self.db[full_id])
+        except:
+            return  {'id':obj_id}
+    
+    def set_object_attr(self, obj, attr, val):
+        obj[attr] = val
+        return obj
 
-    def get(self, soul, key=None):
-        print("\n\n{} {} {}\n\n".format(soul, key, type(key)))
-        ret = {SOUL: soul, METADATA: {SOUL: soul, STATE: {}}}
-        if isinstance(key, str):
-            keys = [k for k in self.db.keys() if k and k.startswith(soul + ":" + key)]
-        else:
-            keys = [k for k in self.db.keys() if k.startswith(soul + ":")]
+    def save_object(self, obj, obj_id, schema=None):
+        full_id = format_object_id(schema, obj_id)
+        self.db[full_id] = json.dumps(obj)
+        self.savedb()
 
-        for k in keys:
-            sol, key, state = k.split(":")
-            ret[METADATA][STATE][key] = state
-            ret[key] = self.db[k]
+    def savedb(self):
+        self.db.close()
 
-        return ret
+    def __setitem__(self, k, v):
+        self.db[k] = v
 
-    def putsoul(self, soul, souldict):
-        for k, v in souldict.items():
-            if k in "#_>":
-                continue
-            kstate = souldict.get(STATE, {}).get(STATE, {k: 0})[k]
-            self.put(soul, k, v, kstate)
-
-    def __getitem__(self, soul):
-        return self.get(soul, None)
-
-    def __setitem__(self, soul, souldict):
-        self.putsoul(soul, souldict)
-
-    def close(self):
-        if self.db:
-            self.db.close()
+    def __getitem__(self, k):
+        return self.db[k]
 
     def list(self):
-        return {k: self.db[k] for k in self.db.keys()}
+        return self.db.items()
