@@ -29,8 +29,12 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         return self._default
 
     def build(self):
+        """
+        will make sure to build lua and install lua-resty-auto-ssl (to automatically issue ssl certificates)
+        :return:
+        """
         j.builders.runtimes.lua.build()  # also gets the openresty
-        j.builders.runtimes.lua.lua_rock_install('lua-resty-auto-ssl')
+        j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")
         # this is a hack shouldn't be done if the paths are correct see https://github.com/threefoldtech/jumpscaleX/pull/692
         j.sal.fs.copyDirTree("/sandbox/openresty/luarocks/bin/resty-auto-ssl/", "/bin", rsyncdelete=False)
         j.sal.unix.addSystemGroup("www")
@@ -60,11 +64,14 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
 
         ip_addr = "0.0.0.0"
         import os
+
         domain = os.environ.get("DOMAIN", "")
         ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
         ws.configure()
 
-        rp = openresty.reverseproxies.new(name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr)
+        rp = openresty.reverseproxies.new(
+            name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr
+        )
         rp.configure()
 
         if openresty.is_running():
@@ -72,11 +79,9 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         else:
             openresty.start()
 
-
         # wiki = openresty.wikis.new(
         #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
         # )
-
 
         website_response = j.clients.http.get("http://{}:8080".format(ip_addr))
         assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
