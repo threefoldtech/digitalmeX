@@ -82,7 +82,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
         self._log_info("[+] test website response OK")
         # test the reverse prosy port
-        reverse_response = j.clients.http.get("http://{}:88".format(ip_addr))
+        reverse_response = j.clients.http.get("http://{}:80".format(ip_addr))
         assert reverse_response == website_response
         self._log_info("[+] test reverse proxy response OK")
 
