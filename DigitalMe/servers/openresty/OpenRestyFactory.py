@@ -35,6 +35,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         """
         j.builders.runtimes.lua.build()  # also gets the openresty
         j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")
+        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/jumpscale_weblibs")
         # This is a hack shouldn't be done if the paths are correct see
         # https://github.com/threefoldtech/jumpscaleX/pull/692
         if j.sal.fs.exists("/sandbox/openresty/luarocks/bin/resty-auto-ssl/"):
