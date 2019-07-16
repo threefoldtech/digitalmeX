@@ -33,7 +33,7 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         will make sure to build lua and install lua-resty-auto-ssl (to automatically issue ssl certificates)
         :return:
         """
-        j.builders.runtimes.lua.build()  # also gets the openresty
+        j.builders.runtimes.lua.install()  # also gets the openresty
         j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")
         j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/jumpscale_weblibs")
         # This is a hack shouldn't be done if the paths are correct see
