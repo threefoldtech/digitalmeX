@@ -125,7 +125,7 @@ class DNSResolver(j.application.JSBaseConfigClass):
                         return domain_obj
         return None
 
-    def delete_record(self, domain="", record_type=""):
+    def delete_record(self, domain="", record_type="A"):
         """Delete dns_item record, if zone contains no more records then remove zone from dns as well
 
         :param domain: domain name of entry
