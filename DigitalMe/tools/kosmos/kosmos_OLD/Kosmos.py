@@ -5,7 +5,7 @@ class Kosmos(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.kosmos"
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
     def register_service(self, obj):

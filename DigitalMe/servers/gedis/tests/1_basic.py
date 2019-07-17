@@ -1,48 +1,16 @@
 from Jumpscale import j
 
-serverscript = """
-
-# starting the server
-gedis = j.servers.gedis.configure(name="test", port=8888, host="127.0.0.1", ssl=False, password="123456")
-gedis.save()
-gedis.actors_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/extra/examples/actors", "ibiza")
-gedis.start()
-
-"""
-
 
 def main(self):
     """
     kosmos 'j.servers.gedis.test("basic")'
     """
 
-    # j.servers.zdb.start_test_instance()
-
-    def start():
-        # Load schema used for testing to the client process
-        cmd = j.tools.startupcmd.get(
-            "gedis_test",
-            serverscript,
-            cmd_stop="",
-            path="/tmp",
-            timeout=30,
-            env={},
-            ports=[8888],
-            process_strings=[],
-            interpreter="jumpscale",
-            daemon=True,
-        )
-        cmd.start(foreground=False)
-
-        res = j.sal.nettools.waitConnectionTest("localhost", 8888, timeoutTotal=30)
-        if res == False:
-            raise RuntimeError("Could not start gedis server on port:%s" % 8888)
-        self._log_info("gedis server '%s' started" % 8888)
-
-    start()
-
     print("[*] testing echo")
     client = j.clients.gedis.get("gedis_test", port=8888, namespace="ibiza")
+
+    actors_path = "/sandbox/code/github/threefoldtech/digitalmeX/packages/extra/examples/actors"
+    client.actors.system.actors_add_path(namespace="ibiza", path=actors_path)
 
     client.actors
     assert client.ping()

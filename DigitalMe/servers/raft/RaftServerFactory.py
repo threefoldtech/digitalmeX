@@ -6,7 +6,7 @@ from .RaftServer import RaftServer
 from .RaftCluster import RaftCluster
 
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSFactoryConfigsBaseClass
 
 
 class RaftServerFactory(JSConfigBase):

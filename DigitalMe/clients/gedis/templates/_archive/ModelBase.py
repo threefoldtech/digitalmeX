@@ -29,7 +29,7 @@ class model(JSBASE):
     def get(self, id):
         res = self.redis.execute_command("model_%s.get" % self.name, str(id))
         id, data = j.data.serializers.msgpack.loads(res)
-        obj = self.schema.get(data=data)
+        obj = self.schema.new(data=data)
         obj.id = id
         return obj
 
@@ -41,7 +41,7 @@ class model(JSBASE):
 
         for item in items:
             id, data = j.data.serializers.msgpack.loads(item)
-            obj = self.schema.get(data=data)
+            obj = self.schema.new(data=data)
             obj.id = id
             result.append(obj)
         return result

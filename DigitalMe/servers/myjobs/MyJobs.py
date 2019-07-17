@@ -38,7 +38,7 @@ schema_worker = """
 @url = jumpscale.myjobs.worker
 timeout = 3600
 time_start = 0 (T)
-last_update = 0 (T) 
+last_update = 0 (T)
 current_job = (I)
 halt = false (B)
 running = false (B)
@@ -80,7 +80,7 @@ class MyJobs(JSBASE):
             if self.dataloop != None:
                 self.dataloop.kill()
 
-            db = j.data.bcdb.new(name="myjobs", reset=reset)
+            db = j.data.bcdb.get(name="myjobs", reset=reset)
 
             self.model_job = db.model_get_from_schema(schema=schema_job)
             self.model_action = db.model_get_from_schema(schema=schema_action)
@@ -355,7 +355,7 @@ class MyJobs(JSBASE):
         jid, data_ret = j.data.serializers.msgpack.loads(data)
         j.shell()
         w
-        job = self.model_job.schema.get(data=data_ret)
+        job = self.model_job.schema.new(datadict=data_ret)
         job.id = jid
         return job
 
@@ -426,10 +426,10 @@ class MyJobs(JSBASE):
 
         def kill():
             # kill leftovers from last time, if any
-            session = j.tools.tmux.session_get("main")
+            session = j.servers.tmux.session_get("main")
             session.window_remove("myworker_worker")
             self.init(reset=True, start=False)
-            jobs = self.model_job.get_all()
+            jobs = self.model_job.find()
             assert len(jobs) == 0
             assert self.queue.qsize() == 0
             self.workers_subprocess = True
@@ -456,7 +456,7 @@ class MyJobs(JSBASE):
         j.servers.myjobs.schedule(add_error, 1, 2)
         self._start(onetime=True)
 
-        jobs = self.model_job.get_all()
+        jobs = self.model_job.find()
         assert len(jobs) == 1
         job = jobs[0]
         assert job.error == "s"
@@ -468,7 +468,7 @@ class MyJobs(JSBASE):
         j.servers.myjobs.schedule(add, 1, 2)
         self._start(onetime=True)
 
-        jobs = self.model_job.get_all()
+        jobs = self.model_job.find()
         assert len(jobs) == 2
         job = jobs[1]
         assert job.error == ""
@@ -494,7 +494,7 @@ class MyJobs(JSBASE):
 
         j.servers.myjobs.schedule(add_error, 1, 2)
 
-        jobs = self.model_job.get_all()
+        jobs = self.model_job.find()
 
         assert len(jobs) == 11
 
@@ -503,7 +503,7 @@ class MyJobs(JSBASE):
         def tmuxexec():
             # lets now run the job executor in tmux, see it runs well in process
             cmd = 'js_shell "j.servers.myjobs.worker_start_inprocess()"'
-            j.tools.tmux.execute(
+            j.servers.tmux.execute(
                 cmd, session="main", window="myworker_worker", pane="main", session_reset=False, window_reset=True
             )
 
@@ -517,7 +517,7 @@ class MyJobs(JSBASE):
         print("will wait for results")
         assert self.results([1, 2, 3], timeout=1) == {1: "3", 2: "3", 3: "3"}
 
-        jobs = self.model_job.get_all()
+        jobs = self.model_job.find()
         errors = [job for job in jobs if job.state == "ERROR"]
         assert len(errors) == 1
 
@@ -554,7 +554,7 @@ class MyJobs(JSBASE):
 
         # now timeout should have happened & all should have executed
 
-        jobs = self.model_job.get_all()
+        jobs = self.model_job.find()
         assert len(jobs) == 22
 
         completed = [job for job in jobs if job.time_stop != 0]

@@ -3,12 +3,12 @@ from .Farmers import *
 from .Nodes import *
 
 
-class ThreeFoldDirectory(j.application.JSFactoryBaseClass):
+class ThreeFoldDirectory(j.application.JSFactoryConfigsBaseClass):
 
     __jslocation__ = "j.tools.threefold_directory"
     _CHILDCLASSES = [Farmers, Nodes]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._zerotier_client = None
         self._zerotier_net_sysadmin = None
         # self.zerotier_net_tfgrid = self.zerotier_client.network_get("") #TODO:*1

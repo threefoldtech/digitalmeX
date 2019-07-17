@@ -201,7 +201,7 @@ class Handler(JSBASE):
         self.cmds_meta = self.gedis_server.cmds_meta
         self.session = Session()
 
-    def handle_redis(self, socket, address):
+    def handle_gedis(self, socket, address):
 
         # BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
         # w=self.t
@@ -209,12 +209,12 @@ class Handler(JSBASE):
         gedis_socket = GedisSocket(socket)
 
         try:
-            self._handle_redis_session(gedis_socket, address)
+            self._handle_gedis_session(gedis_socket, address)
         finally:
             gedis_socket.on_disconnect()
             self._log_info("connection closed", context="%s:%s" % address)
 
-    def _handle_redis_session(self, gedis_socket, address):
+    def _handle_gedis_session(self, gedis_socket, address):
         """
         deal with 1 specific session
         :param socket:
@@ -320,7 +320,7 @@ class Handler(JSBASE):
 
         def json_decode(request, command, die=True):
             try:
-                args = command.schema_in.get(data=j.data.serializers.json.loads(request.arguments[0]))
+                args = command.schema_in.new(datadict=j.data.serializers.json.loads(request.arguments[0]))
                 return args
             except Exception as e:
                 if die:
@@ -415,7 +415,7 @@ def _result_encode(cmd, response_type, item):
             return item._json
     else:
 
-        if isinstance(item, j.data.schema.DataObjBase):
+        if isinstance(item, j.data.schema._JSXObjectClass):
             if response_type == "json":
                 return item._json
             else:

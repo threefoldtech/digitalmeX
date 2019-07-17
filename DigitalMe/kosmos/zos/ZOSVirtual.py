@@ -13,7 +13,7 @@ class ZOSVirtual(j.application.JSBaseConfigClass):
     secret = "" (S)    
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.ZOSNode = None  # links to the ZOSNode which hosts this ZOSContainer
 
     @property

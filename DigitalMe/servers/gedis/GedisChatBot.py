@@ -106,7 +106,7 @@ class GedisChatBotSession(JSBASE):
         self.q_out.put({"cat": "string_ask", "msg": msg, "kwargs": kwargs})
         return self.q_in.get()
 
-    def password_ask(self, msg, **kwargs):
+    def secret_ask(self, msg, **kwargs):
         """
         helper method to generate a question that expects a password answer.
         html generated in the client side will use `<input type="password"/>`
@@ -114,7 +114,7 @@ class GedisChatBotSession(JSBASE):
         :param kwargs: dict of possible extra options like (validate, reset, ...etc)
         :return: the user answer for the question
         """
-        self.q_out.put({"cat": "password_ask", "msg": msg, "kwargs": kwargs})
+        self.q_out.put({"cat": "secret_ask", "msg": msg, "kwargs": kwargs})
         return self.q_in.get()
 
     def text_ask(self, msg, **kwargs):

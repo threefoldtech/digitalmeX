@@ -29,10 +29,11 @@ class GedisClient(JSConfigBase):
     
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         # j.clients.gedis.latest = self
-        self._namespace = self.data.namespace
-
+        self._namespace = self._data.namespace
+        self._actorsmeta = {}
+        self.schemas = None
         self._code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
         j.sal.fs.createDir(self._code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self._code_generated_dir, "__init__.py"))
@@ -69,9 +70,12 @@ class GedisClient(JSConfigBase):
         if self._actors is None:
             assert self.ping()
             self._actorsmeta = {}
-            # self._redis.execute_command("select", self.namespace)
             self._actors = GedisClientActors()
             self.schemas = GedisClientSchemas()
+
+            # this will make sure we know the core schema's as used on server
+            r = self._redis.execute_command("jsx_schemas_get")
+            j.data.schema.add_from_text(r.decode())
 
             cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
             cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
@@ -82,7 +86,6 @@ class GedisClient(JSConfigBase):
                     raise RuntimeError("aa")
                 actor_name = key.split("__")[1]
                 self._actorsmeta[actor_name] = j.servers.gedis._cmds_get(key, data)
-                # a = self._actorsmeta[actor_name]
 
             # at this point the schema's are loaded only for the namespace identified (is all part of metadata)
             for actorname, actormeta in self._actorsmeta.items():
@@ -125,14 +128,14 @@ class GedisClient(JSConfigBase):
         :return: redis instance
         """
         if self._redis_ is None:
-            addr = self.data.host
-            port = self.data.port
-            secret = self.data.password_
-            ssl_certfile = self.data.sslkey
+            addr = self._data.host
+            port = self._data.port
+            secret = self._data.password_
+            ssl_certfile = self._data.sslkey
 
-            if self.data.ssl:
-                if not self.data.sslkey:
-                    ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
+            if self._data.ssl:
+                if not self._data.sslkey:
+                    ssl_certfjoile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
                 self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
             else:
                 self._log_info("redisclient: %s:%s " % (addr, port))
@@ -141,7 +144,7 @@ class GedisClient(JSConfigBase):
                 ipaddr=addr,
                 port=port,
                 password=secret,
-                ssl=self.data.ssl,
+                ssl=self._data.ssl,
                 ssl_ca_certs=ssl_certfile,
                 ping=False,
                 fromcache=False,

@@ -4,9 +4,8 @@ JSBASE = j.application.JSBaseClass
 
 
 class system(JSBASE):
-    def __init__(self):
-        JSBASE.__init__(self)
-        self.server = j.servers.gedis.latest
+    def __init__(self, server):
+        self.server_gedis = server
 
     def ping(self):
         return "PONG"
@@ -14,16 +13,33 @@ class system(JSBASE):
     def ping_bool(self):
         return True
 
-    # def core_schemas_get(self, namespace):
-    #     """
-    #     return all core schemas as understood by the server, is as text, can be processed by j.data.schema
-    #     """
-    #     namespace = namespace.decode()
-    #     res = {}
-    #     for key, item in j.data.schema.schemas.items():
-    #         # TODO: should prob limit to namespace
-    #         res[key] = item.text
-    #     return j.data.serializers.msgpack.dumps(res)
+    def jsx_schemas_get(self):
+        """
+        return all core schemas as understood by the server, is as text, can be processed by j.data.schema
+        """
+        out = ""
+        urls = [
+            "jumpscale.bcdb.user.2",
+            "jumpscale.bcdb.circle.2",
+            "jumpscale.bcdb.acl.2",
+            "jumpscale.bcdb.acl.circle.2",
+            "jumpscale.bcdb.acl.user.2",
+            "jumpscale.bcdb.meta.2",
+            "jumpscale.bcdb.meta.schema.2",
+            "jumpscale.bcdb.namespace.2",
+            "jumpscale.gedis.server",
+            "jumpscale.gedis.api",
+            "jumpscale.gedis.cmd",
+            "jumpscale.gedis.schema",
+        ]
+        for url in urls:
+            md5 = j.data.schema.url_to_md5[url][-1]
+            s = j.data.schema.md5_to_schema[md5]
+            out += "%s\n\n" % s.text
+        return out
+
+    def actors_add_path(self, namespace, path):
+        self.server_gedis.actors_add(path, namespace)
 
     def api_meta_get(self, namespace):
         """
@@ -32,7 +48,7 @@ class system(JSBASE):
         """
         namespace = namespace.decode()
         res = {"cmds": {}}
-        for key, item in self.server.cmds_meta.items():
+        for key, item in self.server_gedis.cmds_meta.items():
             if item.namespace == namespace:
                 res["cmds"][key] = item.data._data
         return j.data.serializers.msgpack.dumps(res)
@@ -55,8 +71,8 @@ class system(JSBASE):
         r.paths.append(j.servers.web.latest.path)
 
         # changes for the actors
-        r.paths.append(j.servers.gedis.latest.code_generated_dir)
-        r.paths.append(j.servers.gedis.latest.app_dir + "/actors")
+        r.paths.append(self.server_gedis_gedis.code_generated_dir)
+        r.paths.append(self.server_gedis_gedis.app_dir + "/actors")
         r.paths.append("%s/systemactors" % j.servers.gedis.path)
 
         return r
@@ -97,21 +113,21 @@ class system(JSBASE):
         # check if path is actor if yes, reload that one
         if not changeobj.is_directory and changeobj.src_path.endswith(".py"):
             paths = list()
-            paths.append(j.servers.gedis.latest.code_generated_dir)
-            paths.append(j.servers.gedis.latest.app_dir + "/actors")
+            paths.append(self.server_gedis_gedis.code_generated_dir)
+            paths.append(self.server_gedis_gedis.app_dir + "/actors")
             paths.append("%s/systemactors" % j.servers.gedis.path)
             # now check if path is in docsites, if yes then reload that docsite only !
             for path in paths:
                 if path in changeobj.src_path:
                     actor_name = j.sal.fs.getBaseName(changeobj.src_path)[:-3].lower()
-                    namespace = j.servers.gedis.latest.instance + "." + actor_name
-                    if namespace in j.servers.gedis.latest.cmds_meta:
-                        del j.servers.gedis.latest.cmds_meta[namespace]
-                        del j.servers.gedis.latest.actors[namespace]
-                        for cmd in list(j.servers.gedis.latest.cmds.keys()):
+                    namespace = self.server_gedis_gedis.instance + "." + actor_name
+                    if namespace in self.server_gedis_gedis.cmds_meta:
+                        del self.server_gedis_gedis.cmds_meta[namespace]
+                        del self.server_gedis_gedis.actors[namespace]
+                        for cmd in list(self.server_gedis_gedis.cmds.keys()):
                             if actor_name in cmd:
-                                del j.servers.gedis.latest.cmds[cmd]
-                        j.servers.gedis.latest.cmds_add(namespace, path=changeobj.src_path)
+                                del self.server_gedis_gedis.cmds[cmd]
+                        self.server_gedis_gedis.cmds_add(namespace, path=changeobj.src_path)
                         self._log_info("reloading namespace: {}".format(namespace))
                         return
 

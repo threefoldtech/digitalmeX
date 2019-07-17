@@ -47,12 +47,12 @@ class GedisCmds(JSBASE):
         self._cmds = {}
 
         if data:
-            self.data = self.schema.get(serializeddata=data)
+            self.data = self.schema.new(serializeddata=data)
             self.cmds
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
             klass = j.tools.codeloader.load(obj_key=cname, path=path, reload=False)
-            kobj = klass()  # this is the actor obj
+            kobj = klass(self.server)  # this is the actor obj
 
             key = "%s__%s" % (namespace, cname.replace(".", "_"))
 
