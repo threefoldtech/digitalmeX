@@ -60,38 +60,94 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         :return:
         """
 
-        self.build()
+        def corex():
+            self._log_info('Now trying coreX')
+            j.servers.corex.default.check()
 
-        openresty = self.default
-        openresty.install()
+            corex = j.servers.corex.default.client
+            openresty = self.get(name="default", executor='corex', corex_client_name=corex.name)
 
-        ip_addr = "0.0.0.0"
-        import os
 
-        domain = os.environ.get("DOMAIN", "")
-        ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
-        ws.configure()
+            # openresty.install()
 
-        rp = openresty.reverseproxies.new(
-            name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr
-        )
-        rp.configure()
+            ip_addr = "0.0.0.0"
+            import os
 
-        if openresty.is_running():
-            openresty.reload()
-        else:
+            domain = os.environ.get("DOMAIN", "")
+
+            ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
+            ws.configure()
+
+            rp = openresty.reverseproxies.new(
+                name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr
+            )
+            rp.configure()
             openresty.start()
 
-        # wiki = openresty.wikis.new(
-        #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
-        # )
+            website_response = j.clients.http.get("http://{}:8080".format(ip_addr))
+            assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
+            self._log_info("[+] test website response OK")
+            # test the reverse prosy port
+            reverse_response = j.clients.http.get("http://{}:80".format(ip_addr))
+            assert reverse_response == website_response
+            self._log_info("[+] test reverse proxy response OK")
 
-        website_response = j.clients.http.get("http://{}:8080".format(ip_addr))
-        assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
-        self._log_info("[+] test website response OK")
-        # test the reverse prosy port
-        reverse_response = j.clients.http.get("http://{}:80".format(ip_addr))
-        assert reverse_response == website_response
-        self._log_info("[+] test reverse proxy response OK")
+            self._log_info("can now go to http://localhost:8080/index.html")
+            self._log_info('now closing')
 
-        self._log_info("can now go to http://localhost:8080/index.html")
+
+
+
+            openresty.stop()
+
+
+
+        def tmux():
+            self.build()
+
+            openresty = self.default
+            openresty.install()
+
+            ip_addr = "0.0.0.0"
+            import os
+
+            domain = os.environ.get("DOMAIN", "")
+            ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
+            ws.configure()
+
+            rp = openresty.reverseproxies.new(
+                name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr
+            )
+            rp.configure()
+
+            if openresty.is_running():
+                openresty.reload()
+            else:
+                openresty.start()
+
+            # wiki = openresty.wikis.new(
+            #     name="tfgrid", giturl="https://github.com/threefoldfoundation/info_grid", branch="development"
+            # )
+
+            website_response = j.clients.http.get("http://{}:8080".format(ip_addr))
+            assert website_response == "<!DOCTYPE html>\n<html>\n<body>\n\nwelcome\n\n</body>\n</html>\n"
+            self._log_info("[+] test website response OK")
+            # test the reverse prosy port
+            reverse_response = j.clients.http.get("http://{}:80".format(ip_addr))
+            assert reverse_response == website_response
+            self._log_info("[+] test reverse proxy response OK")
+
+            self._log_info("can now go to http://localhost:8080/index.html")
+            self._log_info('now closing')
+            openresty.stop()
+
+
+        tmux()
+        corex()
+
+
+
+
+
+
+

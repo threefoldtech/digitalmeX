@@ -25,7 +25,17 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
            port = 80 (I)
            port_ssl = 443 (I)
            status = init,installed,ok (E)
-           executor = tmux,corex (E) 
+           executor = tmux,corex (E)
+           interpreter = "bash,jumpscale,direct,python" (E)  #direct means we will not put in bash script
+           daemon = true (b)
+           hardkill = false (b)
+           state = "init,running,error,stopped,stopping,down,notfound" (E)
+           corex_client_name = "default" (S)
+           corex_id = (S)
+           error = "" (S)
+           time_start = (T)
+           time_refresh = (T)
+           time_stop = (T)
            """
 
     def _init(self, **kwargs):
