@@ -320,7 +320,7 @@ class Handler(JSBASE):
 
         def json_decode(request, command, die=True):
             try:
-                args = command.schema_in.get(data=j.data.serializers.json.loads(request.arguments[0]))
+                args = command.schema_in.new(datadict=j.data.serializers.json.loads(request.arguments[0]))
                 return args
             except Exception as e:
                 if die:

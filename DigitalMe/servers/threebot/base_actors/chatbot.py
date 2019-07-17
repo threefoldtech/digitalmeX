@@ -9,8 +9,7 @@ class chatbot(JSBASE):
     """
     """
 
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self):
         self.chatbot = self.server_gedis.chatbot
 
         # check self.chatbot.chatflows for the existing chatflows
