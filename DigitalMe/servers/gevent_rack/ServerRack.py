@@ -8,8 +8,9 @@ import sys
 JSBASE = j.application.JSBaseClass
 from gevent import spawn
 
-# from gevent import monkey
-# monkey.patch_all(subprocess=False)
+from gevent import monkey
+
+monkey.patch_all(subprocess=False)
 import gevent
 from gevent import event
 

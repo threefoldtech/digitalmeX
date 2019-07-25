@@ -307,7 +307,7 @@ class Handler(JSBASE):
             try:
                 # Try capnp which is combination of msgpack of a list of id/capnpdata
                 id, data = j.data.serializers.msgpack.loads(request.arguments[0])
-                args = command.schema_in.get(data=data)
+                args = command.schema_in.new(serializeddata=data)
                 if id:
                     args.id = id
                 return args

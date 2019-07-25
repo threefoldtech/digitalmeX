@@ -48,4 +48,4 @@ class chatbot(JSBASE):
         topic = "" (S)
         ```
         """
-        return json.dumps({"sessionid": self.chatbot.session_new(topic)})
+        return json.dumps(self.chatbot.session_new(topic))
