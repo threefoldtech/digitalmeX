@@ -61,9 +61,9 @@ class ServerRackFactory(JSBASE):
         if not background:
 
             self.install()
-
-            admincl = j.servers.zdb.start_test_instance(destroydata=True)
-            cl = admincl.namespace_new("test", secret="1234")
+            j.servers.zdb.test_instance_start(destroydata=True)
+            admin_zdb_cl = j.clients.zdb.client_admin_get(port=9901)
+            cl = admin_zdb_cl.namespace_new("test", secret="1234")
 
             if gedis:
 

@@ -22,7 +22,7 @@ class DNSServerFactory(j.application.JSBaseConfigsFactoryClass):
         self._extensions = {}
 
     def get_gevent_server(self, name="default", port=53, bcdb_name="system", resolvername="default"):
-        s = self.servers.new(name=name, port=port, bcdb_name=bcdb_name, resolvername=resolvername)
+        s = self.servers.get(name=name, port=port, resolvername=resolvername)
         # make sure there is a resolver created
         if resolvername == "default" and self.resolvers.exists(name=resolvername) == False:
             r = self.resolvers.new(name="default")
@@ -100,35 +100,35 @@ class DNSServerFactory(j.application.JSBaseConfigsFactoryClass):
         pprint(ns.namerecords_get("google.com"))
         pprint(ns.namerecords_get("info.despiegk"))
 
-        bcdb = j.data.bcdb.new('test_dns')
+        bcdb = j.data.bcdb.new("test_dns")
         dns = self.get(port, bcdb)
-        obj = dns.resolver.model.find(zone='test.com')
+        obj = dns.resolver.model.find(zone="test.com")
         if obj:
             obj[0].delete()
 
-        dns.resolver.create_record(domain='one.test.com')
-        assert 'one.test.com' == dns.resolver.get_record(domain='one.test.com').domain
+        dns.resolver.create_record(domain="one.test.com")
+        assert "one.test.com" == dns.resolver.get_record(domain="one.test.com").domain
 
-        dns.resolver.create_record(domain='two.test.com')
-        assert 'two.test.com' == dns.resolver.get_record(domain='two.test.com').domain
+        dns.resolver.create_record(domain="two.test.com")
+        assert "two.test.com" == dns.resolver.get_record(domain="two.test.com").domain
 
-        dns.resolver.create_record(domain='one.test.com', ttl=360)
-        assert 360 == dns.resolver.get_record(domain='one.test.com').ttl
+        dns.resolver.create_record(domain="one.test.com", ttl=360)
+        assert 360 == dns.resolver.get_record(domain="one.test.com").ttl
 
-        records = dns.resolver.model.find(zone='test.com')
+        records = dns.resolver.model.find(zone="test.com")
         assert len(records) == 1
 
         record = records[0]
         assert len(record.domains) == 2
 
-        dns.resolver.delete_record('two.test.com')
+        dns.resolver.delete_record("two.test.com")
 
-        records = dns.resolver.model.find(zone='test.com')
+        records = dns.resolver.model.find(zone="test.com")
         assert len(records) == 1
 
         record = records[0]
         assert len(record.domains) == 1
 
-        dns.resolver.delete_record('one.test.com')
-        records = dns.resolver.model.find(zone='test.com')
+        dns.resolver.delete_record("one.test.com")
+        records = dns.resolver.model.find(zone="test.com")
         assert len(records) == 0

@@ -21,7 +21,7 @@ class GedisClient(JSConfigBase):
     @url = jumpscale.gedis.client
     name* = "main"
     host = "127.0.0.1" (S)
-    port = 8888 (ipport)
+    port = 8900 (ipport)
     namespace = "default" (S)
     password_ = "" (S)
     ssl = False (B)
@@ -31,9 +31,10 @@ class GedisClient(JSConfigBase):
 
     def _init(self, **kwargs):
         # j.clients.gedis.latest = self
-        self._namespace = self._data.namespace
+        self._namespace = self.namespace
         self._actorsmeta = {}
         self.schemas = None
+        self._actors = None
         self._code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
         j.sal.fs.createDir(self._code_generated_dir)
         j.sal.fs.touch(j.sal.fs.joinPaths(self._code_generated_dir, "__init__.py"))
@@ -128,13 +129,13 @@ class GedisClient(JSConfigBase):
         :return: redis instance
         """
         if self._redis_ is None:
-            addr = self._data.host
-            port = self._data.port
-            secret = self._data.password_
-            ssl_certfile = self._data.sslkey
+            addr = self.host
+            port = self.port
+            secret = self.password_
+            ssl_certfile = self.sslkey
 
-            if self._data.ssl:
-                if not self._data.sslkey:
+            if self.ssl:
+                if not self.sslkey:
                     ssl_certfjoile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
                 self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
             else:
@@ -144,9 +145,9 @@ class GedisClient(JSConfigBase):
                 ipaddr=addr,
                 port=port,
                 password=secret,
-                ssl=self._data.ssl,
+                ssl=self.ssl,
                 ssl_ca_certs=ssl_certfile,
-                ping=False,
+                ping=True,
                 fromcache=False,
             )
         return self._redis_

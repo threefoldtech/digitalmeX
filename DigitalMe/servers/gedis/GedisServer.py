@@ -73,11 +73,14 @@ class GedisServer(JSBaseConfig):
             self._sig_handler.append(gevent.signal(sig, self.stop))
 
         self.handler = Handler(self)  # registers the current gedis server on the handler
+
+    @property
+    def gedis_server(self):
         if self.ssl:
             self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
             # Server always supports SSL
             # client can use to talk to it in SSL or not
-            self.gedis_server = StreamServer(
+            gedis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
                 handle=self.handler.handle_gedis,
@@ -85,7 +88,9 @@ class GedisServer(JSBaseConfig):
                 certfile=self.ssl_cert_path,
             )
         else:
-            self.gedis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handler.handle_gedis)
+            gedis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handler.handle_gedis)
+
+        return gedis_server
 
     def actors_add(self, path, namespace="default"):
         """
@@ -188,11 +193,11 @@ class GedisServer(JSBaseConfig):
         data = {}
         data["host"] = self.host
         data["port"] = self.port
-        data["secret_"] = self.secret_
+        data["password_"] = self.secret_
         data["ssl"] = self.ssl
         data["namespace"] = namespace
 
-        return j.clients.gedis.get(name=self.name, configureonly=False, **data)
+        return j.clients.gedis.get(name=self.name, **data)
 
     def client_configure(self, namespace="default"):
         """

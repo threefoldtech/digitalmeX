@@ -1,4 +1,6 @@
 from Jumpscale import j
+import os
+import gevent
 from .OpenPublish import OpenPublish
 
 JSConfigs = j.application.JSBaseConfigsClass
@@ -12,27 +14,27 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.open_publish.1
         name* = "main" (S)
-        executor = "corex"
+        executor = "tmux"
         adminsecret_ = "123456"
         
         """
+
+    def _init(self, **kwargs):
+        self._gedis_server = None
+        self.dns_server = None
+
+    @property
+    def gedis_server(self):
+        if not self._gedis_server:
+            self._gedis_server = j.servers.gedis.get("main", port=8900)
+        return self._gedis_server
 
     def start(self, background=False):
 
         if not background:
 
-            # j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO, pull=False)
-            url = "https://github.com/threefoldtech/jumpscale_weblibs"
-            weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
-            j.sal.fs.symlink(
-                "{}/static".format(weblibs_path),
-                "{}/static/weblibs".format(self.open_publish_path),
-                overwriteTarget=False,
-            )
-
-            zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret, executor=self.executor)
+            zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
-
             # Start Sonic Server
             sonic_server = j.servers.sonic.default
             sonic_server.start()
@@ -42,19 +44,25 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             rack = j.servers.rack.get()
 
-            gedis = j.servers.gedis.get_gevent_server("main", port=8900)
-            rack.add("gedis", gedis)
+            app = j.servers.gedis_websocket.default.app
+            rack.websocket_server_add("websocket", 4444, app)
 
             # TODO, needs to be possible to run ssl and not but still use the same gedis backend, should not have to run 2x
-            # gedis = j.servers.gedis.get_gevent_server("main_ssl", ssl=True, port=8901)
+            # gedis = j.servers.gedis.get("main_ssl", ssl=True, port=8901)
             # rack.add("gedis_ssl", gedis)
 
-            gedis.actors_add("%s/base_actors" % self._dirpath)
-            gedis.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
-
-            dns = j.servers.dns.get_gevent_server(port=5354)  # for now high port
+            dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             rack.add("dns", dns)
 
+            openresty = j.servers.openresty.get("threebot")
+            j.servers.openresty.build()
+            openresty.start()
+            self._gedis_server = j.servers.gedis.get("main", port=8900)
+
+            self._gedis_server.actors_add("%s/base_actors" % self._dirpath)
+            self._gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
+
+            rack.add("gedis", self._gedis_server.gedis_server)
             rack.start()
 
         else:
@@ -78,7 +86,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
                 s.stop()
             s.start()
 
-
-class ThreeBotServers(j.application.JSBaseConfigsClass):
-    _name = "servers"
-    _CHILDCLASS = ThreeBotServer
+    def auto_update(self):
+        while True:
+            self._log_info("Reload for docsites done")
+            gevent.sleep(300)

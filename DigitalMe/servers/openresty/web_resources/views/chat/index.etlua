@@ -76,7 +76,7 @@
             </div>
         </div>
         <script>
-            var SERVER = '<%= url %>/ws'
+            var SERVER = '<%= url %>'
             var TOPIC= '<%= topic %>'
         </script>
         <!-- Javascript -->

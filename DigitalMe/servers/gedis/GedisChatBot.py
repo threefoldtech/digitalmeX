@@ -29,7 +29,7 @@ class GedisChatBotFactory(JSBASE):
         topic_method = self.chat_flows[topic]
         session = GedisChatBotSession(session_id, topic_method, **kwargs)
         self.sessions[session_id] = session
-        return session_id
+        return {"session_id": session_id}
 
     def session_work_get(self, session_id):
         """
@@ -41,16 +41,16 @@ class GedisChatBotFactory(JSBASE):
         bot = self.sessions[session_id]
         return bot.q_out.get(block=True)
 
-    def session_work_set(self, session_id, val):
+    def session_work_set(self, session_id, result):
         """
         receives user's answer and set it into `q_in` queue to be consumed afterwards by helper methods
         (ask_string, ask_int, ....) to be able to continue execution
         :param session_id: user session id
-        :param val: answer sent by the user
+        :param result: answer sent by the user
         :return:
         """
         bot = self.sessions[session_id]
-        bot.q_in.put(val)
+        bot.q_in.put(result)
         return
 
     def chatflows_load(self, chatflows_dir):

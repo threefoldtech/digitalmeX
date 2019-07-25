@@ -245,12 +245,13 @@ class Handler(JSBASE):
         :param request:
         :return:
         """
+
         # process the predefined commands
-        if request.command == "command":
+        if request.command.command == "command":
             return "OK"
-        elif request.command == "ping":
+        elif request.command.command == "ping":
             return "PONG"
-        elif request.command == "auth":
+        elif request.command.command == "auth":
             dm_id, epoch, signed_message = request[1:]
             if self.dm_verify(dm_id, epoch, signed_message):
                 self.session.dmid = dm_id
