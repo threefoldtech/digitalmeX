@@ -2,19 +2,20 @@ import json
 from .consts import *
 from .resolvers import *
 
+
 class BackendMixin:
     def get_object_by_id(self, obj_id, schema=None):
         pass
 
     def set_object_attr(self, obj, attr, val):
         pass
-    
+
     def save_object(self, obj, obj_id, schema=None):
         pass
-    
+
     def put(self, soul, key, value, state, graph):
         if soul not in self.db:
-            self.db[soul] = {METADATA:{STATE:{}}}
+            self.db[soul] = {METADATA: {STATE: {}}}
         self.db[soul][key] = value
         self.db[soul][METADATA][STATE][key] = state
 
@@ -31,12 +32,13 @@ class BackendMixin:
             if is_root_soul(soul):
                 schema, obj_id = parse_schema_and_id(soul)
                 obj = self.get_object_by_id(obj_id, schema)
-                obj = self.set_object_attr(obj, 'id', obj_id)
+                obj = self.set_object_attr(obj, "id", obj_id)
                 # print("object update setting attr {} with value {}".format(key, resolve_v(value, graph)))
 
                 if key.startswith("list_"):
                     theattr = key
                     resolved_list = resolve_v(value, graph)
+
                     def hash_dict(adict):
                         return str(adict)
 
@@ -62,7 +64,7 @@ class BackendMixin:
             else:
                 objpath = path = search(soul, graph, rootobjects)
                 if not objpath:
-                    # FIXME doesn't work 
+                    # FIXME doesn't work
 
                     """
                         put bcdb => soul jxvd6ufqyCFeQ9mtcpwJ key jxvd6ufkPTDohIx value white state 1562649540756
@@ -79,13 +81,13 @@ class BackendMixin:
                         }
                         [---]can't find : jxvd6ufqyCFeQ9mtcpwJ jxvd6ufkPTDohIx white
                     """
-                    print("[---]can't find :", soul, key, value) 
+                    print("[---]can't find :", soul, key, value)
                     return
-                objcontent = path + [{"#":soul}, graph]
+                objcontent = path + [{"#": soul}, graph]
 
                 schema, obj_id = parse_schema_and_id(objpath[0])
                 if not schema:
-                    return 
+                    return
                 print("*****schema:", schema)
                 objdata = do(*objcontent)
 
@@ -95,7 +97,7 @@ class BackendMixin:
                 objpath = objpath[1:]
 
                 obj = self.get_object_by_id(obj_id, schema)
-                
+
                 # print("objpath: ", objpath)
                 while objpath:
                     attr = objpath.pop(0)
@@ -110,9 +112,8 @@ class BackendMixin:
         do(soul, key, value, graph)
         graph[soul][key] = value
 
-
     def get(self, soul, key=None):
-        ret = {SOUL: soul, METADATA:{SOUL:soul, STATE:{}}}
+        ret = {SOUL: soul, METADATA: {SOUL: soul, STATE: {}}}
 
         res = None
         if soul in self.db:
@@ -123,4 +124,4 @@ class BackendMixin:
             else:
                 res = {**ret, **self.db.get(soul)}
                 return res
-        return ret 
+        return ret

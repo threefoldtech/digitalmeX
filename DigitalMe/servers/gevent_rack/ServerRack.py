@@ -22,6 +22,7 @@ class ServerRack(JSBASE):
 
     def _init(self):
         self.servers = {}
+        self.greenlets = {}
         self._logger_enable()
         # self._monkeypatch_done = False
 

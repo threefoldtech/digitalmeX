@@ -13,12 +13,14 @@ import uuid
 # import time
 # from time import sleep
 
+
 class App:
     def __init__(self, backend):
         self.backend = backend
 
 
 app = App(BCDB())
+
 
 class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
     def __init__(self, ws):
@@ -67,9 +69,9 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
         print("Got client connection")
 
     def on_message(self, message):
-        resp = {'ok':True}
+        resp = {"ok": True}
         msgstr = message
-        resp = {'ok':True}
+        resp = {"ok": True}
         if msgstr is not None:
             msg = json.loads(msgstr)
             print("\n\n\n received {} \n\n\n".format(msg))
@@ -79,33 +81,33 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
                 # print("payload: {}\n\n".format(payload))
                 if isinstance(payload, str):
                     payload = json.loads(payload)
-                if 'put' in payload:
-                    change = payload['put']
-                    msgid = payload['#']
+                if "put" in payload:
+                    change = payload["put"]
+                    msgid = payload["#"]
                     diff = ham_mix(change, self.graph)
                     uid = self._trackid(str(uuid.uuid4()))
                     self._loggraph(self.graph)
                     # make sure to send error too in case of failed ham_mix
 
-                    resp = {'@':msgid, '#':uid, 'ok':True}
+                    resp = {"@": msgid, "#": uid, "ok": True}
                     # print("DIFF:", diff)
                     for soul, node in diff.items():
                         for k, v in node.items():
                             if k == METADATA:
                                 continue
-                            self.graph[soul][k]=v
+                            self.graph[soul][k] = v
                         for k, v in node.items():
                             if k == METADATA:
                                 continue
                             app.backend.put(soul, k, v, diff[soul][METADATA][STATE][k], self.graph)
 
-                elif 'get' in payload:
+                elif "get" in payload:
                     uid = self._trackid(str(uuid.uuid4()))
-                    get = payload['get']
-                    msgid = payload['#']
+                    get = payload["get"]
+                    msgid = payload["#"]
                     ack = lex_from_graph(get, app.backend)
                     self._loggraph(self.graph)
-                    resp = {'put': ack, '@':msgid, '#':uid, 'ok':True}
+                    resp = {"put": ack, "@": msgid, "#": uid, "ok": True}
 
                 self.sendall(resp)
                 self.sendall(msg)

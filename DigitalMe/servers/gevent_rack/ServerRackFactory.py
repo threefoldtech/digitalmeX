@@ -28,6 +28,7 @@ class ServerRackFactory(JSBASE):
 
     def _init(self):
         self._logger_enable()
+        self.current = None
 
     def get(self):
 
@@ -38,7 +39,11 @@ class ServerRackFactory(JSBASE):
         js_shell 'j.servers.rack.start(namespace="test", secret="1234")'
 
         """
-        return ServerRack()
+        sr = ServerRack()
+        if not self.current:
+            self.current = sr
+        else:
+            raise RuntimeError("can only work with 1 rack for now")
 
     def install(self):
         """

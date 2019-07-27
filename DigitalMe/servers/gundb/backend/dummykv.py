@@ -6,13 +6,14 @@ import json
 def format_object_id(schema, id):
     return "{}://{}".format(schema, id)
 
+
 class FakeKV:
     def __init__(self):
         self._database = {}
 
     def set(self, key, obj):
         self._database[key] = obj
-    
+
     def exists(self, key):
         return key in self._database
 
@@ -22,6 +23,7 @@ class FakeKV:
         except:
             return default
 
+
 class DummyKV(BackendMixin):
     def __init__(self):
         self.db = defaultdict(lambda: defaultdict(lambda: defaultdict()))
@@ -29,7 +31,7 @@ class DummyKV(BackendMixin):
 
     def get_object_by_id(self, obj_id, schema=None):
         full_id = format_object_id(schema, obj_id)
-        return self.kv.get(full_id, {'id':obj_id})
+        return self.kv.get(full_id, {"id": obj_id})
 
     def set_object_attr(self, obj, attr, val):
         obj[attr] = val

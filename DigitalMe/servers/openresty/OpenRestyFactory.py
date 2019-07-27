@@ -59,14 +59,14 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
         kosmos 'j.servers.openresty.test()'
         :return:
         """
+        self.build()
 
         def corex():
-            self._log_info('Now trying coreX')
+            self._log_info("Now trying coreX")
             j.servers.corex.default.check()
 
             corex = j.servers.corex.default.client
-            openresty = self.get(name="default", executor='corex', corex_client_name=corex.name)
-
+            openresty = self.get(name="default", executor="corex", corex_client_name=corex.name)
 
             # openresty.install()
 
@@ -93,14 +93,9 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             self._log_info("[+] test reverse proxy response OK")
 
             self._log_info("can now go to http://localhost:8080/index.html")
-            self._log_info('now closing')
-
-
-
+            self._log_info("now closing")
 
             openresty.stop()
-
-
 
         def tmux():
             self.build()
@@ -138,16 +133,8 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             self._log_info("[+] test reverse proxy response OK")
 
             self._log_info("can now go to http://localhost:8080/index.html")
-            self._log_info('now closing')
+            self._log_info("now closing")
             openresty.stop()
-
 
         tmux()
         corex()
-
-
-
-
-
-
-

@@ -6,9 +6,11 @@ import json
 def format_object_id(schema, id):
     return "{}://{}".format(schema, id)
 
+
 class RedisKV(BackendMixin):
     def __init__(self, host="127.0.0.1", port=6379):
         from redis import Redis
+
         self.db = defaultdict(lambda: defaultdict(lambda: defaultdict()))
         self.redis = Redis(host=host, port=port)
 
@@ -17,7 +19,7 @@ class RedisKV(BackendMixin):
         if self.redis.exists(full_id):
             return json.loads(self.redis.get(full_id))
         else:
-            return {'id':obj_id}
+            return {"id": obj_id}
 
     def set_object_attr(self, obj, attr, val):
         obj[attr] = val

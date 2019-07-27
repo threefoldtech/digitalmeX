@@ -9,6 +9,7 @@ class OpenPublishFactory(JSConfigs):
     Open Publish factory
     """
 
+    __jslocation__ = "j.servers.threebot"
     _CHILDCLASS = OpenPublish
 
     def __init__(self):

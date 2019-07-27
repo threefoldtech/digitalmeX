@@ -5,89 +5,111 @@ from .backend import BackendMixin
 import Jumpscale
 from Jumpscale import j
 from collections import defaultdict
-    
+
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.todoitem
 title* = "" (S)
 done* = False (B)
 
-""")
+"""
+)
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.todolist
 name* = "" (S)
 list_todos* = (LO) !proj.todoitem
 
-""")
-j.data.schema.add_from_text("""
+"""
+)
+j.data.schema.add_from_text(
+    """
 @url = proj.simple
 attr1* = "" (S)
 attr2* = 0 (I)
 list_mychars* = (LS) 
-""")
+"""
+)
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.email
 addr* = "" (S)
-""")
-j.data.schema.add_from_text("""
+"""
+)
+j.data.schema.add_from_text(
+    """
 @url = proj.person
 name* = "" (S)
 email* = "" !proj.email
-""")
+"""
+)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.os
 name* = "" (S)
-""")
+"""
+)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.phone
 model* = "" (S)
 os* = "" !proj.os
-""")
+"""
+)
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.lang
 name* = ""
-""")
+"""
+)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.human
 name* = "" (S)
 list_favcolors = (LS)
 list_langs = (LO) !proj.lang
 phone* = "" !proj.phone
-""")
+"""
+)
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.post
 name = "" (S)
 title* = "" (S)
 body = "" (S)
 
-""")
+"""
+)
 
-j.data.schema.add_from_text("""
+j.data.schema.add_from_text(
+    """
 @url = proj.blog
 name* = "" (S)
 list_posts = (LO) !proj.post
 headline = "" (S)
 
-""")
-
+"""
+)
 
 
 def parse_schema_and_id(s):
     m = re.match(SCHEME_UID_PAT, s)
     if m:
-        return m.groupdict()['schema'], int(m.groupdict()['id']) 
+        return m.groupdict()["schema"], int(m.groupdict()["id"])
     return None, None
+
 
 class BCDB(BackendMixin):
     def __init__(self, name="test"):
@@ -106,7 +128,7 @@ class BCDB(BackendMixin):
 
     def get_model_by_schema_url(self, schema_url):
 
-        return self.bcdb.model_get_from_url(schema_url)   
+        return self.bcdb.model_get_from_url(schema_url)
 
     def get_object_by_id(self, obj_id, schema=None):
         m = self.get_model_by_schema_url(schema)
@@ -116,7 +138,7 @@ class BCDB(BackendMixin):
             o = m.new()
             o.save()
             return o
-    
+
     def set_object_attr(self, obj, attr, val):
         setattr(obj, attr, val)
         return obj
