@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -35,14 +53,9 @@ from urllib.parse import quote
 
 from radicale import pathutils
 
-MIMETYPES = {
-    "VADDRESSBOOK": "text/vcard",
-    "VCALENDAR": "text/calendar"}
+MIMETYPES = {"VADDRESSBOOK": "text/vcard", "VCALENDAR": "text/calendar"}
 
-OBJECT_MIMETYPES = {
-    "VCARD": "text/vcard",
-    "VLIST": "text/x-vlist",
-    "VCALENDAR": "text/calendar"}
+OBJECT_MIMETYPES = {"VCARD": "text/vcard", "VLIST": "text/x-vlist", "VCALENDAR": "text/calendar"}
 
 NAMESPACES = {
     "C": "urn:ietf:params:xml:ns:caldav",
@@ -51,7 +64,8 @@ NAMESPACES = {
     "CS": "http://calendarserver.org/ns/",
     "ICAL": "http://apple.com/ns/ical/",
     "ME": "http://me.com/_namespace/",
-    "RADICALE": "http://radicale.org/ns/"}
+    "RADICALE": "http://radicale.org/ns/",
+}
 
 NAMESPACES_REV = {}
 for short, url in NAMESPACES.items():
@@ -98,9 +112,7 @@ def tag_from_clark(name):
     """
     match = CLARK_TAG_REGEX.match(name)
     if match and match.group("namespace") in NAMESPACES_REV:
-        args = {
-            "ns": NAMESPACES_REV[match.group("namespace")],
-            "tag": match.group("tag")}
+        args = {"ns": NAMESPACES_REV[match.group("namespace")], "tag": match.group("tag")}
         return "%(ns)s:%(tag)s" % args
     return name
 
@@ -171,7 +183,8 @@ def props_from_request(xml_request, actions=("set", "remove")):
                 result[tag_from_clark(prop.tag)] = ",".join(
                     supported_comp.attrib["name"]
                     for supported_comp in prop
-                    if supported_comp.tag == make_tag("C", "comp"))
+                    if supported_comp.tag == make_tag("C", "comp")
+                )
             else:
                 result[tag_from_clark(prop.tag)] = prop.text
 

@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -49,8 +67,7 @@ class ApplicationGetMixin:
         try:
             encoded_filename = quote(filename, encoding=self.encoding)
         except UnicodeEncodeError:
-            logger.warning("Failed to encode filename: %r", filename,
-                           exc_info=True)
+            logger.warning("Failed to encode filename: %r", filename, exc_info=True)
             encoded_filename = ""
         if encoded_filename:
             value += "; filename*=%s''%s" % (self.encoding, encoded_filename)
@@ -62,11 +79,8 @@ class ApplicationGetMixin:
         if not pathutils.strip_path(path):
             web_path = ".web"
             if not environ.get("PATH_INFO"):
-                web_path = posixpath.join(posixpath.basename(base_prefix),
-                                          web_path)
-            return (client.FOUND,
-                    {"Location": web_path, "Content-Type": "text/plain"},
-                    "Redirected to %s" % web_path)
+                web_path = posixpath.join(posixpath.basename(base_prefix), web_path)
+            return (client.FOUND, {"Location": web_path, "Content-Type": "text/plain"}, "Redirected to %s" % web_path)
         # Dispatch .web URL to web module
         if path == "/.web" or path.startswith("/.web/"):
             return self.Web.get(environ, base_prefix, path, user)
@@ -83,15 +97,11 @@ class ApplicationGetMixin:
                 if not tag:
                     return httputils.DIRECTORY_LISTING
                 content_type = xmlutils.MIMETYPES[tag]
-                content_disposition = self._content_disposition_attachement(
-                    propose_filename(item))
+                content_disposition = self._content_disposition_attachement(propose_filename(item))
             else:
                 content_type = xmlutils.OBJECT_MIMETYPES[item.name]
                 content_disposition = ""
-            headers = {
-                "Content-Type": content_type,
-                "Last-Modified": item.last_modified,
-                "ETag": item.etag}
+            headers = {"Content-Type": content_type, "Last-Modified": item.last_modified, "ETag": item.etag}
             if content_disposition:
                 headers["Content-Disposition"] = content_disposition
             answer = item.serialize()

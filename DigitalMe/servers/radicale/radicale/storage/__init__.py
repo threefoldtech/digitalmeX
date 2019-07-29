@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -39,9 +57,8 @@ from radicale.log import logger
 
 INTERNAL_TYPES = ("multifilesystem",)
 
-CACHE_DEPS = ("radicale", "vobject", "python-dateutil",)
-CACHE_VERSION = (";".join(pkg_resources.get_distribution(pkg).version
-                          for pkg in CACHE_DEPS) + ";").encode()
+CACHE_DEPS = ("radicale", "vobject", "python-dateutil")
+CACHE_VERSION = (";".join(pkg_resources.get_distribution(pkg).version for pkg in CACHE_DEPS) + ";").encode()
 
 
 def load(configuration):
@@ -54,12 +71,12 @@ def load(configuration):
     try:
         class_ = import_module(module).Collection
     except Exception as e:
-        raise RuntimeError("Failed to load storage module %r: %s" %
-                           (module, e)) from e
+        raise RuntimeError("Failed to load storage module %r: %s" % (module, e)) from e
     logger.info("Storage type is %r", storage_type)
 
     class CollectionCopy(class_):
         """Collection copy, avoids overriding the original class attributes."""
+
     CollectionCopy.configuration = configuration
     CollectionCopy.static_init()
     return CollectionCopy
@@ -173,7 +190,7 @@ class BaseCollection:
                  invalid.
 
         """
-        token = "http://radicale.org/ns/sync/%s" % self.etag.strip("\"")
+        token = "http://radicale.org/ns/sync/%s" % self.etag.strip('"')
         if old_token:
             raise ValueError("Sync token are not supported")
         return token, (item.href for item in self.get_all())
@@ -205,8 +222,7 @@ class BaseCollection:
         matched.
 
         """
-        tag, start, end, simple = radicale_filter.simplify_prefilters(
-            filters, collection_tag=self.get_meta("tag"))
+        tag, start, end, simple = radicale_filter.simplify_prefilters(filters, collection_tag=self.get_meta("tag"))
         for item in self.get_all():
             if tag:
                 if tag != item.component_name:
@@ -289,7 +305,7 @@ class BaseCollection:
                         elif vtimezone:
                             vtimezone.append(line + "\r\n")
                             if depth == 2 and line.startswith("TZID:"):
-                                tzid = line[len("TZID:"):]
+                                tzid = line[len("TZID:") :]
                             elif depth == 2 and line.startswith("END:"):
                                 if tzid is None or tzid not in included_tzids:
                                     vtimezones += "".join(vtimezone)
@@ -314,9 +330,7 @@ class BaseCollection:
             template = template.serialize()
             template_insert_pos = template.find("\r\nEND:VCALENDAR\r\n") + 2
             assert template_insert_pos != -1
-            return (template[:template_insert_pos] +
-                    vtimezones + components +
-                    template[template_insert_pos:])
+            return template[:template_insert_pos] + vtimezones + components + template[template_insert_pos:]
         elif self.get_meta("tag") == "VADDRESSBOOK":
             return "".join((item.serialize() for item in self.get_all()))
         return ""

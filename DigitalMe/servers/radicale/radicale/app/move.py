@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -38,10 +56,9 @@ class ApplicationMoveMixin:
             return httputils.NOT_ALLOWED
         to_path = pathutils.sanitize_path(to_url.path)
         if not (to_path + "/").startswith(base_prefix + "/"):
-            logger.warning("Destination %r from MOVE request on %r doesn't "
-                           "start with base prefix", to_path, path)
+            logger.warning("Destination %r from MOVE request on %r doesn't " "start with base prefix", to_path, path)
             return httputils.NOT_ALLOWED
-        to_path = to_path[len(base_prefix):]
+        to_path = to_path[len(base_prefix) :]
         if not self.access(user, to_path, "w"):
             return httputils.NOT_ALLOWED
 
@@ -49,8 +66,7 @@ class ApplicationMoveMixin:
             item = next(self.Collection.discover(path), None)
             if not item:
                 return httputils.NOT_FOUND
-            if (not self.access(user, path, "w", item) or
-                    not self.access(user, to_path, "w", item)):
+            if not self.access(user, path, "w", item) or not self.access(user, to_path, "w", item):
                 return httputils.NOT_ALLOWED
             if isinstance(item, storage.BaseCollection):
                 # TODO: support moving collections
@@ -59,10 +75,8 @@ class ApplicationMoveMixin:
             to_item = next(self.Collection.discover(to_path), None)
             if isinstance(to_item, storage.BaseCollection):
                 return httputils.FORBIDDEN
-            to_parent_path = pathutils.unstrip_path(
-                posixpath.dirname(pathutils.strip_path(to_path)), True)
-            to_collection = next(
-                self.Collection.discover(to_parent_path), None)
+            to_parent_path = pathutils.unstrip_path(posixpath.dirname(pathutils.strip_path(to_path)), True)
+            to_collection = next(self.Collection.discover(to_parent_path), None)
             if not to_collection:
                 return httputils.CONFLICT
             tag = item.collection.get_meta("tag")
@@ -70,17 +84,18 @@ class ApplicationMoveMixin:
                 return httputils.FORBIDDEN
             if to_item and environ.get("HTTP_OVERWRITE", "F") != "T":
                 return httputils.PRECONDITION_FAILED
-            if (to_item and item.uid != to_item.uid or
-                    not to_item and
-                    to_collection.path != item.collection.path and
-                    to_collection.has_uid(item.uid)):
-                return self.webdav_error_response(
-                    "C" if tag == "VCALENDAR" else "CR", "no-uid-conflict")
+            if (
+                to_item
+                and item.uid != to_item.uid
+                or not to_item
+                and to_collection.path != item.collection.path
+                and to_collection.has_uid(item.uid)
+            ):
+                return self.webdav_error_response("C" if tag == "VCALENDAR" else "CR", "no-uid-conflict")
             to_href = posixpath.basename(pathutils.strip_path(to_path))
             try:
                 self.Collection.move(item, to_collection, to_href)
             except ValueError as e:
-                logger.warning(
-                    "Bad MOVE request on %r: %s", path, e, exc_info=True)
+                logger.warning("Bad MOVE request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
             return client.NO_CONTENT if to_item else client.CREATED, {}, None

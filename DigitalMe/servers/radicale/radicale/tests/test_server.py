@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2018-2019 Unrud <unrud@outlook.com>
 #
@@ -62,21 +80,22 @@ class TestBaseServerRequests:
             # Find available port
             sock.bind(("127.0.0.1", 0))
             self.sockname = sock.getsockname()
-        self.configuration.update({
-            "storage": {"filesystem_folder": self.colpath},
-            "server": {"hosts": "[%s]:%d" % self.sockname},
-            # Enable debugging for new processes
-            "logging": {"level": "debug"},
-            # Disable syncing to disk for better performance
-            "internal": {"filesystem_fsync": "False"}}, "test")
-        self.thread = threading.Thread(target=server.serve, args=(
-            self.configuration, shutdown_socket_out))
+        self.configuration.update(
+            {
+                "storage": {"filesystem_folder": self.colpath},
+                "server": {"hosts": "[%s]:%d" % self.sockname},
+                # Enable debugging for new processes
+                "logging": {"level": "debug"},
+                # Disable syncing to disk for better performance
+                "internal": {"filesystem_fsync": "False"},
+            },
+            "test",
+        )
+        self.thread = threading.Thread(target=server.serve, args=(self.configuration, shutdown_socket_out))
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
-        self.opener = request.build_opener(
-            request.HTTPSHandler(context=ssl_context),
-            DisabledRedirectHandler)
+        self.opener = request.build_opener(request.HTTPSHandler(context=ssl_context), DisabledRedirectHandler)
 
     def teardown(self):
         self.shutdown_socket.sendall(b" ")
@@ -90,11 +109,10 @@ class TestBaseServerRequests:
         """Send a request."""
         if is_alive_fn is None:
             is_alive_fn = self.thread.is_alive
-        scheme = ("https" if self.configuration.get("server", "ssl") else
-                  "http")
+        scheme = "https" if self.configuration.get("server", "ssl") else "http"
         req = request.Request(
-            "%s://[%s]:%d%s" % (scheme, *self.sockname, path),
-            data=data, headers=headers, method=method)
+            "%s://[%s]:%d%s" % (scheme, *self.sockname, path), data=data, headers=headers, method=method
+        )
         while True:
             assert is_alive_fn()
             try:
@@ -113,10 +131,10 @@ class TestBaseServerRequests:
         assert status == 302
 
     def test_ssl(self):
-        self.configuration.update({
-            "server": {"ssl": "True",
-                       "certificate": get_file_path("cert.pem"),
-                       "key": get_file_path("key.pem")}}, "test")
+        self.configuration.update(
+            {"server": {"ssl": "True", "certificate": get_file_path("cert.pem"), "key": get_file_path("key.pem")}},
+            "test",
+        )
         self.thread.start()
         status, _, _ = self.request("GET", "/")
         assert status == 302
@@ -131,8 +149,7 @@ class TestBaseServerRequests:
             except OSError:
                 pytest.skip("IPv6 not supported")
             self.sockname = sock.getsockname()[:2]
-        self.configuration.update({
-            "server": {"hosts": "[%s]:%d" % self.sockname}}, "test")
+        self.configuration.update({"server": {"hosts": "[%s]:%d" % self.sockname}}, "test")
         savedEaiAddrfamily = server.EAI_ADDRFAMILY
         if os.name == "nt" and server.EAI_ADDRFAMILY is None:
             # HACK: incomplete errno conversion in WINE
@@ -152,23 +169,19 @@ class TestBaseServerRequests:
             for option, data in values.items():
                 if option.startswith("_"):
                     continue
-                long_name = "--{0}-{1}".format(
-                    section, option.replace("_", "-"))
+                long_name = "--{0}-{1}".format(section, option.replace("_", "-"))
                 if data["type"] == bool:
                     if not self.configuration.get(section, option):
                         long_name = "--no{0}".format(long_name[1:])
                     config_args.append(long_name)
                 else:
                     config_args.append(long_name)
-                    config_args.append(
-                        self.configuration.get_raw(section, option))
+                    config_args.append(self.configuration.get_raw(section, option))
         env = os.environ.copy()
         env["PYTHONPATH"] = os.pathsep.join(sys.path)
-        p = subprocess.Popen(
-            [sys.executable, "-m", "radicale"] + config_args, env=env)
+        p = subprocess.Popen([sys.executable, "-m", "radicale"] + config_args, env=env)
         try:
-            status, _, _ = self.request(
-                "GET", "/", is_alive_fn=lambda: p.poll() is None)
+            status, _, _ = self.request("GET", "/", is_alive_fn=lambda: p.poll() is None)
             assert status == 302
         finally:
             p.terminate()
@@ -185,14 +198,21 @@ class TestBaseServerRequests:
             parser.write(f)
         env = os.environ.copy()
         env["PYTHONPATH"] = os.pathsep.join(sys.path)
-        p = subprocess.Popen([
-            sys.executable,
-            "-c", "from gunicorn.app.wsgiapp import run; run()",
-            "--bind", self.configuration.get_raw("server", "hosts"),
-            "--env", "RADICALE_CONFIG=%s" % config_path, "radicale"], env=env)
+        p = subprocess.Popen(
+            [
+                sys.executable,
+                "-c",
+                "from gunicorn.app.wsgiapp import run; run()",
+                "--bind",
+                self.configuration.get_raw("server", "hosts"),
+                "--env",
+                "RADICALE_CONFIG=%s" % config_path,
+                "radicale",
+            ],
+            env=env,
+        )
         try:
-            status, _, _ = self.request(
-                "GET", "/", is_alive_fn=lambda: p.poll() is None)
+            status, _, _ = self.request("GET", "/", is_alive_fn=lambda: p.poll() is None)
             assert status == 302
         finally:
             p.terminate()

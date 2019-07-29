@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -42,7 +60,7 @@ class CollectionSyncMixin:
             # Extract the token name from the sync token
             if not old_token.startswith("http://radicale.org/ns/sync/"):
                 raise ValueError("Malformed token: %r" % old_token)
-            old_token_name = old_token[len("http://radicale.org/ns/sync/"):]
+            old_token_name = old_token[len("http://radicale.org/ns/sync/") :]
             if not check_token_name(old_token_name):
                 raise ValueError("Malformed token: %r" % old_token)
         # Get the current state and sync-token of the collection.
@@ -50,8 +68,8 @@ class CollectionSyncMixin:
         token_name_hash = md5()
         # Find the history of all existing and deleted items
         for href, item in itertools.chain(
-                ((item.href, item) for item in self.get_all()),
-                ((href, None) for href in self._get_deleted_history_hrefs())):
+            ((item.href, item) for item in self.get_all()), ((href, None) for href in self._get_deleted_history_hrefs())
+        ):
             history_etag = self._update_history_etag(href, item)
             state[href] = history_etag
             token_name_hash.update((href + "/" + history_etag).encode("utf-8"))
@@ -60,8 +78,7 @@ class CollectionSyncMixin:
         if token_name == old_token_name:
             # Nothing changed
             return token, ()
-        token_folder = os.path.join(self._filesystem_path,
-                                    ".Radicale.cache", "sync-token")
+        token_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "sync-token")
         token_path = os.path.join(token_folder, token_name)
         old_state = {}
         if old_token_name:
@@ -71,12 +88,11 @@ class CollectionSyncMixin:
                 # Race: Another process might have deleted the file.
                 with open(old_token_path, "rb") as f:
                     old_state = pickle.load(f)
-            except (FileNotFoundError, pickle.UnpicklingError,
-                    ValueError) as e:
+            except (FileNotFoundError, pickle.UnpicklingError, ValueError) as e:
                 if isinstance(e, (pickle.UnpicklingError, ValueError)):
                     logger.warning(
-                        "Failed to load stored sync token %r in %r: %s",
-                        old_token_name, self.path, e, exc_info=True)
+                        "Failed to load stored sync token %r in %r: %s", old_token_name, self.path, e, exc_info=True
+                    )
                     # Delete the damaged file
                     try:
                         os.remove(old_token_path)
@@ -95,9 +111,11 @@ class CollectionSyncMixin:
                 pass
             else:
                 # clean up old sync tokens and item cache
-                self._clean_cache(token_folder, os.listdir(token_folder),
-                                  max_age=self.configuration.get(
-                                      "storage", "max_sync_token_age"))
+                self._clean_cache(
+                    token_folder,
+                    os.listdir(token_folder),
+                    max_age=self.configuration.get("storage", "max_sync_token_age"),
+                )
                 self._clean_history()
         else:
             # Try to update the modification time

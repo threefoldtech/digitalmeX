@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -40,47 +58,40 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
         return client.MULTI_STATUS, multistatus
     root = xml_request
     if root.tag in (
-            xmlutils.make_tag("D", "principal-search-property-set"),
-            xmlutils.make_tag("D", "principal-property-search"),
-            xmlutils.make_tag("D", "expand-property")):
+        xmlutils.make_tag("D", "principal-search-property-set"),
+        xmlutils.make_tag("D", "principal-property-search"),
+        xmlutils.make_tag("D", "expand-property"),
+    ):
         # We don't support searching for principals or indirect retrieving of
         # properties, just return an empty result.
         # InfCloud asks for expand-property reports (even if we don't announce
         # support for them) and stops working if an error code is returned.
-        logger.warning("Unsupported REPORT method %r on %r requested",
-                       xmlutils.tag_from_clark(root.tag), path)
+        logger.warning("Unsupported REPORT method %r on %r requested", xmlutils.tag_from_clark(root.tag), path)
         return client.MULTI_STATUS, multistatus
-    if (root.tag == xmlutils.make_tag("C", "calendar-multiget") and
-            collection.get_meta("tag") != "VCALENDAR" or
-            root.tag == xmlutils.make_tag("CR", "addressbook-multiget") and
-            collection.get_meta("tag") != "VADDRESSBOOK" or
-            root.tag == xmlutils.make_tag("D", "sync-collection") and
-            collection.get_meta("tag") not in ("VADDRESSBOOK", "VCALENDAR")):
-        logger.warning("Invalid REPORT method %r on %r requested",
-                       xmlutils.tag_from_clark(root.tag), path)
-        return (client.CONFLICT,
-                xmlutils.webdav_error("D", "supported-report"))
+    if (
+        root.tag == xmlutils.make_tag("C", "calendar-multiget")
+        and collection.get_meta("tag") != "VCALENDAR"
+        or root.tag == xmlutils.make_tag("CR", "addressbook-multiget")
+        and collection.get_meta("tag") != "VADDRESSBOOK"
+        or root.tag == xmlutils.make_tag("D", "sync-collection")
+        and collection.get_meta("tag") not in ("VADDRESSBOOK", "VCALENDAR")
+    ):
+        logger.warning("Invalid REPORT method %r on %r requested", xmlutils.tag_from_clark(root.tag), path)
+        return (client.CONFLICT, xmlutils.webdav_error("D", "supported-report"))
     prop_element = root.find(xmlutils.make_tag("D", "prop"))
-    props = (
-        [prop.tag for prop in prop_element]
-        if prop_element is not None else [])
+    props = [prop.tag for prop in prop_element] if prop_element is not None else []
 
-    if root.tag in (
-            xmlutils.make_tag("C", "calendar-multiget"),
-            xmlutils.make_tag("CR", "addressbook-multiget")):
+    if root.tag in (xmlutils.make_tag("C", "calendar-multiget"), xmlutils.make_tag("CR", "addressbook-multiget")):
         # Read rfc4791-7.9 for info
         hreferences = set()
         for href_element in root.findall(xmlutils.make_tag("D", "href")):
-            href_path = pathutils.sanitize_path(
-                unquote(urlparse(href_element.text).path))
+            href_path = pathutils.sanitize_path(unquote(urlparse(href_element.text).path))
             if (href_path + "/").startswith(base_prefix + "/"):
-                hreferences.add(href_path[len(base_prefix):])
+                hreferences.add(href_path[len(base_prefix) :])
             else:
-                logger.warning("Skipping invalid path %r in REPORT request on "
-                               "%r", href_path, path)
+                logger.warning("Skipping invalid path %r in REPORT request on " "%r", href_path, path)
     elif root.tag == xmlutils.make_tag("D", "sync-collection"):
-        old_sync_token_element = root.find(
-            xmlutils.make_tag("D", "sync-token"))
+        old_sync_token_element = root.find(xmlutils.make_tag("D", "sync-token"))
         old_sync_token = ""
         if old_sync_token_element is not None and old_sync_token_element.text:
             old_sync_token = old_sync_token_element.text.strip()
@@ -89,21 +100,18 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
             sync_token, names = collection.sync(old_sync_token)
         except ValueError as e:
             # Invalid sync token
-            logger.warning("Client provided invalid sync token %r: %s",
-                           old_sync_token, e, exc_info=True)
-            return (client.CONFLICT,
-                    xmlutils.webdav_error("D", "valid-sync-token"))
-        hreferences = (pathutils.unstrip_path(
-            posixpath.join(collection.path, n)) for n in names)
+            logger.warning("Client provided invalid sync token %r: %s", old_sync_token, e, exc_info=True)
+            return (client.CONFLICT, xmlutils.webdav_error("D", "valid-sync-token"))
+        hreferences = (pathutils.unstrip_path(posixpath.join(collection.path, n)) for n in names)
         # Append current sync token to response
         sync_token_element = ET.Element(xmlutils.make_tag("D", "sync-token"))
         sync_token_element.text = sync_token
         multistatus.append(sync_token_element)
     else:
         hreferences = (path,)
-    filters = (
-        root.findall("./%s" % xmlutils.make_tag("C", "filter")) +
-        root.findall("./%s" % xmlutils.make_tag("CR", "filter")))
+    filters = root.findall("./%s" % xmlutils.make_tag("C", "filter")) + root.findall(
+        "./%s" % xmlutils.make_tag("CR", "filter")
+    )
 
     def retrieve_items(collection, hreferences, multistatus):
         """Retrieves all items that are referenced in ``hreferences`` from
@@ -121,10 +129,8 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
                 try:
                     name = pathutils.name_from_path(hreference, collection)
                 except ValueError as e:
-                    logger.warning("Skipping invalid path %r in REPORT request"
-                                   " on %r: %s", hreference, path, e)
-                    response = xml_item_response(base_prefix, hreference,
-                                                 found_item=False)
+                    logger.warning("Skipping invalid path %r in REPORT request" " on %r: %s", hreference, path, e)
+                    response = xml_item_response(base_prefix, hreference, found_item=False)
                     multistatus.append(response)
                     continue
                 if name:
@@ -136,10 +142,8 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
 
         for name, item in collection.get_multi(get_names()):
             if not item:
-                uri = pathutils.unstrip_path(
-                    posixpath.join(collection.path, name))
-                response = xml_item_response(base_prefix, uri,
-                                             found_item=False)
+                uri = pathutils.unstrip_path(posixpath.join(collection.path, name))
+                response = xml_item_response(base_prefix, uri, found_item=False)
                 multistatus.append(response)
             else:
                 yield item, False
@@ -147,16 +151,14 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
             yield from collection.get_filtered(filters)
 
     # Retrieve everything required for finishing the request.
-    retrieved_items = list(retrieve_items(collection, hreferences,
-                                          multistatus))
+    retrieved_items = list(retrieve_items(collection, hreferences, multistatus))
     collection_tag = collection.get_meta("tag")
     # Don't access storage after this!
     unlock_storage_fn()
 
     def match(item, filter_):
         tag = collection_tag
-        if (tag == "VCALENDAR" and
-                filter_.tag != xmlutils.make_tag("C", filter_)):
+        if tag == "VCALENDAR" and filter_.tag != xmlutils.make_tag("C", filter_):
             if len(filter_) == 0:
                 return True
             if len(filter_) > 1:
@@ -164,23 +166,17 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
             if filter_[0].tag != xmlutils.make_tag("C", "comp-filter"):
                 raise ValueError("Unexpected %r in filter" % filter_[0].tag)
             return radicale_filter.comp_match(item, filter_[0])
-        if (tag == "VADDRESSBOOK" and
-                filter_.tag != xmlutils.make_tag("CR", filter_)):
+        if tag == "VADDRESSBOOK" and filter_.tag != xmlutils.make_tag("CR", filter_):
             for child in filter_:
                 if child.tag != xmlutils.make_tag("CR", "prop-filter"):
                     raise ValueError("Unexpected %r in filter" % child.tag)
             test = filter_.get("test", "anyof")
             if test == "anyof":
-                return any(
-                    radicale_filter.prop_match(item.vobject_item, f, "CR")
-                    for f in filter_)
+                return any(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
             if test == "allof":
-                return all(
-                    radicale_filter.prop_match(item.vobject_item, f, "CR")
-                    for f in filter_)
+                return all(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
             raise ValueError("Unsupported filter test: %r" % test)
-            return all(radicale_filter.prop_match(item.vobject_item, f, "CR")
-                       for f in filter_)
+            return all(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
         raise ValueError("unsupported filter %r for %r" % (filter_.tag, tag))
 
     while retrieved_items:
@@ -193,11 +189,9 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
                 if not all(match(item, filter_) for filter_ in filters):
                     continue
             except ValueError as e:
-                raise ValueError("Failed to filter item %r from %r: %s" %
-                                 (item.href, collection.path, e)) from e
+                raise ValueError("Failed to filter item %r from %r: %s" % (item.href, collection.path, e)) from e
             except Exception as e:
-                raise RuntimeError("Failed to filter item %r from %r: %s" %
-                                   (item.href, collection.path, e)) from e
+                raise RuntimeError("Failed to filter item %r from %r: %s" % (item.href, collection.path, e)) from e
 
         found_props = []
         not_found_props = []
@@ -210,25 +204,23 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
             elif tag == xmlutils.make_tag("D", "getcontenttype"):
                 element.text = xmlutils.get_content_type(item)
                 found_props.append(element)
-            elif tag in (
-                    xmlutils.make_tag("C", "calendar-data"),
-                    xmlutils.make_tag("CR", "address-data")):
+            elif tag in (xmlutils.make_tag("C", "calendar-data"), xmlutils.make_tag("CR", "address-data")):
                 element.text = item.serialize()
                 found_props.append(element)
             else:
                 not_found_props.append(element)
 
-        uri = pathutils.unstrip_path(
-            posixpath.join(collection.path, item.href))
-        multistatus.append(xml_item_response(
-            base_prefix, uri, found_props=found_props,
-            not_found_props=not_found_props, found_item=True))
+        uri = pathutils.unstrip_path(posixpath.join(collection.path, item.href))
+        multistatus.append(
+            xml_item_response(
+                base_prefix, uri, found_props=found_props, not_found_props=not_found_props, found_item=True
+            )
+        )
 
     return client.MULTI_STATUS, multistatus
 
 
-def xml_item_response(base_prefix, href, found_props=(), not_found_props=(),
-                      found_item=True):
+def xml_item_response(base_prefix, href, found_props=(), not_found_props=(), found_item=True):
     response = ET.Element(xmlutils.make_tag("D", "response"))
 
     href_tag = ET.Element(xmlutils.make_tag("D", "href"))
@@ -263,8 +255,7 @@ class ApplicationReportMixin:
         try:
             xml_content = self.read_xml_content(environ)
         except RuntimeError as e:
-            logger.warning(
-                "Bad REPORT request on %r: %s", path, e, exc_info=True)
+            logger.warning("Bad REPORT request on %r: %s", path, e, exc_info=True)
             return httputils.BAD_REQUEST
         except socket.timeout:
             logger.debug("client timed out", exc_info=True)
@@ -282,11 +273,8 @@ class ApplicationReportMixin:
                 collection = item.collection
             headers = {"Content-Type": "text/xml; charset=%s" % self.encoding}
             try:
-                status, xml_answer = xml_report(
-                    base_prefix, path, xml_content, collection,
-                    lock_stack.close)
+                status, xml_answer = xml_report(base_prefix, path, xml_content, collection, lock_stack.close)
             except ValueError as e:
-                logger.warning(
-                    "Bad REPORT request on %r: %s", path, e, exc_info=True)
+                logger.warning("Bad REPORT request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
             return (status, headers, self.write_xml_content(xml_answer))

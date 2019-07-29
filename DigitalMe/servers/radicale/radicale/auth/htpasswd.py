@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -41,17 +59,15 @@ class Auth(auth.BaseAuth):
             try:
                 from passlib.hash import apr_md5_crypt
             except ImportError as e:
-                raise RuntimeError(
-                    "The htpasswd encryption method 'md5' requires "
-                    "the passlib module.") from e
+                raise RuntimeError("The htpasswd encryption method 'md5' requires " "the passlib module.") from e
             self.verify = functools.partial(self._md5apr1, apr_md5_crypt)
         elif self.encryption == "bcrypt":
             try:
                 from passlib.hash import bcrypt
             except ImportError as e:
                 raise RuntimeError(
-                    "The htpasswd encryption method 'bcrypt' requires "
-                    "the passlib module with bcrypt support.") from e
+                    "The htpasswd encryption method 'bcrypt' requires " "the passlib module with bcrypt support."
+                ) from e
             # A call to `encrypt` raises passlib.exc.MissingBackendError with a
             # good error message if bcrypt backend is not available. Trigger
             # this here.
@@ -62,13 +78,11 @@ class Auth(auth.BaseAuth):
                 import crypt
             except ImportError as e:
                 raise RuntimeError(
-                    "The htpasswd encryption method 'crypt' requires "
-                    "the crypt() system support.") from e
+                    "The htpasswd encryption method 'crypt' requires " "the crypt() system support."
+                ) from e
             self.verify = functools.partial(self._crypt, crypt)
         else:
-            raise RuntimeError(
-                "The htpasswd encryption method %r is not "
-                "supported." % self.encryption)
+            raise RuntimeError("The htpasswd encryption method %r is not " "supported." % self.encryption)
 
     def _plain(self, hash_value, password):
         """Check if ``hash_value`` and ``password`` match, plain method."""
@@ -77,13 +91,11 @@ class Auth(auth.BaseAuth):
     def _crypt(self, crypt, hash_value, password):
         """Check if ``hash_value`` and ``password`` match, crypt method."""
         hash_value = hash_value.strip()
-        return hmac.compare_digest(crypt.crypt(password, hash_value),
-                                   hash_value)
+        return hmac.compare_digest(crypt.crypt(password, hash_value), hash_value)
 
     def _sha1(self, hash_value, password):
         """Check if ``hash_value`` and ``password`` match, sha1 method."""
-        hash_value = base64.b64decode(hash_value.strip().replace(
-            "{SHA}", "").encode("ascii"))
+        hash_value = base64.b64decode(hash_value.strip().replace("{SHA}", "").encode("ascii"))
         password = password.encode(self.configuration.get("encoding", "stock"))
         sha1 = hashlib.sha1()
         sha1.update(password)
@@ -96,8 +108,7 @@ class Auth(auth.BaseAuth):
         written with e.g. openssl, and nginx can parse it.
 
         """
-        hash_value = base64.b64decode(hash_value.strip().replace(
-            "{SSHA}", "").encode("ascii"))
+        hash_value = base64.b64decode(hash_value.strip().replace("{SSHA}", "").encode("ascii"))
         password = password.encode(self.configuration.get("encoding", "stock"))
         salt_value = hash_value[20:]
         hash_value = hash_value[:20]
@@ -132,8 +143,7 @@ class Auth(auth.BaseAuth):
                     line = line.rstrip("\n")
                     if line.lstrip() and not line.lstrip().startswith("#"):
                         try:
-                            hash_login, hash_value = line.split(
-                                ":", maxsplit=1)
+                            hash_login, hash_value = line.split(":", maxsplit=1)
                             # Always compare both login and password to avoid
                             # timing attacks, see #591.
                             login_ok = hmac.compare_digest(hash_login, login)
@@ -141,9 +151,7 @@ class Auth(auth.BaseAuth):
                             if login_ok and password_ok:
                                 return login
                         except ValueError as e:
-                            raise RuntimeError("Invalid htpasswd file %r: %s" %
-                                               (self.filename, e)) from e
+                            raise RuntimeError("Invalid htpasswd file %r: %s" % (self.filename, e)) from e
         except OSError as e:
-            raise RuntimeError("Failed to load htpasswd file %r: %s" %
-                               (self.filename, e)) from e
+            raise RuntimeError("Failed to load htpasswd file %r: %s" % (self.filename, e)) from e
         return ""

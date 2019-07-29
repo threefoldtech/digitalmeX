@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2012-2017 Guillaume Ayoub
 # Copyright © 2017-2018 Unrud <unrud@outlook.com>
@@ -31,9 +49,7 @@ class Rights(authenticated.Rights):
         else:
             owned = True
         if "/" not in sane_path:
-            return rights.intersect_permissions(permissions,
-                                                "RW" if owned else "R")
+            return rights.intersect_permissions(permissions, "RW" if owned else "R")
         if sane_path.count("/") == 1:
-            return rights.intersect_permissions(permissions,
-                                                "rw" if owned else "r")
+            return rights.intersect_permissions(permissions, "rw" if owned else "r")
         return ""

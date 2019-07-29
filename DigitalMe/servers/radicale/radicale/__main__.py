@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2011-2017 Guillaume Ayoub
 # Copyright © 2017-2019 Unrud <unrud@outlook.com>
@@ -40,12 +58,9 @@ def run():
     parser = argparse.ArgumentParser(usage="radicale [OPTIONS]")
 
     parser.add_argument("--version", action="version", version=VERSION)
-    parser.add_argument("--verify-storage", action="store_true",
-                        help="check the storage for errors and exit")
-    parser.add_argument(
-        "-C", "--config", help="use a specific configuration file")
-    parser.add_argument("-D", "--debug", action="store_true",
-                        help="print debug information")
+    parser.add_argument("--verify-storage", action="store_true", help="check the storage for errors and exit")
+    parser.add_argument("-C", "--config", help="use a specific configuration file")
+    parser.add_argument("-D", "--debug", action="store_true", help="print debug information")
 
     groups = {}
     for section, values in config.DEFAULT_CONFIG_SCHEMA.items():
@@ -57,8 +72,7 @@ def run():
             if option.startswith("_"):
                 continue
             kwargs = data.copy()
-            long_name = "--{0}-{1}".format(
-                section, option.replace("_", "-"))
+            long_name = "--{0}-{1}".format(section, option.replace("_", "-"))
             args = kwargs.pop("aliases", [])
             args.append(long_name)
             kwargs["dest"] = "{0}_{1}".format(section, option)
@@ -76,8 +90,7 @@ def run():
                 group.add_argument(*args, **kwargs)
 
                 kwargs["const"] = "False"
-                kwargs["help"] = "do not {0} (opposite of {1})".format(
-                    kwargs["help"], long_name)
+                kwargs["help"] = "do not {0} (opposite of {1})".format(kwargs["help"], long_name)
                 group.add_argument(*opposite_args, **kwargs)
             else:
                 del kwargs["type"]
@@ -89,8 +102,7 @@ def run():
     if args.debug:
         args.logging_level = "debug"
     with contextlib.suppress(ValueError):
-        log.set_level(config.DEFAULT_CONFIG_SCHEMA["logging"]["level"]["type"](
-            args.logging_level))
+        log.set_level(config.DEFAULT_CONFIG_SCHEMA["logging"]["level"]["type"](args.logging_level))
 
     # Update Radicale configuration according to arguments
     arguments_config = {}
@@ -100,18 +112,16 @@ def run():
         for action in actions:
             value = getattr(args, action)
             if value is not None:
-                section_config[action.split('_', 1)[1]] = value
+                section_config[action.split("_", 1)[1]] = value
         if section_config:
             arguments_config[section] = section_config
 
     try:
-        configuration = config.load(config.parse_compound_paths(
-            config.DEFAULT_CONFIG_PATH,
-            os.environ.get("RADICALE_CONFIG"),
-            args.config))
+        configuration = config.load(
+            config.parse_compound_paths(config.DEFAULT_CONFIG_PATH, os.environ.get("RADICALE_CONFIG"), args.config)
+        )
         if arguments_config:
-            configuration.update(
-                arguments_config, "arguments", internal=False)
+            configuration.update(arguments_config, "arguments", internal=False)
     except Exception as e:
         logger.fatal("Invalid configuration: %s", e, exc_info=True)
         exit(1)
@@ -131,8 +141,7 @@ def run():
                     logger.fatal("Storage verifcation failed")
                     exit(1)
         except Exception as e:
-            logger.fatal("An exception occurred during storage verification: "
-                         "%s", e, exc_info=True)
+            logger.fatal("An exception occurred during storage verification: " "%s", e, exc_info=True)
             exit(1)
         return
 
@@ -142,14 +151,14 @@ def run():
     # SIGTERM and SIGINT (aka KeyboardInterrupt) shutdown the server
     def shutdown(*args):
         shutdown_socket.sendall(b" ")
+
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
 
     try:
         server.serve(configuration, shutdown_socket_out)
     except Exception as e:
-        logger.fatal("An exception occurred during server startup: %s", e,
-                     exc_info=True)
+        logger.fatal("An exception occurred during server startup: %s", e, exc_info=True)
         exit(1)
 
 

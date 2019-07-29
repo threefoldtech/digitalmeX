@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -38,8 +56,7 @@ def xml_propfind(base_prefix, path, xml_request, allowed_items, user):
     """
     # A client may choose not to submit a request body.  An empty PROPFIND
     # request body MUST be treated as if it were an 'allprop' request.
-    top_tag = (xml_request[0] if xml_request is not None else
-               ET.Element(xmlutils.make_tag("D", "allprop")))
+    top_tag = xml_request[0] if xml_request is not None else ET.Element(xmlutils.make_tag("D", "allprop"))
 
     props = ()
     allprop = False
@@ -63,16 +80,15 @@ def xml_propfind(base_prefix, path, xml_request, allowed_items, user):
     for item, permission in allowed_items:
         write = permission == "w"
         response = xml_propfind_response(
-            base_prefix, path, item, props, user, write=write,
-            allprop=allprop, propname=propname)
+            base_prefix, path, item, props, user, write=write, allprop=allprop, propname=propname
+        )
         if response:
             multistatus.append(response)
 
     return client.MULTI_STATUS, multistatus
 
 
-def xml_propfind_response(base_prefix, path, item, props, user, write=False,
-                          propname=False, allprop=False):
+def xml_propfind_response(base_prefix, path, item, props, user, write=False, propname=False, allprop=False):
     """Build and return a PROPFIND response."""
     if propname and allprop or (props and (propname or allprop)):
         raise ValueError("Only use one of props, propname and allprops")
@@ -90,8 +106,7 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
         # Some clients expect collections to end with /
         uri = pathutils.unstrip_path(item.path, True)
     else:
-        uri = pathutils.unstrip_path(
-            posixpath.join(collection.path, item.href))
+        uri = pathutils.unstrip_path(posixpath.join(collection.path, item.href))
 
     href.text = xmlutils.make_href(base_prefix, uri)
     response.append(href)
@@ -134,8 +149,7 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
                 props.append(xmlutils.make_tag("D", "sync-token"))
             if collection.get_meta("tag") == "VCALENDAR":
                 props.append(xmlutils.make_tag("CS", "getctag"))
-                props.append(
-                    xmlutils.make_tag("C", "supported-calendar-component-set"))
+                props.append(xmlutils.make_tag("C", "supported-calendar-component-set"))
 
             meta = item.get_meta()
             for tag in meta:
@@ -167,11 +181,17 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
             tag = ET.Element(xmlutils.make_tag("D", "href"))
             tag.text = xmlutils.make_href(base_prefix, "/")
             element.append(tag)
-        elif (tag in (xmlutils.make_tag("C", "calendar-user-address-set"),
-                      xmlutils.make_tag("D", "principal-URL"),
-                      xmlutils.make_tag("CR", "addressbook-home-set"),
-                      xmlutils.make_tag("C", "calendar-home-set")) and
-                collection.is_principal and is_collection):
+        elif (
+            tag
+            in (
+                xmlutils.make_tag("C", "calendar-user-address-set"),
+                xmlutils.make_tag("D", "principal-URL"),
+                xmlutils.make_tag("CR", "addressbook-home-set"),
+                xmlutils.make_tag("C", "calendar-home-set"),
+            )
+            and collection.is_principal
+            and is_collection
+        ):
             tag = ET.Element(xmlutils.make_tag("D", "href"))
             tag.text = xmlutils.make_href(base_prefix, path)
             element.append(tag)
@@ -195,8 +215,7 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
                 tag.text = xmlutils.make_href(base_prefix, "/%s/" % user)
                 element.append(tag)
             else:
-                element.append(ET.Element(
-                    xmlutils.make_tag("D", "unauthenticated")))
+                element.append(ET.Element(xmlutils.make_tag("D", "unauthenticated")))
         elif tag == xmlutils.make_tag("D", "current-user-privilege-set"):
             privileges = [("D", "read")]
             if write:
@@ -206,15 +225,15 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
                 privileges.append(("D", "write-content"))
             for ns, privilege_name in privileges:
                 privilege = ET.Element(xmlutils.make_tag("D", "privilege"))
-                privilege.append(ET.Element(
-                    xmlutils.make_tag(ns, privilege_name)))
+                privilege.append(ET.Element(xmlutils.make_tag(ns, privilege_name)))
                 element.append(privilege)
         elif tag == xmlutils.make_tag("D", "supported-report-set"):
             # These 3 reports are not implemented
             reports = [
                 ("D", "expand-property"),
                 ("D", "principal-search-property-set"),
-                ("D", "principal-property-search")]
+                ("D", "principal-property-search"),
+            ]
             if is_collection and is_leaf:
                 reports.append(("D", "sync-collection"))
                 if item.get_meta("tag") == "VADDRESSBOOK":
@@ -224,11 +243,9 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
                     reports.append(("C", "calendar-multiget"))
                     reports.append(("C", "calendar-query"))
             for ns, report_name in reports:
-                supported = ET.Element(
-                    xmlutils.make_tag("D", "supported-report"))
+                supported = ET.Element(xmlutils.make_tag("D", "supported-report"))
                 report_tag = ET.Element(xmlutils.make_tag("D", "report"))
-                supported_report_tag = ET.Element(
-                    xmlutils.make_tag(ns, report_name))
+                supported_report_tag = ET.Element(xmlutils.make_tag(ns, report_name))
                 report_tag.append(supported_report_tag)
                 supported.append(report_tag)
                 element.append(supported)
@@ -242,8 +259,7 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
             # return empty elment, if no owner available (rfc3744-5.1)
             if collection.owner:
                 tag = ET.Element(xmlutils.make_tag("D", "href"))
-                tag.text = xmlutils.make_href(
-                    base_prefix, "/%s/" % collection.owner)
+                tag.text = xmlutils.make_href(base_prefix, "/%s/" % collection.owner)
                 element.append(tag)
         elif is_collection:
             if tag == xmlutils.make_tag("D", "getcontenttype"):
@@ -257,8 +273,7 @@ def xml_propfind_response(base_prefix, path, item, props, user, write=False,
                     element.append(tag)
                 if is_leaf:
                     if item.get_meta("tag") == "VADDRESSBOOK":
-                        tag = ET.Element(
-                            xmlutils.make_tag("CR", "addressbook"))
+                        tag = ET.Element(xmlutils.make_tag("CR", "addressbook"))
                         element.append(tag)
                     elif item.get_meta("tag") == "VCALENDAR":
                         tag = ET.Element(xmlutils.make_tag("C", "calendar"))
@@ -349,9 +364,7 @@ class ApplicationPropfindMixin:
             else:
                 permission = ""
                 status = "NO"
-            logger.debug(
-                "%s has %s access to %s",
-                repr(user) if user else "anonymous user", status, target)
+            logger.debug("%s has %s access to %s", repr(user) if user else "anonymous user", status, target)
             if permission:
                 yield item, permission
 
@@ -362,15 +375,13 @@ class ApplicationPropfindMixin:
         try:
             xml_content = self.read_xml_content(environ)
         except RuntimeError as e:
-            logger.warning(
-                "Bad PROPFIND request on %r: %s", path, e, exc_info=True)
+            logger.warning("Bad PROPFIND request on %r: %s", path, e, exc_info=True)
             return httputils.BAD_REQUEST
         except socket.timeout:
             logger.debug("client timed out", exc_info=True)
             return httputils.REQUEST_TIMEOUT
         with self.Collection.acquire_lock("r", user):
-            items = self.Collection.discover(
-                path, environ.get("HTTP_DEPTH", "0"))
+            items = self.Collection.discover(path, environ.get("HTTP_DEPTH", "0"))
             # take root item for rights checking
             item = next(items, None)
             if not item:
@@ -380,10 +391,8 @@ class ApplicationPropfindMixin:
             # put item back
             items = itertools.chain([item], items)
             allowed_items = self._collect_allowed_items(items, user)
-            headers = {"DAV": httputils.DAV_HEADERS,
-                       "Content-Type": "text/xml; charset=%s" % self.encoding}
-            status, xml_answer = xml_propfind(
-                base_prefix, path, xml_content, allowed_items, user)
+            headers = {"DAV": httputils.DAV_HEADERS, "Content-Type": "text/xml; charset=%s" % self.encoding}
+            status, xml_answer = xml_propfind(base_prefix, path, xml_content, allowed_items, user)
             if status == client.FORBIDDEN:
                 return httputils.NOT_ALLOWED
             return status, headers, self.write_xml_content(xml_answer)

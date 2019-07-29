@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -38,7 +56,8 @@ if os.name == "nt":
             ("internal_high", ULONG_PTR),
             ("offset", ctypes.wintypes.DWORD),
             ("offset_high", ctypes.wintypes.DWORD),
-            ("h_event", ctypes.wintypes.HANDLE)]
+            ("h_event", ctypes.wintypes.HANDLE),
+        ]
 
     lock_file_ex = ctypes.windll.kernel32.LockFileEx
     lock_file_ex.argtypes = [
@@ -47,7 +66,8 @@ if os.name == "nt":
         ctypes.wintypes.DWORD,
         ctypes.wintypes.DWORD,
         ctypes.wintypes.DWORD,
-        ctypes.POINTER(Overlapped)]
+        ctypes.POINTER(Overlapped),
+    ]
     lock_file_ex.restype = ctypes.wintypes.BOOL
     unlock_file_ex = ctypes.windll.kernel32.UnlockFileEx
     unlock_file_ex.argtypes = [
@@ -55,7 +75,8 @@ if os.name == "nt":
         ctypes.wintypes.DWORD,
         ctypes.wintypes.DWORD,
         ctypes.wintypes.DWORD,
-        ctypes.POINTER(Overlapped)]
+        ctypes.POINTER(Overlapped),
+    ]
     unlock_file_ex.restype = ctypes.wintypes.BOOL
 elif os.name == "posix":
     import fcntl
@@ -89,22 +110,18 @@ class RwLock:
                 flags = LOCKFILE_EXCLUSIVE_LOCK if mode == "w" else 0
                 overlapped = Overlapped()
                 if not lock_file_ex(handle, flags, 0, 1, 0, overlapped):
-                    raise RuntimeError("Locking the storage failed: %s" %
-                                       ctypes.FormatError())
+                    raise RuntimeError("Locking the storage failed: %s" % ctypes.FormatError())
             elif os.name == "posix":
                 _cmd = fcntl.LOCK_EX if mode == "w" else fcntl.LOCK_SH
                 try:
                     fcntl.flock(lock_file.fileno(), _cmd)
                 except OSError as e:
-                    raise RuntimeError("Locking the storage failed: %s" %
-                                       e) from e
+                    raise RuntimeError("Locking the storage failed: %s" % e) from e
             else:
-                raise RuntimeError("Locking the storage failed: "
-                                   "Unsupported operating system")
+                raise RuntimeError("Locking the storage failed: " "Unsupported operating system")
             with self._lock:
                 if self._writer or mode == "w" and self._readers != 0:
-                    raise RuntimeError("Locking the storage failed: "
-                                       "Guarantees failed")
+                    raise RuntimeError("Locking the storage failed: " "Guarantees failed")
                 if mode == "r":
                     self._readers += 1
                 else:
@@ -173,10 +190,14 @@ def is_safe_filesystem_path_component(path):
 
     """
     return (
-        path and not os.path.splitdrive(path)[0] and
-        not os.path.split(path)[0] and path not in (os.curdir, os.pardir) and
-        not path.startswith(".") and not path.endswith("~") and
-        is_safe_path_component(path))
+        path
+        and not os.path.splitdrive(path)[0]
+        and not os.path.split(path)[0]
+        and path not in (os.curdir, os.pardir)
+        and not path.startswith(".")
+        and not path.endswith("~")
+        and is_safe_path_component(path)
+    )
 
 
 def path_to_filesystem(root, sane_path):
@@ -200,9 +221,7 @@ def path_to_filesystem(root, sane_path):
         safe_path = os.path.join(safe_path, part)
         # Check for conflicting files (e.g. case-insensitive file systems
         # or short names on Windows file systems)
-        if (os.path.lexists(safe_path) and
-                part not in (e.name for e in
-                             os.scandir(safe_path_parent))):
+        if os.path.lexists(safe_path) and part not in (e.name for e in os.scandir(safe_path_parent)):
             raise CollidingPathError(part)
     return safe_path
 
@@ -225,8 +244,7 @@ def name_from_path(path, collection):
     start = unstrip_path(collection.path, True)
     if not (path + "/").startswith(start):
         raise ValueError("%r doesn't start with %r" % (path, start))
-    name = path[len(start):]
+    name = path[len(start) :]
     if name and not is_safe_path_component(name):
-        raise ValueError("%r is not a component in collection %r" %
-                         (name, collection.path))
+        raise ValueError("%r is not a component in collection %r" % (name, collection.path))
     return name

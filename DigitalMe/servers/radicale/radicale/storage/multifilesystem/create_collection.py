@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -39,13 +57,11 @@ class CollectionCreateCollectionMixin:
         cls._makedirs_synced(parent_dir)
 
         # Create a temporary directory with an unsafe name
-        with TemporaryDirectory(
-                prefix=".Radicale.tmp-", dir=parent_dir) as tmp_dir:
+        with TemporaryDirectory(prefix=".Radicale.tmp-", dir=parent_dir) as tmp_dir:
             # The temporary directory itself can't be renamed
             tmp_filesystem_path = os.path.join(tmp_dir, "collection")
             os.makedirs(tmp_filesystem_path)
-            self = cls(pathutils.unstrip_path(sane_path, True),
-                       filesystem_path=tmp_filesystem_path)
+            self = cls(pathutils.unstrip_path(sane_path, True), filesystem_path=tmp_filesystem_path)
             self.set_meta(props)
             if items is not None:
                 if props.get("tag") == "VCALENDAR":

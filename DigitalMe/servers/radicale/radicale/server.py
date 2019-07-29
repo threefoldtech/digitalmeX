@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -79,8 +97,7 @@ else:
     HAS_IPV6 = False
 
 
-class ParallelHTTPServer(ParallelizationMixIn,
-                         wsgiref.simple_server.WSGIServer):
+class ParallelHTTPServer(ParallelizationMixIn, wsgiref.simple_server.WSGIServer):
 
     # wait for child processes/threads
     _block_on_close = True
@@ -114,8 +131,7 @@ class ParallelHTTPServer(ParallelizationMixIn,
         try:
             super().server_bind()
         except socket.gaierror as e:
-            if (not HAS_IPV6 or self.address_family != socket.AF_INET or
-                    e.errno not in (EAI_NONAME, EAI_ADDRFAMILY)):
+            if not HAS_IPV6 or self.address_family != socket.AF_INET or e.errno not in (EAI_NONAME, EAI_ADDRFAMILY):
                 raise
             # Try again with IPv6
             self.address_family = socket.AF_INET6
@@ -151,8 +167,7 @@ class ParallelHTTPServer(ParallelizationMixIn,
         if issubclass(sys.exc_info()[0], socket.timeout):
             logger.info("client timed out", exc_info=True)
         else:
-            logger.error("An exception occurred during request: %s",
-                         sys.exc_info()[1], exc_info=True)
+            logger.error("An exception occurred during request: %s", sys.exc_info()[1], exc_info=True)
 
 
 class ParallelHTTPSServer(ParallelHTTPServer):
@@ -168,12 +183,16 @@ class ParallelHTTPSServer(ParallelHTTPServer):
         super().server_bind()
         """Create server by wrapping HTTP socket in an SSL socket."""
         self.socket = ssl.wrap_socket(
-            self.socket, self.key, self.certificate, server_side=True,
-            cert_reqs=ssl.CERT_REQUIRED if self.certificate_authority else
-            ssl.CERT_NONE,
+            self.socket,
+            self.key,
+            self.certificate,
+            server_side=True,
+            cert_reqs=ssl.CERT_REQUIRED if self.certificate_authority else ssl.CERT_NONE,
             ca_certs=self.certificate_authority or None,
-            ssl_version=self.protocol, ciphers=self.ciphers,
-            do_handshake_on_connect=False)
+            ssl_version=self.protocol,
+            ciphers=self.ciphers,
+            do_handshake_on_connect=False,
+        )
 
     def finish_request_locked(self, request, client_address):
         try:
@@ -198,8 +217,7 @@ class ServerHandler(wsgiref.simple_server.ServerHandler):
     os_environ = {}
 
     def log_exception(self, exc_info):
-        logger.error("An exception occurred during request: %s",
-                     exc_info[1], exc_info=exc_info)
+        logger.error("An exception occurred during request: %s", exc_info[1], exc_info=exc_info)
 
 
 class RequestHandler(wsgiref.simple_server.WSGIRequestHandler):
@@ -235,9 +253,7 @@ class RequestHandler(wsgiref.simple_server.WSGIRequestHandler):
         if not self.parse_request():
             return
 
-        handler = ServerHandler(
-            self.rfile, self.wfile, self.get_stderr(), self.get_environ()
-        )
+        handler = ServerHandler(self.rfile, self.wfile, self.get_stderr(), self.get_environ())
         handler.request_handler = self
         handler.run(self.server.get_app())
 
@@ -258,29 +274,26 @@ def serve(configuration, shutdown_socket=None):
 
     class ServerCopy(server_class):
         """Copy, avoids overriding the original class attributes."""
+
     ServerCopy.client_timeout = configuration.get("server", "timeout")
     ServerCopy.max_connections = configuration.get("server", "max_connections")
     if configuration.get("server", "ssl"):
         ServerCopy.certificate = configuration.get("server", "certificate")
         ServerCopy.key = configuration.get("server", "key")
-        ServerCopy.certificate_authority = configuration.get(
-            "server", "certificate_authority")
+        ServerCopy.certificate_authority = configuration.get("server", "certificate_authority")
         ServerCopy.ciphers = configuration.get("server", "ciphers")
-        ServerCopy.protocol = getattr(
-            ssl, configuration.get("server", "protocol"), ssl.PROTOCOL_SSLv23)
+        ServerCopy.protocol = getattr(ssl, configuration.get("server", "protocol"), ssl.PROTOCOL_SSLv23)
         # Test if the SSL files can be read
-        for name in ["certificate", "key"] + (
-                ["certificate_authority"]
-                if ServerCopy.certificate_authority else []):
+        for name in ["certificate", "key"] + (["certificate_authority"] if ServerCopy.certificate_authority else []):
             filename = getattr(ServerCopy, name)
             try:
                 open(filename, "r").close()
             except OSError as e:
-                raise RuntimeError("Failed to read SSL %s %r: %s" %
-                                   (name, filename, e)) from e
+                raise RuntimeError("Failed to read SSL %s %r: %s" % (name, filename, e)) from e
 
     class RequestHandlerCopy(RequestHandler):
         """Copy, avoids overriding the original class attributes."""
+
     if not configuration.get("server", "dns_lookup"):
         RequestHandlerCopy.address_string = lambda self: self.client_address[0]
 
@@ -294,8 +307,7 @@ def serve(configuration, shutdown_socket=None):
         logger.info("Using socket activation")
         ServerCopy.address_family = socket.AF_UNIX
         for fd in listen_fds:
-            server_addresses.append(socket.fromfd(
-                fd, ServerCopy.address_family, ServerCopy.socket_type))
+            server_addresses.append(socket.fromfd(fd, ServerCopy.address_family, ServerCopy.socket_type))
     else:
         for address, port in configuration.get("server", "hosts"):
             server_addresses.append((address, port))
@@ -306,12 +318,14 @@ def serve(configuration, shutdown_socket=None):
             server = ServerCopy(server_address, RequestHandlerCopy)
             server.set_app(application)
         except OSError as e:
-            raise RuntimeError(
-                "Failed to start server %r: %s" % (server_address, e)) from e
+            raise RuntimeError("Failed to start server %r: %s" % (server_address, e)) from e
         servers[server.socket] = server
-        logger.info("Listening to %r on port %d%s",
-                    server.server_name, server.server_port, " using SSL"
-                    if configuration.get("server", "ssl") else "")
+        logger.info(
+            "Listening to %r on port %d%s",
+            server.server_name,
+            server.server_port,
+            " using SSL" if configuration.get("server", "ssl") else "",
+        )
 
     # Main loop: wait for requests on any of the servers or program shutdown
     sockets = list(servers.keys())
@@ -328,8 +342,7 @@ def serve(configuration, shutdown_socket=None):
         for _, server in servers.items():
             stack.callback(server.server_close)
         while True:
-            rlist, _, xlist = select.select(
-                sockets, [], sockets, select_timeout)
+            rlist, _, xlist = select.select(sockets, [], sockets, select_timeout)
             if xlist:
                 raise RuntimeError("unhandled socket error")
             if shutdown_socket in rlist:

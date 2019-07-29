@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -38,8 +56,7 @@ from xml.etree import ElementTree as ET
 
 import pkg_resources
 
-from radicale import (auth, httputils, log, pathutils, rights, storage, web,
-                      xmlutils)
+from radicale import auth, httputils, log, pathutils, rights, storage, web, xmlutils
 from radicale.app.delete import ApplicationDeleteMixin
 from radicale.app.get import ApplicationGetMixin
 from radicale.app.head import ApplicationHeadMixin
@@ -57,11 +74,18 @@ VERSION = pkg_resources.get_distribution("radicale").version
 
 
 class Application(
-        ApplicationDeleteMixin, ApplicationGetMixin, ApplicationHeadMixin,
-        ApplicationMkcalendarMixin, ApplicationMkcolMixin,
-        ApplicationMoveMixin, ApplicationOptionsMixin,
-        ApplicationPropfindMixin, ApplicationProppatchMixin,
-        ApplicationPutMixin, ApplicationReportMixin):
+    ApplicationDeleteMixin,
+    ApplicationGetMixin,
+    ApplicationHeadMixin,
+    ApplicationMkcalendarMixin,
+    ApplicationMkcolMixin,
+    ApplicationMoveMixin,
+    ApplicationOptionsMixin,
+    ApplicationPropfindMixin,
+    ApplicationProppatchMixin,
+    ApplicationPutMixin,
+    ApplicationReportMixin,
+):
 
     """WSGI application managing collections."""
 
@@ -97,8 +121,7 @@ class Application(
         # First append content charset given in the request
         content_type = environ.get("CONTENT_TYPE")
         if content_type and "charset=" in content_type:
-            charsets.append(
-                content_type.split("charset=")[1].split(";")[0].strip())
+            charsets.append(content_type.split("charset=")[1].split(";")[0].strip())
         # Then append default Radicale charset
         charsets.append(self.encoding)
         # Then append various fallbacks
@@ -126,20 +149,18 @@ class Application(
                     path = str(environ.get("PATH_INFO", ""))
                 except Exception:
                     path = ""
-                logger.error("An exception occurred during %s request on %r: "
-                             "%s", method, path, e, exc_info=True)
+                logger.error("An exception occurred during %s request on %r: " "%s", method, path, e, exc_info=True)
                 status, headers, answer = httputils.INTERNAL_SERVER_ERROR
                 answer = answer.encode("ascii")
-                status = "%d %s" % (
-                    status, client.responses.get(status, "Unknown"))
-                headers = [
-                    ("Content-Length", str(len(answer)))] + list(headers)
+                status = "%d %s" % (status, client.responses.get(status, "Unknown"))
+                headers = [("Content-Length", str(len(answer)))] + list(headers)
                 answers = [answer]
             start_response(status, headers)
         return answers
 
     def _handle_request(self, environ):
         """Manage a request."""
+
         def response(status, headers=(), answer=None):
             headers = dict(headers)
             # Set content length
@@ -149,9 +170,10 @@ class Application(
                     headers["Content-Type"] += "; charset=%s" % self.encoding
                     answer = answer.encode(self.encoding)
                 accept_encoding = [
-                    encoding.strip() for encoding in
-                    environ.get("HTTP_ACCEPT_ENCODING", "").split(",")
-                    if encoding.strip()]
+                    encoding.strip()
+                    for encoding in environ.get("HTTP_ACCEPT_ENCODING", "").split(",")
+                    if encoding.strip()
+                ]
 
                 if "gzip" in accept_encoding:
                     zcomp = zlib.compressobj(wbits=16 + zlib.MAX_WBITS)
@@ -166,12 +188,15 @@ class Application(
 
             # Start response
             time_end = datetime.datetime.now()
-            status = "%d %s" % (
-                status, client.responses.get(status, "Unknown"))
+            status = "%d %s" % (status, client.responses.get(status, "Unknown"))
             logger.info(
                 "%s response status for %r%s in %.3f seconds: %s",
-                environ["REQUEST_METHOD"], environ.get("PATH_INFO", ""),
-                depthinfo, (time_end - time_begin).total_seconds(), status)
+                environ["REQUEST_METHOD"],
+                environ.get("PATH_INFO", ""),
+                depthinfo,
+                (time_end - time_begin).total_seconds(),
+                status,
+            )
             # Return response content
             return status, list(headers.items()), [answer] if answer else []
 
@@ -181,8 +206,7 @@ class Application(
         elif environ.get("REMOTE_ADDR"):
             remote_host = environ["REMOTE_ADDR"]
         if environ.get("HTTP_X_FORWARDED_FOR"):
-            remote_host = "%r (forwarded by %s)" % (
-                environ["HTTP_X_FORWARDED_FOR"], remote_host)
+            remote_host = "%r (forwarded by %s)" % (environ["HTTP_X_FORWARDED_FOR"], remote_host)
         remote_useragent = ""
         if environ.get("HTTP_USER_AGENT"):
             remote_useragent = " using %r" % environ["HTTP_USER_AGENT"]
@@ -192,8 +216,12 @@ class Application(
         time_begin = datetime.datetime.now()
         logger.info(
             "%s request for %r%s received from %s%s",
-            environ["REQUEST_METHOD"], environ.get("PATH_INFO", ""), depthinfo,
-            remote_host, remote_useragent)
+            environ["REQUEST_METHOD"],
+            environ.get("PATH_INFO", ""),
+            depthinfo,
+            remote_host,
+            remote_useragent,
+        )
         headers = pprint.pformat(self._headers_log(environ))
         logger.debug("Request headers:\n%s", headers)
 
@@ -201,8 +229,7 @@ class Application(
         if "HTTP_X_SCRIPT_NAME" in environ:
             # script_name must be removed from PATH_INFO by the client.
             unsafe_base_prefix = environ["HTTP_X_SCRIPT_NAME"]
-            logger.debug("Script name overwritten by client: %r",
-                         unsafe_base_prefix)
+            logger.debug("Script name overwritten by client: %r", unsafe_base_prefix)
         else:
             # SCRIPT_NAME is already removed from PATH_INFO, according to the
             # WSGI specification.
@@ -230,9 +257,8 @@ class Application(
             login, password = external_login
             login, password = login or "", password or ""
         elif authorization.startswith("Basic"):
-            authorization = authorization[len("Basic"):].strip()
-            login, password = self.decode(base64.b64decode(
-                authorization.encode("ascii")), environ).split(":", 1)
+            authorization = authorization[len("Basic") :].strip()
+            login, password = self.decode(base64.b64decode(authorization.encode("ascii")), environ).split(":", 1)
 
         user = self.Auth.login(login, password) or "" if login else ""
         if user and login == user:
@@ -258,50 +284,40 @@ class Application(
             principal_path = "/%s/" % user
             if self.Rights.authorized(user, principal_path, "W"):
                 with self.Collection.acquire_lock("r", user):
-                    principal = next(
-                        self.Collection.discover(principal_path, depth="1"),
-                        None)
+                    principal = next(self.Collection.discover(principal_path, depth="1"), None)
                 if not principal:
                     with self.Collection.acquire_lock("w", user):
                         try:
                             self.Collection.create_collection(principal_path)
                         except ValueError as e:
-                            logger.warning("Failed to create principal "
-                                           "collection %r: %s", user, e)
+                            logger.warning("Failed to create principal " "collection %r: %s", user, e)
                             user = ""
             else:
-                logger.warning("Access to principal path %r denied by "
-                               "rights backend", principal_path)
+                logger.warning("Access to principal path %r denied by " "rights backend", principal_path)
 
         if self.configuration.get("internal", "internal_server"):
             # Verify content length
             content_length = int(environ.get("CONTENT_LENGTH") or 0)
             if content_length:
-                max_content_length = self.configuration.get(
-                    "server", "max_content_length")
+                max_content_length = self.configuration.get("server", "max_content_length")
                 if max_content_length and content_length > max_content_length:
                     logger.info("Request body too large: %d", content_length)
                     return response(*httputils.REQUEST_ENTITY_TOO_LARGE)
 
         if not login or user:
-            status, headers, answer = function(
-                environ, base_prefix, path, user)
+            status, headers, answer = function(environ, base_prefix, path, user)
             if (status, headers, answer) == httputils.NOT_ALLOWED:
-                logger.info("Access to %r denied for %s", path,
-                            repr(user) if user else "anonymous user")
+                logger.info("Access to %r denied for %s", path, repr(user) if user else "anonymous user")
         else:
             status, headers, answer = httputils.NOT_ALLOWED
 
-        if ((status, headers, answer) == httputils.NOT_ALLOWED and not user and
-                not external_login):
+        if (status, headers, answer) == httputils.NOT_ALLOWED and not user and not external_login:
             # Unknown or unauthorized user
             logger.debug("Asking client for authentication")
             status = client.UNAUTHORIZED
             realm = self.configuration.get("auth", "realm")
             headers = dict(headers)
-            headers.update({
-                "WWW-Authenticate":
-                "Basic realm=\"%s\"" % realm})
+            headers.update({"WWW-Authenticate": 'Basic realm="%s"' % realm})
 
         return response(status, headers, answer)
 
@@ -323,8 +339,7 @@ class Application(
         if permissions and self.Rights.authorized(user, path, permissions):
             return True
         if parent_permissions:
-            parent_path = pathutils.unstrip_path(
-                posixpath.dirname(pathutils.strip_path(path)), True)
+            parent_path = pathutils.unstrip_path(posixpath.dirname(pathutils.strip_path(path)), True)
             if self.Rights.authorized(user, parent_path, parent_permissions):
                 return True
         return False
@@ -353,23 +368,18 @@ class Application(
             logger.debug("Request content (Invalid XML):\n%s", content)
             raise RuntimeError("Failed to parse XML: %s" % e) from e
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Request content:\n%s",
-                         xmlutils.pretty_xml(xml_content))
+            logger.debug("Request content:\n%s", xmlutils.pretty_xml(xml_content))
         return xml_content
 
     def write_xml_content(self, xml_content):
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Response content:\n%s",
-                         xmlutils.pretty_xml(xml_content))
+            logger.debug("Response content:\n%s", xmlutils.pretty_xml(xml_content))
         f = io.BytesIO()
-        ET.ElementTree(xml_content).write(f, encoding=self.encoding,
-                                          xml_declaration=True)
+        ET.ElementTree(xml_content).write(f, encoding=self.encoding, xml_declaration=True)
         return f.getvalue()
 
-    def webdav_error_response(self, namespace, name,
-                              status=httputils.WEBDAV_PRECONDITION_FAILED[0]):
+    def webdav_error_response(self, namespace, name, status=httputils.WEBDAV_PRECONDITION_FAILED[0]):
         """Generate XML error response."""
         headers = {"Content-Type": "text/xml; charset=%s" % self.encoding}
-        content = self.write_xml_content(
-            xmlutils.webdav_error(namespace, name))
+        content = self.write_xml_content(xmlutils.webdav_error(namespace, name))
         return status, headers, content

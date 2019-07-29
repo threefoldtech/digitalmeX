@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -57,8 +75,7 @@ def xml_proppatch(base_prefix, path, xml_request, collection):
 
     """
     props_to_set = xmlutils.props_from_request(xml_request, actions=("set",))
-    props_to_remove = xmlutils.props_from_request(xml_request,
-                                                  actions=("remove",))
+    props_to_remove = xmlutils.props_from_request(xml_request, actions=("remove",))
 
     multistatus = ET.Element(xmlutils.make_tag("D", "multistatus"))
     response = ET.Element(xmlutils.make_tag("D", "response"))
@@ -92,8 +109,7 @@ class ApplicationProppatchMixin:
         try:
             xml_content = self.read_xml_content(environ)
         except RuntimeError as e:
-            logger.warning(
-                "Bad PROPPATCH request on %r: %s", path, e, exc_info=True)
+            logger.warning("Bad PROPPATCH request on %r: %s", path, e, exc_info=True)
             return httputils.BAD_REQUEST
         except socket.timeout:
             logger.debug("client timed out", exc_info=True)
@@ -106,14 +122,10 @@ class ApplicationProppatchMixin:
                 return httputils.NOT_ALLOWED
             if not isinstance(item, storage.BaseCollection):
                 return httputils.FORBIDDEN
-            headers = {"DAV": httputils.DAV_HEADERS,
-                       "Content-Type": "text/xml; charset=%s" % self.encoding}
+            headers = {"DAV": httputils.DAV_HEADERS, "Content-Type": "text/xml; charset=%s" % self.encoding}
             try:
-                xml_answer = xml_proppatch(base_prefix, path, xml_content,
-                                           item)
+                xml_answer = xml_proppatch(base_prefix, path, xml_content, item)
             except ValueError as e:
-                logger.warning(
-                    "Bad PROPPATCH request on %r: %s", path, e, exc_info=True)
+                logger.warning("Bad PROPPATCH request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
-            return (client.MULTI_STATUS, headers,
-                    self.write_xml_content(xml_answer))
+            return (client.MULTI_STATUS, headers, self.write_xml_content(xml_answer))

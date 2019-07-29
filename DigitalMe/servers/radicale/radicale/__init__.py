@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -47,9 +65,7 @@ def _init_application(config_path, wsgi_errors):
         log.setup()
         with log.register_stream(wsgi_errors):
             _application_config_path = config_path
-            configuration = config.load(config.parse_compound_paths(
-                config.DEFAULT_CONFIG_PATH,
-                config_path))
+            configuration = config.load(config.parse_compound_paths(config.DEFAULT_CONFIG_PATH, config_path))
             log.set_level(configuration.get("logging", "level"))
             # Inspect configuration after logger is configured
             configuration.inspect()
@@ -57,11 +73,11 @@ def _init_application(config_path, wsgi_errors):
 
 
 def application(environ, start_response):
-    config_path = environ.get("RADICALE_CONFIG",
-                              os.environ.get("RADICALE_CONFIG"))
+    config_path = environ.get("RADICALE_CONFIG", os.environ.get("RADICALE_CONFIG"))
     if _application is None:
         _init_application(config_path, environ["wsgi.errors"])
     if _application_config_path != config_path:
-        raise ValueError("RADICALE_CONFIG must not change: %s != %s" %
-                         (repr(config_path), repr(_application_config_path)))
+        raise ValueError(
+            "RADICALE_CONFIG must not change: %s != %s" % (repr(config_path), repr(_application_config_path))
+        )
     return _application(environ, start_response)

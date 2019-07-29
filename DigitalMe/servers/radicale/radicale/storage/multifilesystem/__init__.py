@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -24,8 +42,7 @@ from tempfile import NamedTemporaryFile
 
 from radicale import pathutils, storage
 from radicale.storage.multifilesystem.cache import CollectionCacheMixin
-from radicale.storage.multifilesystem.create_collection import \
-    CollectionCreateCollectionMixin
+from radicale.storage.multifilesystem.create_collection import CollectionCreateCollectionMixin
 from radicale.storage.multifilesystem.delete import CollectionDeleteMixin
 from radicale.storage.multifilesystem.discover import CollectionDiscoverMixin
 from radicale.storage.multifilesystem.get import CollectionGetMixin
@@ -39,11 +56,20 @@ from radicale.storage.multifilesystem.verify import CollectionVerifyMixin
 
 
 class Collection(
-        CollectionCacheMixin, CollectionCreateCollectionMixin,
-        CollectionDeleteMixin, CollectionDiscoverMixin, CollectionGetMixin,
-        CollectionHistoryMixin, CollectionLockMixin, CollectionMetaMixin,
-        CollectionMoveMixin, CollectionSyncMixin, CollectionUploadMixin,
-        CollectionVerifyMixin, storage.BaseCollection):
+    CollectionCacheMixin,
+    CollectionCreateCollectionMixin,
+    CollectionDeleteMixin,
+    CollectionDiscoverMixin,
+    CollectionGetMixin,
+    CollectionHistoryMixin,
+    CollectionLockMixin,
+    CollectionMetaMixin,
+    CollectionMoveMixin,
+    CollectionSyncMixin,
+    CollectionUploadMixin,
+    CollectionVerifyMixin,
+    storage.BaseCollection,
+):
     """Collection stored in several files per calendar."""
 
     @classmethod
@@ -65,25 +91,27 @@ class Collection(
 
     @classmethod
     def _get_collection_root_folder(cls):
-        filesystem_folder = cls.configuration.get(
-            "storage", "filesystem_folder")
+        filesystem_folder = cls.configuration.get("storage", "filesystem_folder")
         return os.path.join(filesystem_folder, "collection-root")
 
     @contextlib.contextmanager
-    def _atomic_write(self, path, mode="w", newline=None, sync_directory=True,
-                      replace_fn=os.replace):
+    def _atomic_write(self, path, mode="w", newline=None, sync_directory=True, replace_fn=os.replace):
         directory = os.path.dirname(path)
         tmp = NamedTemporaryFile(
-            mode=mode, dir=directory, delete=False, prefix=".Radicale.tmp-",
-            newline=newline, encoding=None if "b" in mode else self._encoding)
+            mode=mode,
+            dir=directory,
+            delete=False,
+            prefix=".Radicale.tmp-",
+            newline=newline,
+            encoding=None if "b" in mode else self._encoding,
+        )
         try:
             yield tmp
             tmp.flush()
             try:
                 self._fsync(tmp.fileno())
             except OSError as e:
-                raise RuntimeError("Fsync'ing file %r failed: %s" %
-                                   (path, e)) from e
+                raise RuntimeError("Fsync'ing file %r failed: %s" % (path, e)) from e
             tmp.close()
             replace_fn(tmp.name, path)
         except BaseException:
@@ -115,8 +143,7 @@ class Collection(
                 finally:
                     os.close(fd)
             except OSError as e:
-                raise RuntimeError("Fsync'ing directory %r failed: %s" %
-                                   (path, e)) from e
+                raise RuntimeError("Fsync'ing directory %r failed: %s" % (path, e)) from e
 
     @classmethod
     def _makedirs_synced(cls, filesystem_path):
@@ -141,7 +168,8 @@ class Collection(
         relevant_files = chain(
             (self._filesystem_path,),
             (self._props_path,) if os.path.exists(self._props_path) else (),
-            (os.path.join(self._filesystem_path, h) for h in self._list()))
+            (os.path.join(self._filesystem_path, h) for h in self._list()),
+        )
         last = max(map(os.path.getmtime, relevant_files))
         return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(last))
 

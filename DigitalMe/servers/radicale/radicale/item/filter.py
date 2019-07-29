@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -65,8 +83,7 @@ def comp_match(item, filter_, level=0):
     elif level == 1:
         tag = item.component_name
     else:
-        logger.warning(
-            "Filters with three levels of comp-filter are not supported")
+        logger.warning("Filters with three levels of comp-filter are not supported")
         return True
     if not tag:
         return False
@@ -80,18 +97,14 @@ def comp_match(item, filter_, level=0):
             return name != tag
     if name != tag:
         return False
-    if (level == 0 and name != "VCALENDAR" or
-            level == 1 and name not in ("VTODO", "VEVENT", "VJOURNAL")):
+    if level == 0 and name != "VCALENDAR" or level == 1 and name not in ("VTODO", "VEVENT", "VJOURNAL"):
         logger.warning("Filtering %s is not supported" % name)
         return True
     # Point #3 and #4 of rfc4791-9.7.1
-    components = ([item.vobject_item] if level == 0
-                  else list(getattr(item.vobject_item,
-                                    "%s_list" % tag.lower())))
+    components = [item.vobject_item] if level == 0 else list(getattr(item.vobject_item, "%s_list" % tag.lower()))
     for child in filter_:
         if child.tag == xmlutils.make_tag("C", "prop-filter"):
-            if not any(prop_match(comp, child, "C")
-                       for comp in components):
+            if not any(prop_match(comp, child, "C") for comp in components):
                 return False
         elif child.tag == xmlutils.make_tag("C", "time-range"):
             if not time_range_match(item.vobject_item, filter_[0], tag):
@@ -195,17 +208,18 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
     # either.
 
     def getrruleset(child, ignore=()):
-        if (hasattr(child, "rrule") and
-                ";UNTIL=" not in child.rrule.value.upper() and
-                ";COUNT=" not in child.rrule.value.upper()):
+        if (
+            hasattr(child, "rrule")
+            and ";UNTIL=" not in child.rrule.value.upper()
+            and ";COUNT=" not in child.rrule.value.upper()
+        ):
             for dtstart in child.getrruleset(addRDate=True):
                 if dtstart in ignore:
                     continue
                 if infinity_fn(date_to_datetime(dtstart)):
                     return (), True
                 break
-        return filter(lambda dtstart: dtstart not in ignore,
-                      child.getrruleset(addRDate=True)), False
+        return filter(lambda dtstart: dtstart not in ignore, child.getrruleset(addRDate=True)), False
 
     def get_children(components):
         main = None
@@ -227,8 +241,7 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
 
     # Comments give the lines in the tables of the specification
     if child_name == "VEVENT":
-        for child, is_recurrence, recurrences in get_children(
-                vobject_item.vevent_list):
+        for child, is_recurrence, recurrences in get_children(vobject_item.vevent_list):
             # TODO: check if there's a timezone
             dtstart = child.dtstart.value
 
@@ -263,8 +276,7 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
                         original_duration = duration.seconds
                     if duration.seconds > 0:
                         # Line 2
-                        if range_fn(dtstart, dtstart + duration,
-                                    is_recurrence):
+                        if range_fn(dtstart, dtstart + duration, is_recurrence):
                             return
                     else:
                         # Line 3
@@ -280,8 +292,7 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
                         return
 
     elif child_name == "VTODO":
-        for child, is_recurrence, recurrences in get_children(
-                vobject_item.vtodo_list):
+        for child, is_recurrence, recurrences in get_children(vobject_item.vtodo_list):
             dtstart = getattr(child, "dtstart", None)
             duration = getattr(child, "duration", None)
             due = getattr(child, "due", None)
@@ -328,51 +339,40 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
 
                 if dtstart is not None and duration is not None:
                     # Line 1
-                    if range_fn(reference_date,
-                                reference_date + duration + SECOND,
-                                is_recurrence):
+                    if range_fn(reference_date, reference_date + duration + SECOND, is_recurrence):
                         return
-                    if range_fn(reference_date + duration - SECOND,
-                                reference_date + duration + SECOND,
-                                is_recurrence):
+                    if range_fn(reference_date + duration - SECOND, reference_date + duration + SECOND, is_recurrence):
                         return
                 elif dtstart is not None and due is not None:
                     # Line 2
                     due = reference_date + timedelta(seconds=original_duration)
-                    if (range_fn(reference_date, due, is_recurrence) or
-                            range_fn(reference_date,
-                                     reference_date + SECOND, is_recurrence) or
-                            range_fn(due - SECOND, due, is_recurrence) or
-                            range_fn(due - SECOND, reference_date + SECOND,
-                                     is_recurrence)):
+                    if (
+                        range_fn(reference_date, due, is_recurrence)
+                        or range_fn(reference_date, reference_date + SECOND, is_recurrence)
+                        or range_fn(due - SECOND, due, is_recurrence)
+                        or range_fn(due - SECOND, reference_date + SECOND, is_recurrence)
+                    ):
                         return
                 elif dtstart is not None:
-                    if range_fn(reference_date, reference_date + SECOND,
-                                is_recurrence):
+                    if range_fn(reference_date, reference_date + SECOND, is_recurrence):
                         return
                 elif due is not None:
                     # Line 4
-                    if range_fn(reference_date - SECOND, reference_date,
-                                is_recurrence):
+                    if range_fn(reference_date - SECOND, reference_date, is_recurrence):
                         return
                 elif completed is not None and created is not None:
                     # Line 5
-                    completed = reference_date + timedelta(
-                        seconds=original_duration)
-                    if (range_fn(reference_date - SECOND,
-                                 reference_date + SECOND,
-                                 is_recurrence) or
-                            range_fn(completed - SECOND, completed + SECOND,
-                                     is_recurrence) or
-                            range_fn(reference_date - SECOND,
-                                     reference_date + SECOND, is_recurrence) or
-                            range_fn(completed - SECOND, completed + SECOND,
-                                     is_recurrence)):
+                    completed = reference_date + timedelta(seconds=original_duration)
+                    if (
+                        range_fn(reference_date - SECOND, reference_date + SECOND, is_recurrence)
+                        or range_fn(completed - SECOND, completed + SECOND, is_recurrence)
+                        or range_fn(reference_date - SECOND, reference_date + SECOND, is_recurrence)
+                        or range_fn(completed - SECOND, completed + SECOND, is_recurrence)
+                    ):
                         return
                 elif completed is not None:
                     # Line 6
-                    if range_fn(reference_date - SECOND,
-                                reference_date + SECOND, is_recurrence):
+                    if range_fn(reference_date - SECOND, reference_date + SECOND, is_recurrence):
                         return
                 elif created is not None:
                     # Line 7
@@ -380,8 +380,7 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
                         return
 
     elif child_name == "VJOURNAL":
-        for child, is_recurrence, recurrences in get_children(
-                vobject_item.vjournal_list):
+        for child, is_recurrence, recurrences in get_children(vobject_item.vjournal_list):
             dtstart = getattr(child, "dtstart", None)
 
             if dtstart is not None:
@@ -443,9 +442,7 @@ def text_match(vobject_item, filter_, child_name, ns, attrib_name=None):
 
     children = getattr(vobject_item, "%s_list" % child_name, [])
     if attrib_name:
-        condition = any(
-            match(attrib) for child in children
-            for attrib in child.params.get(attrib_name, []))
+        condition = any(match(attrib) for child in children for attrib in child.params.get(attrib_name, []))
     else:
         condition = any(match(child.value) for child in children)
     if filter_.get("negate-condition") == "yes":
@@ -465,8 +462,7 @@ def param_filter_match(vobject_item, filter_, parent_name, ns):
     condition = any(name in child.params for child in children)
     if len(filter_):
         if filter_[0].tag == xmlutils.make_tag(ns, "text-match"):
-            return condition and text_match(
-                vobject_item, filter_[0], parent_name, ns, name)
+            return condition and text_match(vobject_item, filter_[0], parent_name, ns, name)
         elif filter_[0].tag == xmlutils.make_tag(ns, "is-not-defined"):
             return not condition
     else:
@@ -488,8 +484,7 @@ def simplify_prefilters(filters, collection_tag="VCALENDAR"):
         if collection_tag != "VCALENDAR":
             simple = False
             break
-        if (col_filter.tag != xmlutils.make_tag("C", "comp-filter") or
-                col_filter.get("name").upper() != "VCALENDAR"):
+        if col_filter.tag != xmlutils.make_tag("C", "comp-filter") or col_filter.get("name").upper() != "VCALENDAR":
             simple = False
             continue
         simple &= len(col_filter) <= 1
@@ -498,8 +493,7 @@ def simplify_prefilters(filters, collection_tag="VCALENDAR"):
                 simple = False
                 continue
             tag = comp_filter.get("name").upper()
-            if comp_filter.find(
-                    xmlutils.make_tag("C", "is-not-defined")) is not None:
+            if comp_filter.find(xmlutils.make_tag("C", "is-not-defined")) is not None:
                 simple = False
                 continue
             simple &= len(comp_filter) <= 1
@@ -513,15 +507,13 @@ def simplify_prefilters(filters, collection_tag="VCALENDAR"):
                 start = time_filter.get("start")
                 end = time_filter.get("end")
                 if start:
-                    start = math.floor(datetime.strptime(
-                        start, "%Y%m%dT%H%M%SZ").replace(
-                            tzinfo=timezone.utc).timestamp())
+                    start = math.floor(
+                        datetime.strptime(start, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).timestamp()
+                    )
                 else:
                     start = TIMESTAMP_MIN
                 if end:
-                    end = math.ceil(datetime.strptime(
-                        end, "%Y%m%dT%H%M%SZ").replace(
-                            tzinfo=timezone.utc).timestamp())
+                    end = math.ceil(datetime.strptime(end, "%Y%m%dT%H%M%SZ").replace(tzinfo=timezone.utc).timestamp())
                 else:
                     end = TIMESTAMP_MAX
                 return tag, start, end, simple

@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -26,8 +44,7 @@ class CollectionMetaMixin:
     def __init__(self):
         super().__init__()
         self._meta_cache = None
-        self._props_path = os.path.join(
-            self._filesystem_path, ".Radicale.props")
+        self._props_path = os.path.join(self._filesystem_path, ".Radicale.props")
 
     def get_meta(self, key=None):
         # reuse cached value if the storage is read-only
@@ -40,8 +57,7 @@ class CollectionMetaMixin:
                     self._meta_cache = {}
                 radicale_item.check_and_sanitize_props(self._meta_cache)
             except ValueError as e:
-                raise RuntimeError("Failed to load properties of collection "
-                                   "%r: %s" % (self.path, e)) from e
+                raise RuntimeError("Failed to load properties of collection " "%r: %s" % (self.path, e)) from e
         return self._meta_cache.get(key) if key else self._meta_cache
 
     def set_meta(self, props):

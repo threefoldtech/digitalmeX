@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -60,16 +78,16 @@ class CollectionVerifyMixin:
                         has_child_collections = True
                         remaining_sane_paths.append(item.path)
                     elif item.uid in uids:
-                        logger.error("Invalid item %r in %r: UID conflict %r",
-                                     item.href, sane_path, item.uid)
+                        logger.error("Invalid item %r in %r: UID conflict %r", item.href, sane_path, item.uid)
                     else:
                         uids.add(item.uid)
-                        logger.debug("Verified item %r in %r",
-                                     item.href, sane_path)
+                        logger.debug("Verified item %r in %r", item.href, sane_path)
                 if item_errors == saved_item_errors:
                     collection.sync()
                 if has_child_collections and collection.get_meta("tag"):
-                    logger.error("Invalid collection %r: %r must not have "
-                                 "child collections", sane_path,
-                                 collection.get_meta("tag"))
+                    logger.error(
+                        "Invalid collection %r: %r must not have " "child collections",
+                        sane_path,
+                        collection.get_meta("tag"),
+                    )
         return item_errors == 0 and collection_errors == 0

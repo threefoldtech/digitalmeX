@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2008 Nicolas Kandel
 # Copyright © 2008 Pascal Halter
@@ -65,12 +83,10 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
         raise ValueError("Item contains %d components" % len(vobject_items))
     if tag == "VCALENDAR":
         if len(vobject_items) > 1:
-            raise RuntimeError("VCALENDAR collection contains %d "
-                               "components" % len(vobject_items))
+            raise RuntimeError("VCALENDAR collection contains %d " "components" % len(vobject_items))
         vobject_item = vobject_items[0]
         if vobject_item.name != "VCALENDAR":
-            raise ValueError("Item type %r not supported in %r "
-                             "collection" % (vobject_item.name, tag))
+            raise ValueError("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
         component_uids = set()
         for component in vobject_item.components():
             if component.name in ("VTODO", "VEVENT", "VJOURNAL"):
@@ -87,8 +103,7 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
             if component_name is None or is_collection:
                 component_name = component.name
             elif component_name != component.name:
-                raise ValueError("Multiple component types in object: %r, %r" %
-                                 (component_name, component.name))
+                raise ValueError("Multiple component types in object: %r, %r" % (component_name, component.name))
             if component_name not in ("VTODO", "VEVENT", "VJOURNAL"):
                 continue
             component_uid = get_uid(component)
@@ -97,28 +112,25 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                 object_uid = component_uid
                 if not component_uid:
                     if not is_collection:
-                        raise ValueError("%s component without UID in object" %
-                                         component_name)
-                    component_uid = find_available_uid(
-                        component_uids.__contains__)
+                        raise ValueError("%s component without UID in object" % component_name)
+                    component_uid = find_available_uid(component_uids.__contains__)
                     component_uids.add(component_uid)
                     if hasattr(component, "uid"):
                         component.uid.value = component_uid
                     else:
                         component.add("UID").value = component_uid
             elif not object_uid or not component_uid:
-                raise ValueError("Multiple %s components without UID in "
-                                 "object" % component_name)
+                raise ValueError("Multiple %s components without UID in " "object" % component_name)
             elif object_uid != component_uid:
                 raise ValueError(
                     "Multiple %s components with different UIDs in object: "
-                    "%r, %r" % (component_name, object_uid, component_uid))
+                    "%r, %r" % (component_name, object_uid, component_uid)
+                )
             # vobject interprets recurrence rules on demand
             try:
                 component.rruleset
             except Exception as e:
-                raise ValueError("invalid recurrence rules in %s" %
-                                 component.name) from e
+                raise ValueError("invalid recurrence rules in %s" % component.name) from e
     elif tag == "VADDRESSBOOK":
         # https://tools.ietf.org/html/rfc6352#section-5.1
         object_uids = set()
@@ -133,13 +145,11 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                 # contacts
                 continue
             if vobject_item.name != "VCARD":
-                raise ValueError("Item type %r not supported in %r "
-                                 "collection" % (vobject_item.name, tag))
+                raise ValueError("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
             object_uid = get_uid(vobject_item)
             if not object_uid:
                 if not is_collection:
-                    raise ValueError("%s object without UID" %
-                                     vobject_item.name)
+                    raise ValueError("%s object without UID" % vobject_item.name)
                 object_uid = find_available_uid(object_uids.__contains__)
                 object_uids.add(object_uid)
                 if hasattr(vobject_item, "uid"):
@@ -148,8 +158,7 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                     vobject_item.add("UID").value = object_uid
     else:
         for i in vobject_items:
-            raise ValueError("Item type %r not supported in %s collection" %
-                             (i.name, repr(tag) if tag else "generic"))
+            raise ValueError("Item type %r not supported in %s collection" % (i.name, repr(tag) if tag else "generic"))
 
 
 def check_and_sanitize_props(props):
@@ -164,8 +173,7 @@ def find_available_uid(exists_fn, suffix=""):
     # Prevent infinite loop
     for _ in range(1000):
         r = "%016x" % getrandbits(128)
-        name = "%s-%s-%s-%s-%s%s" % (
-            r[:8], r[8:12], r[12:16], r[16:20], r[20:], suffix)
+        name = "%s-%s-%s-%s-%s%s" % (r[:8], r[8:12], r[12:16], r[16:20], r[20:], suffix)
         if not exists_fn(name):
             return name
     # something is wrong with the PRNG
@@ -185,8 +193,7 @@ def get_etag(text):
 
 def get_uid(vobject_component):
     """UID value of an item if defined."""
-    return (vobject_component.uid.value
-            if hasattr(vobject_component, "uid") else None)
+    return vobject_component.uid.value if hasattr(vobject_component, "uid") else None
 
 
 def get_uid_from_object(vobject_item):
@@ -223,8 +230,7 @@ def find_tag_and_time_range(vobject_item):
     """
     tag = find_tag(vobject_item)
     if not tag:
-        return (
-            tag, radicale_filter.TIMESTAMP_MIN, radicale_filter.TIMESTAMP_MAX)
+        return (tag, radicale_filter.TIMESTAMP_MIN, radicale_filter.TIMESTAMP_MAX)
     start = end = None
 
     def range_fn(range_start, range_end, is_recurrence):
@@ -250,17 +256,29 @@ def find_tag_and_time_range(vobject_item):
     try:
         return tag, math.floor(start.timestamp()), math.ceil(end.timestamp())
     except ValueError as e:
-        if str(e) == ("offset must be a timedelta representing a whole "
-                      "number of minutes") and sys.version_info < (3, 6):
+        if str(e) == ("offset must be a timedelta representing a whole " "number of minutes") and sys.version_info < (
+            3,
+            6,
+        ):
             raise RuntimeError("Unsupported in Python < 3.6: %s" % e) from e
         raise
 
 
 class Item:
-    def __init__(self, collection_path=None, collection=None,
-                 vobject_item=None, href=None, last_modified=None, text=None,
-                 etag=None, uid=None, name=None, component_name=None,
-                 time_range=None):
+    def __init__(
+        self,
+        collection_path=None,
+        collection=None,
+        vobject_item=None,
+        href=None,
+        last_modified=None,
+        text=None,
+        etag=None,
+        uid=None,
+        name=None,
+        component_name=None,
+        time_range=None,
+    ):
         """Initialize an item.
 
         ``collection_path`` the path of the parent collection (optional if
@@ -291,15 +309,12 @@ class Item:
 
         """
         if text is None and vobject_item is None:
-            raise ValueError(
-                "at least one of 'text' or 'vobject_item' must be set")
+            raise ValueError("at least one of 'text' or 'vobject_item' must be set")
         if collection_path is None:
             if collection is None:
-                raise ValueError("at least one of 'collection_path' or "
-                                 "'collection' must be set")
+                raise ValueError("at least one of 'collection_path' or " "'collection' must be set")
             collection_path = collection.path
-        assert collection_path == pathutils.strip_path(
-            pathutils.sanitize_path(collection_path))
+        assert collection_path == pathutils.strip_path(pathutils.sanitize_path(collection_path))
         self._collection_path = collection_path
         self.collection = collection
         self.href = href
@@ -317,9 +332,9 @@ class Item:
             try:
                 self._text = self.vobject_item.serialize()
             except Exception as e:
-                raise RuntimeError("Failed to serialize item %r from %r: %s" %
-                                   (self.href, self._collection_path,
-                                    e)) from e
+                raise RuntimeError(
+                    "Failed to serialize item %r from %r: %s" % (self.href, self._collection_path, e)
+                ) from e
         return self._text
 
     @property
@@ -328,9 +343,7 @@ class Item:
             try:
                 self._vobject_item = vobject.readOne(self._text)
             except Exception as e:
-                raise RuntimeError("Failed to parse item %r from %r: %s" %
-                                   (self.href, self._collection_path,
-                                    e)) from e
+                raise RuntimeError("Failed to parse item %r from %r: %s" % (self.href, self._collection_path, e)) from e
         return self._vobject_item
 
     @property
@@ -361,8 +374,7 @@ class Item:
     @property
     def time_range(self):
         if self._time_range is None:
-            self._component_name, *self._time_range = (
-                find_tag_and_time_range(self.vobject_item))
+            self._component_name, *self._time_range = find_tag_and_time_range(self.vobject_item)
         return self._time_range
 
     def prepare(self):

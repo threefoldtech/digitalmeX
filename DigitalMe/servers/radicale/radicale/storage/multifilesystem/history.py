@@ -1,3 +1,21 @@
+
+
+# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
+# This file is part of jumpscale at <https://github.com/threefoldtech>.
+# jumpscale is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# jumpscale is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License v3 for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
+
+
 # This file is part of Radicale Server - Calendar Server
 # Copyright © 2014 Jean-Marc Martins
 # Copyright © 2012-2017 Guillaume Ayoub
@@ -34,16 +52,13 @@ class CollectionHistoryMixin:
         string for deleted items) and a history etag, which is a hash over
         the previous history etag and the etag separated by "/".
         """
-        history_folder = os.path.join(self._filesystem_path,
-                                      ".Radicale.cache", "history")
+        history_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "history")
         try:
             with open(os.path.join(history_folder, href), "rb") as f:
                 cache_etag, history_etag = pickle.load(f)
         except (FileNotFoundError, pickle.UnpicklingError, ValueError) as e:
             if isinstance(e, (pickle.UnpicklingError, ValueError)):
-                logger.warning(
-                    "Failed to load history cache entry %r in %r: %s",
-                    href, self.path, e, exc_info=True)
+                logger.warning("Failed to load history cache entry %r in %r: %s", href, self.path, e, exc_info=True)
             cache_etag = ""
             # Initialize with random data to prevent collisions with cleaned
             # expired items.
@@ -51,12 +66,10 @@ class CollectionHistoryMixin:
         etag = item.etag if item else ""
         if etag != cache_etag:
             self._makedirs_synced(history_folder)
-            history_etag = radicale_item.get_etag(
-                history_etag + "/" + etag).strip("\"")
+            history_etag = radicale_item.get_etag(history_etag + "/" + etag).strip('"')
             try:
                 # Race: Other processes might have created and locked the file.
-                with self._atomic_write(os.path.join(history_folder, href),
-                                        "wb") as f:
+                with self._atomic_write(os.path.join(history_folder, href), "wb") as f:
                     pickle.dump([etag, history_etag], f)
             except PermissionError:
                 pass
@@ -65,8 +78,7 @@ class CollectionHistoryMixin:
     def _get_deleted_history_hrefs(self):
         """Returns the hrefs of all deleted items that are still in the
         history cache."""
-        history_folder = os.path.join(self._filesystem_path,
-                                      ".Radicale.cache", "history")
+        history_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "history")
         try:
             for entry in os.scandir(history_folder):
                 href = entry.name
@@ -80,8 +92,9 @@ class CollectionHistoryMixin:
 
     def _clean_history(self):
         # Delete all expired history entries of deleted items.
-        history_folder = os.path.join(self._filesystem_path,
-                                      ".Radicale.cache", "history")
-        self._clean_cache(history_folder, self._get_deleted_history_hrefs(),
-                          max_age=self.configuration.get(
-                              "storage", "max_sync_token_age"))
+        history_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "history")
+        self._clean_cache(
+            history_folder,
+            self._get_deleted_history_hrefs(),
+            max_age=self.configuration.get("storage", "max_sync_token_age"),
+        )
