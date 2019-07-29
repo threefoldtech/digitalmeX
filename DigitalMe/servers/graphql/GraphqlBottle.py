@@ -1,21 +1,3 @@
-
-
-# Copyright (C) 2019 :  TF TECH NV in Belgium see https://www.threefold.tech/
-# This file is part of jumpscale at <https://github.com/threefoldtech>.
-# jumpscale is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# jumpscale is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License v3 for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with jumpscale or jumpscale derived works.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import json
 from collections import namedtuple
 
@@ -78,3 +60,5 @@ def graphql_middleware(bottle_app, endpoint_name, graphene_schema):
     bottle_app.route(endpoint_name, "OPTIONS", handle_graphql_response(execute_introspection, graphene_schema))
     bottle_app.route(endpoint_name, "POST", handle_graphql_response(execute_post, graphene_schema))
     bottle_app.route(endpoint_name, "GET", handle_graphql_response(execute_get, graphene_schema))
+
+
