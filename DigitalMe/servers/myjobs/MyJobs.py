@@ -154,8 +154,8 @@ class MyJobs(JSBASE):
 
     def _data_loop(self):
         while True:
-            # self._log_debug("data_process run")
-            self._data_process_1time(timeout=5)
+            self._log_debug("data_process run")
+            self._data_process_1time(timeout=1)
 
     def _data_process_1time(self, timeout=0):
         r = self.queue_return.get(timeout=timeout)
@@ -440,6 +440,16 @@ class MyJobs(JSBASE):
         """
 
         j.tools.logger.debug = True
+
+        # TO TEST DEBUG WINDOW
+        # def sometging():
+        #     while True:
+        #         self._log_debug("test")
+        #         self._log_info("test")
+        #         self._log_warning("test")
+        #         time.sleep(1)
+        #
+        # self.dataloop = gevent.spawn(sometging)
 
         def reset():
             # kill leftovers from last time, if any
