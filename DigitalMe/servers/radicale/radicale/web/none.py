@@ -23,5 +23,3 @@ class Web(web.BaseWeb):
         if path != "/.web":
             return httputils.NOT_FOUND
         return client.OK, {"Content-Type": "text/plain"}, "Radicale works!"
-
-

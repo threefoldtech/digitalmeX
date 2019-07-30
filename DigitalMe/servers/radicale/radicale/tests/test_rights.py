@@ -193,5 +193,3 @@ permissions: Rr"""
         event1 = get_file_content("event1.ics")
         status, _, _ = self.request("PUT", "/user/calendar/event1.ics", event1)
         assert status == 201
-
-

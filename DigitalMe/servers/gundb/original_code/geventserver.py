@@ -101,5 +101,3 @@ class GeventGunServer(WebSocketApplication):
 
 
 geventserverapp = WebSocketServer(("", 8000), Resource(OrderedDict([("/", GeventGunServer)])))
-
-

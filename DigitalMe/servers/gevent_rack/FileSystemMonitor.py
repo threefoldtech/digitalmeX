@@ -87,5 +87,3 @@ class ChangeWatchdog(FileSystemEventHandler, JSBASE):
 
     # def on_modified(self, event):
     #     self.handler(event)
-
-

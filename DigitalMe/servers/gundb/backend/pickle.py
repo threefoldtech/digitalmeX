@@ -44,5 +44,3 @@ class Pickle(BackendMixin):
 
     def list(self):
         return self.db.items()
-
-

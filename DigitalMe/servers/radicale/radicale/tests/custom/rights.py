@@ -25,5 +25,3 @@ class Rights(rights.BaseRights):
         if sane_path not in ("tmp", "other"):
             return ""
         return rights.intersect_permissions(permissions)
-
-

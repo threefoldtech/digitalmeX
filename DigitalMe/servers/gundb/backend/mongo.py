@@ -45,5 +45,3 @@ class Mongo(BackendMixin):
 
     def list(self):
         return self.db.items()
-
-

@@ -99,5 +99,3 @@ class ActorBase(JSBASE):
         return "coordinator:%s" % self._name
 
     __repr__ = __str__
-
-

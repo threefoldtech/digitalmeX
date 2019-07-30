@@ -41,5 +41,3 @@ class RadicaleServer(JSConfigClient):
         self.install(reset=reset)
         self.default.start()
         self.default.stop()
-
-

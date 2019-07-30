@@ -497,5 +497,3 @@ def simplify_prefilters(filters, collection_tag="VCALENDAR"):
                 return tag, start, end, simple
             return tag, TIMESTAMP_MIN, TIMESTAMP_MAX, simple
     return None, TIMESTAMP_MIN, TIMESTAMP_MAX, simple
-
-

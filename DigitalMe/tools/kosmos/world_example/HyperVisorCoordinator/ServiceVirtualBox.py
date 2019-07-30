@@ -32,5 +32,3 @@ class ServiceVirtualBox(ServiceBase):
 
     def ok(self):
         pass
-
-

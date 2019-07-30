@@ -233,5 +233,3 @@ class GedisCmds(JSBASE):
                 self._schema_url_add(s2.url, s2.text)
 
         return schema
-
-

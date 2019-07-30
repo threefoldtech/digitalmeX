@@ -24,5 +24,3 @@ from radicale import web
 class Web(web.BaseWeb):
     def get(self, environ, base_prefix, path, user):
         return client.OK, {"Content-Type": "text/plain"}, "custom"
-
-

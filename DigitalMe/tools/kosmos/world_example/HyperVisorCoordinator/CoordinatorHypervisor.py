@@ -14,5 +14,3 @@ class CoordinatorHypervisor(j.world.system._CoordinatorBase):
         from .ServiceVirtualBox import ServiceVirtualBox
 
         self.load(ServiceVirtualBox)
-
-

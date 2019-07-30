@@ -43,5 +43,3 @@ INTERNAL_SERVER_ERROR = (
 )
 
 DAV_HEADERS = "1, 2, 3, calendar-access, addressbook, extended-mkcol"
-
-

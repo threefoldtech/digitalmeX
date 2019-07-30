@@ -62,5 +62,3 @@ class GunClient:
                         print("KSTATE: ", kstate)
                     self.backend.put(soul, k, v, kstate)
             return self.backend.get(soul, key)
-
-

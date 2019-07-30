@@ -108,5 +108,3 @@ class ApplicationProppatchMixin:
                 logger.warning("Bad PROPPATCH request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
             return (client.MULTI_STATUS, headers, self.write_xml_content(xml_answer))
-
-

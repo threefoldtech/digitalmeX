@@ -22,5 +22,3 @@ class GedisBackendClientFactory(JSConfigBase):
         if type not in ALLOWED_TYPES:
             raise RuntimeError("Specified type not allowed")
         return ALLOWED_TYPES[type](instance=instance, data=data, interactive=interactive, parent=self)
-
-

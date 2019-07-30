@@ -49,5 +49,3 @@ class chatbot(JSBASE):
         ```
         """
         return json.dumps(self.chatbot.session_new(topic))
-
-

@@ -473,5 +473,3 @@ class Configuration:
                 logger.info("Skipped missing %s", source)
             else:
                 logger.info("Parsed %s", source)
-
-

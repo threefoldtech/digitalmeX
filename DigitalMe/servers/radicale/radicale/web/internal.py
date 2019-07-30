@@ -65,5 +65,3 @@ class Web(web.BaseWeb):
             last_modified = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(os.fstat(f.fileno()).st_mtime))
         headers = {"Content-Type": content_type, "Last-Modified": last_modified}
         return client.OK, headers, answer
-
-

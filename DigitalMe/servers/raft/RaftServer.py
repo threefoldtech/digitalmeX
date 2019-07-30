@@ -108,5 +108,3 @@ class RaftServer(JSBASE):
                 print(self.dict1.items())
 
                 prevprint = last
-
-

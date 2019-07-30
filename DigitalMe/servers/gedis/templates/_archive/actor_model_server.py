@@ -37,7 +37,7 @@ class model_{{schema.key}}(JSBASE):
 
     def get(self, id):
         id = int(id.decode())
-        obj = self.model.get(id=id)
+        obj = self.model.get(obj_id=id)
         print("get")
         if self.server_gedis.serializer:
             return self.server_gedis.return_serializer.dumps(obj.ddict)

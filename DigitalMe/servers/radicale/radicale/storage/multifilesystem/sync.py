@@ -114,5 +114,3 @@ class CollectionSyncMixin:
             if href not in state:
                 changes.append(href)
         return token, changes
-
-

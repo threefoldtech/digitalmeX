@@ -1,5 +1,3 @@
 METADATA = "_"
 STATE = ">"
 SOUL = "#"
-
-

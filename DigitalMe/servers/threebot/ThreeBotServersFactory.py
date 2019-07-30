@@ -37,5 +37,3 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
         s.start()
 
         j.shell()
-
-

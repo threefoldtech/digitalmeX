@@ -84,5 +84,3 @@ def wait_start_server(addr, port):
     j.tools.timer.execute_until(
         lambda: j.sal.nettools.tcpPortConnectionTest(addr, port, timeout=1), timeout=5, interval=0.2
     )
-
-

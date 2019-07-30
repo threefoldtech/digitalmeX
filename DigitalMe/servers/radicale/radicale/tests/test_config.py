@@ -165,5 +165,3 @@ class TestConfig:
         e = exc_info.value
         assert "Invalid option 'new_option'" in str(e)
         assert "section 'auth'" in str(e)
-
-

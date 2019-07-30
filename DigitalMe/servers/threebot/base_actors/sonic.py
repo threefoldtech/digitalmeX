@@ -23,5 +23,3 @@ class sonic(j.application.JSBaseClass):
         out = schema_out.new()
         out.res = self.sonic_client.query(collection, bucket, text)
         return out
-
-

@@ -62,5 +62,3 @@ class ApplicationMkcalendarMixin:
                 logger.warning("Bad MKCALENDAR request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
             return client.CREATED, {}, None
-
-

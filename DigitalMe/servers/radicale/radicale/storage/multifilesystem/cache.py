@@ -100,5 +100,3 @@ class CollectionCacheMixin:
                 if not os.path.isfile(os.path.join(self._filesystem_path, e.name))
             ),
         )
-
-

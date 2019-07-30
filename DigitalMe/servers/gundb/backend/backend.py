@@ -125,5 +125,3 @@ class BackendMixin:
                 res = {**ret, **self.db.get(soul)}
                 return res
         return ret
-
-

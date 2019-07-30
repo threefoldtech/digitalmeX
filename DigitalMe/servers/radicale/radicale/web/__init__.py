@@ -48,5 +48,3 @@ class BaseWeb:
 
         """
         raise NotImplementedError
-
-

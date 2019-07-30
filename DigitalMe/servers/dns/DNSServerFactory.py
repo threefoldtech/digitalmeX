@@ -132,5 +132,3 @@ class DNSServerFactory(j.application.JSBaseConfigsFactoryClass):
         dns.resolver.delete_record("one.test.com")
         records = dns.resolver.model.find(zone="test.com")
         assert len(records) == 0
-
-

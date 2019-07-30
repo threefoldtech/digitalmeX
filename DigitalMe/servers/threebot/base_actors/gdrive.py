@@ -49,5 +49,3 @@ class gdrive(j.application.JSBaseClass):
                 guid2 = guid2.split("_", maxsplit=1)[1]  # remove the 0x_ part from the file name
                 out.res = "/gdrive_static/slide/{}/{}".format(guid1, guid2)
             return out
-
-

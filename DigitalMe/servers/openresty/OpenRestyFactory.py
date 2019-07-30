@@ -138,5 +138,3 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
 
         tmux()
         corex()
-
-

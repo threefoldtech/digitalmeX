@@ -19,5 +19,3 @@ class ZOSCmdFactory(j.application.JSFactoryConfigsBaseClass):
         # node = self.zosnodes.mynode
 
         j.shell()
-
-

@@ -95,5 +95,3 @@ class WorldSystem(JSFactoryBase):
         action = vb3.task1(descr="mytask_test")
 
         j.shell()
-
-

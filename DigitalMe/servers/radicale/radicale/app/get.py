@@ -85,5 +85,3 @@ class ApplicationGetMixin:
                 headers["Content-Disposition"] = content_disposition
             answer = item.serialize()
             return client.OK, headers, answer
-
-

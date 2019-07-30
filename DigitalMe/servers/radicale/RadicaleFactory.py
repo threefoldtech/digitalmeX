@@ -17,5 +17,3 @@ class RadicaleFactory(JSConfigs):
         if not self._default:
             self._default = self.get("default")
         return self._default
-
-

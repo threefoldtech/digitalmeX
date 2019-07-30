@@ -108,5 +108,3 @@ def gun(ws):
     # print("Connection closed for ws: ", ws)
     peers.remove(ws)
     print("Peers now are: ", peers)
-
-

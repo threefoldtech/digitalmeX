@@ -177,5 +177,3 @@ def set_level(level):
         logger.removeFilter(removeTracebackFilter)
     else:
         logger.addFilter(removeTracebackFilter)
-
-

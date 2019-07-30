@@ -27,5 +27,3 @@ class Farmers(j.application.JSBaseConfigsClass):
     """
 
     _CHILDCLASS = Farmer
-
-

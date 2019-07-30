@@ -77,5 +77,3 @@ class CollectionHistoryMixin:
             self._get_deleted_history_hrefs(),
             max_age=self.configuration.get("storage", "max_sync_token_age"),
         )
-
-

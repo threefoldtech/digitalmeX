@@ -342,5 +342,3 @@ def actor_key(name, namespace):
     #                 model=model)
     #             self.actor_add(path=dest, namespace=namespace)
     #         self.schema_urls.append(model.schema.url)
-
-

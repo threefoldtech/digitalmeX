@@ -47,5 +47,3 @@ def configuration_to_dict(configuration):
         for option in configuration.options(section):
             d[section][option] = configuration.get_raw(section, option)
     return d
-
-

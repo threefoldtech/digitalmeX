@@ -47,5 +47,3 @@ class ReverseProxy(j.application.JSBaseConfigClass):
 class ReverseProxies(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = ReverseProxy
-
-

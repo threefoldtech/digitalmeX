@@ -109,5 +109,3 @@ class Wiki(j.application.JSBaseConfigClass):
 class Wikis(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = Wiki
-
-

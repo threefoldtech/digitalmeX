@@ -103,5 +103,3 @@ class GunClient(JSConfigBase):
                     self.backend.put(soul, k, v, diff[soul]["_"][">"][k])
             res = self.backend.get(soul, key) or "nil"
             return res
-
-

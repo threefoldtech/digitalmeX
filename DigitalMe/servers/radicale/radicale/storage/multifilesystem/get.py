@@ -125,5 +125,3 @@ class CollectionGetMixin:
         # We don't need to check for collissions, because the the file names
         # are from os.listdir.
         return (self._get(href, verify_href=False) for href in self._list())
-
-

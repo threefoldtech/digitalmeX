@@ -242,5 +242,3 @@ def test(factory):
         gevent.sleep(1)  # browser is doing something
         nr += 1
         factory.session_work_set(sid, nr)
-
-

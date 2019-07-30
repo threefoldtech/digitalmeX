@@ -332,5 +332,3 @@ def serve(configuration, shutdown_socket=None):
                 if server:
                     server.handle_request()
                     server.service_actions()
-
-

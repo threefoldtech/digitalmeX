@@ -138,5 +138,3 @@ def lex_from_graph(lex, db):
     ack[soul] = node
 
     return ack
-
-

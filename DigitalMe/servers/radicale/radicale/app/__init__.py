@@ -362,5 +362,3 @@ class Application(
         headers = {"Content-Type": "text/xml; charset=%s" % self.encoding}
         content = self.write_xml_content(xmlutils.webdav_error(namespace, name))
         return status, headers, content
-
-

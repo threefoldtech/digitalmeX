@@ -37,5 +37,3 @@ def cltest():
 
 if __name__ == "__main__":
     cltest()
-
-

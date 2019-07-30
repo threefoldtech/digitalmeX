@@ -52,5 +52,3 @@ class graphql_actor(JSBASE):
             info = item.split("=")
             out_data[info[0]] = info[1]
         return out_data
-
-

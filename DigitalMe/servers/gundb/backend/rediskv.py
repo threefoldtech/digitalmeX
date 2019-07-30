@@ -37,5 +37,3 @@ class RedisKV(BackendMixin):
 
     def list(self):
         return self.db.items()
-
-

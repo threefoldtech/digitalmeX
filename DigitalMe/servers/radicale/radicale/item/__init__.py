@@ -366,5 +366,3 @@ class Item:
         self.time_range
         self.component_name
         self._vobject_item = orig_vobject_item
-
-

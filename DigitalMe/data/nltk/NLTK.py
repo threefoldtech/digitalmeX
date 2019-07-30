@@ -250,5 +250,3 @@ class NLTKFactory(JSBASE):
         for i in range(nr):
             self.dense_binary("1Antonín Dvořák1")
         j.tools.timer.stop(nr)
-
-

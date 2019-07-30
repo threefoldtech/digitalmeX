@@ -225,5 +225,3 @@ class Nodes(j.application.JSBaseConfigsClass):
     """
 
     _CHILDCLASS = Node
-
-

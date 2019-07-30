@@ -115,5 +115,3 @@ class GundbFactory(JSBASE):
         j.shell()
 
         print("tests are ok")
-
-

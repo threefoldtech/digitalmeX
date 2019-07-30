@@ -48,5 +48,3 @@ class Kosmos(j.application.JSBaseClass):
         return out
 
     __repr__ = __str__
-
-

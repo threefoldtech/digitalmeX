@@ -237,5 +237,3 @@ class ServerRack(JSBASE):
                     import traceback
 
                     traceback.print_exc()
-
-

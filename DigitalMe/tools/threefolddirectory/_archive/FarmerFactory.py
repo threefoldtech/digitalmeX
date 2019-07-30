@@ -223,5 +223,3 @@ class FarmerFactory(JSBASE):
         self.farmers_load()
         self.zerotier_scan(reset=reset)
         # self.tf_dir_scan(reset=reset)
-
-

@@ -27,5 +27,3 @@ class ApplicationOptionsMixin:
             "DAV": httputils.DAV_HEADERS,
         }
         return client.OK, headers, None
-
-

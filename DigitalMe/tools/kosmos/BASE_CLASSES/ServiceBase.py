@@ -130,7 +130,7 @@ class ServiceBase(j.application.JSBaseClass):
                 self._data = self._MODEL.new()
                 self._data.key = self._key
             else:
-                self._data = self._MODEL.get(id=self.id)
+                self._data = self._MODEL.get(obj_id=self.id)
                 self._key = self._data.key
 
             if self._data is None:
@@ -247,5 +247,3 @@ class ServiceBase(j.application.JSBaseClass):
         return out
 
     __repr__ = __str__
-
-

@@ -49,5 +49,3 @@ class DummyKV(BackendMixin):
 
     def list(self):
         return self.db.items()
-
-

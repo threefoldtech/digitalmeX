@@ -447,5 +447,3 @@ def dm_verify(dm_id, epoch, signed_message):
         raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
 
     return True
-
-

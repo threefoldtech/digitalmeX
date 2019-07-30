@@ -196,5 +196,3 @@ class ApplicationPutMixin:
 
             headers = {"ETag": etag}
             return client.CREATED, headers, None
-
-

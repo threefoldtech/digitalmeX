@@ -195,5 +195,3 @@ class GraphQLFactory(JSBASE):
         self._server_test_start(background=True)
 
         print("tests are ok")
-
-

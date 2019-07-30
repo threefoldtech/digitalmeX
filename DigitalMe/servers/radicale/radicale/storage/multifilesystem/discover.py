@@ -75,5 +75,3 @@ class CollectionDiscoverMixin:
             child_path = pathutils.unstrip_path(sane_child_path, True)
             with child_context_manager(sane_child_path):
                 yield cls(child_path)
-
-

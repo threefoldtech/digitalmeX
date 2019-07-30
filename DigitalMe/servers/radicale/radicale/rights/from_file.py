@@ -67,5 +67,3 @@ class Rights(rights.BaseRights):
                 )
         logger.info("Rights: %r:%r doesn't match any section", user, sane_path)
         return ""
-
-

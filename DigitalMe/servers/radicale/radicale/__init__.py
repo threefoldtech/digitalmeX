@@ -60,5 +60,3 @@ def application(environ, start_response):
             "RADICALE_CONFIG must not change: %s != %s" % (repr(config_path), repr(_application_config_path))
         )
     return _application(environ, start_response)
-
-

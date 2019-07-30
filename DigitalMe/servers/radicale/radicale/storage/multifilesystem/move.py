@@ -48,5 +48,3 @@ class CollectionMoveMixin:
         to_collection._clean_history()
         if item.collection._filesystem_path != to_collection._filesystem_path:
             item.collection._clean_history()
-
-

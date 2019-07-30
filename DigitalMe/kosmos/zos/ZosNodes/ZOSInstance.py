@@ -59,5 +59,3 @@ class ZOSInstance(j.application.JSFactoryConfigsBaseClass):
         return "zero-os: %-14s %-25s:%-4s" % (self.name, self.addr, self.port)
 
     __repr__ = __str__
-
-

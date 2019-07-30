@@ -198,5 +198,3 @@ class Community(JSBASE):
     #             else: # gevent <= 0.13
     #                 import traceback
     #                 traceback.print_exc()
-
-

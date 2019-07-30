@@ -14,5 +14,3 @@ class ZOSVirtual(ZOSInstance):
 
     def _init(self, **kwargs):
         pass
-
-

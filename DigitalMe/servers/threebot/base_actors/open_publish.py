@@ -63,5 +63,3 @@ class open_publish(JSBASE):
         :return:
         """
         self.open_publish_tool.remove_website(name)
-
-

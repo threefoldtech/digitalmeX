@@ -57,5 +57,3 @@ class CollectionCreateCollectionMixin:
             cls._sync_directory(parent_dir)
 
         return cls(pathutils.unstrip_path(sane_path, True))
-
-

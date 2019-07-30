@@ -21,5 +21,3 @@ def chat(bot):
     res = j.tools.jinja2.template_render(text=j.core.text.strip(res), **locals())
     bot.md_show(res)
     bot.redirect("https://threefold.me")
-
-

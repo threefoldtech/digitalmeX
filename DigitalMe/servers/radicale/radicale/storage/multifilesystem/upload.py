@@ -94,5 +94,3 @@ class CollectionUploadMixin:
                 pickle.dump(cache_content, f)
         self._sync_directory(cache_folder)
         self._sync_directory(self._filesystem_path)
-
-

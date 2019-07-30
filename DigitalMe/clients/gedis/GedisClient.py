@@ -166,5 +166,3 @@ class GedisClient(JSConfigBase):
                 res.append(i)
 
         return res
-
-

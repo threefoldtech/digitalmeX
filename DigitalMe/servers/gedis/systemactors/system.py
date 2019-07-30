@@ -153,5 +153,3 @@ class system(JSBASE):
                     res2[key] = args[nr - 1].decode()
                     key = ""
         return res, res2
-
-

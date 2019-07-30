@@ -168,5 +168,3 @@ def props_from_request(xml_request, actions=("set", "remove")):
                 result[tag_from_clark(prop.tag)] = prop.text
 
     return result
-
-

@@ -1975,5 +1975,3 @@ class TestCustomStorageSystem(BaseFileSystemTest):
     def test_root(self):
         """A simple test to verify that the custom backend works."""
         BaseRequestsMixIn.test_root(self)
-
-

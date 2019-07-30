@@ -138,5 +138,3 @@ class GedisCmd(JSBASE):
         return "%s:%s" % (self.namespace, self.name)
 
     __str__ = __repr__
-
-

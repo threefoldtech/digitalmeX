@@ -213,5 +213,3 @@ class ServerRackFactory(JSBASE):
             self._log(r3.content)
 
         print("tests are ok")
-
-

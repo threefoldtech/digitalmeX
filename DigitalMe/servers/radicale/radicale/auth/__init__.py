@@ -101,5 +101,3 @@ class BaseAuth:
         """
 
         raise NotImplementedError
-
-

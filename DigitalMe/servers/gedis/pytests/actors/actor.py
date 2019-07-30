@@ -86,5 +86,3 @@ class actor(JSBASE):
 
     def raise_error(self):
         raise RuntimeError("woopsy daisy")
-
-

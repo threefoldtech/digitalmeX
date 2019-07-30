@@ -67,5 +67,3 @@ class TestBaseWebRequests(BaseTest):
         status, _, answer = self.request("GET", "/.web")
         assert status == 200
         assert answer == "custom"
-
-

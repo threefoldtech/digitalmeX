@@ -84,5 +84,3 @@ class Website(j.application.JSBaseConfigClass):
 class Websites(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = Website
-
-

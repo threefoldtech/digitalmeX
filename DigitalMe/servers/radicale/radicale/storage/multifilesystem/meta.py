@@ -42,5 +42,3 @@ class CollectionMetaMixin:
     def set_meta(self, props):
         with self._atomic_write(self._props_path, "w") as f:
             json.dump(props, f, sort_keys=True)
-
-

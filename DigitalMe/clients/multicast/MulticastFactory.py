@@ -29,5 +29,3 @@ class MulticastFactory(JSConfigBase):
         data["port"] = 8123
         cl = self.get(data=data)
         cl.send()
-
-

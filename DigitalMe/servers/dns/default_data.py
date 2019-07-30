@@ -31,5 +31,3 @@ records = {
     D.mail: [A(IP)],
     D.andrei: [CNAME(D)],
 }
-
-

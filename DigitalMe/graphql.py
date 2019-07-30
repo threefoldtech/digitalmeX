@@ -7,5 +7,3 @@ class BaseQuery(graphene.ObjectType):
 
 class BaseMutation(graphene.ObjectType):
     pass
-
-

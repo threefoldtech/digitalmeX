@@ -27,5 +27,3 @@ class GedisClientCmds:
 class GedisClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.gedis"
     _CHILDCLASS = GedisClient
-
-

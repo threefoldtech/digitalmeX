@@ -157,5 +157,3 @@ class DNSResolver(j.application.JSBaseConfigClass):
 class DNSResolvers(j.application.JSBaseConfigsClass):
     _name = "resolvers"
     _CHILDCLASS = DNSResolver
-
-

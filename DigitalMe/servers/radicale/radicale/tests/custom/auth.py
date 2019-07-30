@@ -29,5 +29,3 @@ class Auth(auth.BaseAuth):
         if login == "tmp":
             return login
         return ""
-
-

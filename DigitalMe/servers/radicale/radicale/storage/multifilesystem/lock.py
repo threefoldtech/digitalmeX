@@ -67,5 +67,3 @@ class CollectionLockMixin:
                     logger.debug("Captured stderr hook:\n%s", stderr_data)
                 if p.returncode != 0:
                     raise subprocess.CalledProcessError(p.returncode, p.args)
-
-

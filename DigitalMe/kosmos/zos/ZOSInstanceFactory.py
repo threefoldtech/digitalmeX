@@ -14,5 +14,3 @@ class ZOSInstanceFactory(j.application.JSFactoryConfigsBaseClass):
     """
 
     _CHILDCLASSES = [ZOSHostVirtualbox, ZOSHostOVH, ZOSTFNode, ZOSVirtual]
-
-

@@ -129,5 +129,3 @@ class ThreeFoldDirectory(j.application.JSFactoryConfigsBaseClass):
         self.farmers_load()
         self.tfdir_scan()
         # self.zerotier_scan()
-
-

@@ -43,5 +43,3 @@ class GedisFactory(JSConfigFactory):
         # now can run the rest of the tests
 
         self._test_run(name=name)
-
-

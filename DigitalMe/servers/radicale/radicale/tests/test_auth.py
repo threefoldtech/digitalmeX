@@ -180,5 +180,3 @@ class TestBaseAuthRequests(BaseTest):
             "PROPFIND", "/tmp", HTTP_AUTHORIZATION="Basic %s" % base64.b64encode(("tmp:").encode()).decode()
         )
         assert status == 207
-
-

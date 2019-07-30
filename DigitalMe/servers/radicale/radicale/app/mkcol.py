@@ -63,5 +63,3 @@ class ApplicationMkcolMixin:
                 logger.warning("Bad MKCOL request on %r: %s", path, e, exc_info=True)
                 return httputils.BAD_REQUEST
             return client.CREATED, {}, None
-
-

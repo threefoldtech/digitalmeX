@@ -60,5 +60,3 @@ def graphql_middleware(bottle_app, endpoint_name, graphene_schema):
     bottle_app.route(endpoint_name, "OPTIONS", handle_graphql_response(execute_introspection, graphene_schema))
     bottle_app.route(endpoint_name, "POST", handle_graphql_response(execute_post, graphene_schema))
     bottle_app.route(endpoint_name, "GET", handle_graphql_response(execute_get, graphene_schema))
-
-

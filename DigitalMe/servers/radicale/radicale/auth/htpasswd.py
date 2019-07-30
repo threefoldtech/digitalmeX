@@ -134,5 +134,3 @@ class Auth(auth.BaseAuth):
         except OSError as e:
             raise RuntimeError("Failed to load htpasswd file %r: %s" % (self.filename, e)) from e
         return ""
-
-

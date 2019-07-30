@@ -158,5 +158,3 @@ class Collection(
         if self._lock.locked == "w" or self._etag_cache is None:
             self._etag_cache = super().etag
         return self._etag_cache
-
-

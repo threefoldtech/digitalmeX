@@ -331,5 +331,3 @@ class BaseCollection:
     def verify(cls):
         """Check the storage for errors."""
         raise NotImplementedError
-
-

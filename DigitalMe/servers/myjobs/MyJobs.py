@@ -3,7 +3,8 @@ from Jumpscale import j
 import gipc
 import gevent
 import time
-from .MyWorker import myworker
+import sys
+from .MyWorker import MyWorker
 
 JSBASE = j.application.JSBaseClass
 
@@ -12,7 +13,7 @@ schema_job = """
 category*= ""
 time_start = 0 (T)
 time_stop = 0 (T)
-state* = ""
+state* = "new,error,ok" [E]
 timeout = 0
 action_id* = 0
 args = ""   #json
@@ -34,42 +35,42 @@ code = ""
 
 """
 
-
+# NOT THE FASTEST WAY TO KEEP STATE OF WORKER BETWEEN THE PROCESSES, BUT EASY
 schema_worker = """
 @url = jumpscale.myjobs.worker
 timeout = 3600
 time_start = 0 (T)
 last_update = 0 (T)
 current_job = (I)
-halt = false (B)
-running = false (B)
+error = "" (S)
+state* = "new,error,ok" [E]
 pid = 0
+halt = false (B)
 
 """
 
 
 class MyJobs(JSBASE):
-    """
-    """
+    __jslocation__ = "j.servers.myjobs"
 
-    def __init__(self):
-        self.__jslocation__ = "j.servers.myjobs"
-        JSBASE.__init__(self)
-        self.queue = j.clients.redis.queue_get(redisclient=j.core.db, key="myjobs", fromcache=True)
-        self.queue_data = j.clients.redis.queue_get(redisclient=j.core.db, key="myjobs_datachanges", fromcache=False)
-        self._init = False
+    def _init(self):
+        self.queue_jobs_start = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:start")
+        self.queue_return = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:return")
         self.workers = {}
         self.workers_nr_min = 1
         self.workers_nr_max = 10
         self.mainloop = None
         self.dataloop = None
-        self.workers_subprocess = True
+        self.model_job = None
+        self.model_action = None
+        self.model_worker = None
+        self._init_ = False
 
-    def init(self, reset=False, start=True):
+    def init(self, reset=False):
         """
         activates the models and starts the worker manager if required
         """
-        if self._init == False or reset:
+        if self._init_ == False or reset:
 
             # if self.mainloop == None and  self.dataloop == None:
             #     from gevent import monkey
@@ -81,23 +82,20 @@ class MyJobs(JSBASE):
             if self.dataloop != None:
                 self.dataloop.kill()
 
-            db = j.data.bcdb.get(name="myjobs", reset=reset)
+            db = j.data.bcdb.get("myjobs", storclient=j.clients.rdb.client_get())
 
-            self.model_job = db.model_get_from_schema(schema=schema_job)
-            self.model_action = db.model_get_from_schema(schema=schema_action)
-            self.model_worker = db.model_get_from_schema(schema=schema_worker)
+            self.model_job = db.model_get_from_schema(schema_job)
+            self.model_action = db.model_get_from_schema(schema_action)
+            self.model_worker = db.model_get_from_schema(schema_worker)
 
             if reset:
                 self.halt(reset=True)
 
-            if start:
-                self._start()
-
-            self._init = True
+            self._init_ = True
 
     def action_get(self, key, return_none_if_not_exist=False):
         self.init()
-        res = self.model_action.index.select().where(self.model_action.index.key == key).execute()
+        res = self.model_action.find(key=key)
         if len(res) > 0:
             o = self.model_action.get(res[0].id)
             return False, o
@@ -108,62 +106,110 @@ class MyJobs(JSBASE):
             return True, o
 
     @property
-    def nr_workers(self):
+    def workers_count(self):
         return len(self.workers.values())
 
-    def _start(self, onetime=False):
+    def start(self):
         """
+        always in subprocess, cannot see the output
+        will add worker(s) when needed, when there is more work
 
         :return:
         """
-        if self.workers_subprocess:
-            self._worker_start(onetime=onetime)  # start first worker
-        if onetime:
-            self._data_process(onetime=True)
-        else:
-            self.dataloop = gevent.spawn(self._data_process)
-            if self.workers_subprocess:
-                self.mainloop = gevent.spawn(self._main_loop)
+        self.init(reset=False)
+        self.mainloop = gevent.spawn(self._main_loop)
+        self.dataloop = gevent.spawn(self._data_loop)  # returns the data
 
-    def _worker_start(self, onetime=False):
-        w = self.model_worker.new()
-        w.time_start = j.data.time.epoch
-        w.last_update = j.data.time.epoch
-        w = self.model_worker.set(w)
-        self._log_debug("worker add")
+    def worker_start(self, onetime=False, subprocess=True, worker_id=None):
+        self.init()
         if onetime:
-            myworker(w.id, onetime=onetime)
+            subprocess = False
+        if worker_id:
+            w = self.model_worker.get(worker_id)
         else:
-            worker = gipc.start_process(target=myworker, args=(w.id,))
+            w = self.model_worker.new()
+            w.time_start = j.data.time.epoch
+            w.last_update = j.data.time.epoch
+            w = self.model_worker.set(w)
+        self._log_debug("worker add: %s" % w.id, data=w._data)
+        if subprocess:
+            worker = gipc.start_process(target=MyWorker, args=(w.id,))
             self.workers[w.id] = worker
+        else:
+            excepthook_old = sys.excepthook
+            MyWorker(w.id, onetime=onetime)
+            # will make sure the data comes back
+            self._data_process_untill_empty(timeout=5)
+            sys.excepthook = excepthook_old
 
-    def worker_start_inprocess(self):
+    def worker_start_inprocess(self, worker_id=None):
         """
         kosmos "j.servers.myjobs.worker_start_inprocess()"
+
+        easy to debug the myworker framework because can see issues in the jobs executed
+
         :return:
         """
-        self.init(reset=False, start=False)
-        w = self.model_worker.new()
-        w.time_start = j.data.time.epoch
-        w.last_update = j.data.time.epoch
-        w.save()
-        self._log_debug("worker started:%s" % w.id)
-        myworker(w.id, showout=True)
+        self.worker_start(subprocess=False, worker_id=worker_id)
+
+    def _data_loop(self):
+        while True:
+            # self._log_debug("data_process run")
+            self._data_process_1time(timeout=5)
+
+    def _data_process_1time(self, timeout=0):
+        r = self.queue_return.get(timeout=timeout)
+        if r == None:
+            return
+        cat, objid, json_ = j.data.serializers.msgpack.loads(r)
+        if cat not in ["E"]:
+            ddict = j.data.serializers.json.loads(json_)
+        if cat == "W":
+            worker = self.model_worker.new(data=ddict)
+            worker.id = objid
+            worker.save()
+            return worker
+        elif cat == "J":
+            job = self.model_job.new(data=ddict)
+            job.id = objid
+            job.save()
+            for queue_name in job.return_queues:
+                queue = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs:%s" % queue_name)
+                queue.put(job.id)
+            return job
+        elif cat == "E":
+            worker = self.model_worker.get(json_)
+            j.core.tools.pprint(worker)
+            sys.exit(1)
+        else:
+            raise RuntimeError("return queue does not have right obj")
+
+    def _data_process_untill_empty(self, timeout=5):
+        res = []
+
+        # need to wait till first one comes
+        r = self._data_process_1time(timeout=timeout)
+        if not r:
+            raise RuntimeError("timeout did not get data back")
+
+        while r:
+            r = self._data_process_1time(timeout=0)
+        return res
 
     def _main_loop(self):
 
         self._log_debug("monitor start")
 
         def test_workers_more():
-            nr_workers = self.nr_workers
-            a = nr_workers < self.workers_nr_max
-            b = nr_workers < self.queue.qsize() or nr_workers < self.workers_nr_min
+            workers_count = self.workers_count
+            a = workers_count < self.workers_nr_max
+            b = workers_count < self.queue_jobs_start.qsize() or workers_count < self.workers_nr_min
             return a and b
 
         def test_workers_less():
-            nr_workers = self.nr_workers
-            a = nr_workers > self.workers_nr_max
-            b = nr_workers > self.queue.qsize() and nr_workers > self.workers_nr_min
+            workers_count = self.workers_count
+            a = workers_count > self.workers_nr_max
+            b = workers_count > self.queue_jobs_start.qsize() and workers_count > self.workers_nr_min
             return a or b
 
         while True:
@@ -222,7 +268,7 @@ class MyJobs(JSBASE):
                 for wid in active_workers:
                     gproc = self.workers[wid]
                     if gproc.exitcode != None:
-                        raise RuntimeError("subprocess should never have been exitted")
+                        raise RuntimeError("subprocess should never have been exit-ed")
                     w = self.model_worker.get(wid)
                     if w == None:
                         continue
@@ -230,7 +276,7 @@ class MyJobs(JSBASE):
                     job_running = w.current_job != 2147483647
                     self._log_debug("job running:%s (%s)" % (w.id, job_running))
 
-                    if w.halt == False and not job_running and self.queue.qsize() == 0:
+                    if w.halt == False and not job_running and self.queue_jobs_start.qsize() == 0:
                         if removed_one == False and test_workers_less():
                             self._log_debug("worker remove:%s" % wid)
                             removed_one = True
@@ -248,7 +294,7 @@ class MyJobs(JSBASE):
 
             # print(self.workers)
 
-            self._log_debug("nr workers:%s, queuesize:%s" % (self.nr_workers, self.queue.qsize()))
+            self._log_debug("nr workers:%s, queuesize:%s" % (self.workers_count, self.queue_jobs_start.qsize()))
             gevent.sleep(1)
 
     def schedule(
@@ -319,46 +365,9 @@ class MyJobs(JSBASE):
             # self.return_queues[job.id]
             raise RuntimeError("need to implement")
 
-        self.queue.put(job.id)
+        self.queue_jobs_start.put(job.id)
 
         return job.id
-
-    def result_queue_get(self, queue_name, timeout=10, nr_items=1):
-        """
-        wait for job to return on queue
-        :param queue_name:
-        :param timeout:
-        :param nr_items: will only return when nr of items equal min set, if more than 1 then as list
-        :return:
-        """
-        res = []
-        if nr_items > 1:
-            while True:
-                job = self.result_queue_get(queue_name=queue_name, timeout=timeout)
-                res.append(job)
-                if len(res) + 1 > nr_items:
-                    return res
-        else:
-            job = self.result_queue_get(queue_name=queue_name, timeout=timeout)
-        return job
-
-    def _result_queue_get(self, queue_name, timeout=10):
-        """
-        will wait for 1 entry to come in queue & will return it
-        :param queue_name:
-        :param timeout:
-        :return:
-        """
-        q = j.clients.redis.getQueue(redisclient=j.clients.redis.core_get(), name="myjobs:%s" % queue_name)
-        data = q.get(timeout=timeout)
-        if data is None:
-            raise RuntimeError("timeout on wait for queue:%s" % queue_name)
-        jid, data_ret = j.data.serializers.msgpack.loads(data)
-        j.shell()
-        w
-        job = self.model_job.schema.new(datadict=data_ret)
-        job.id = jid
-        return job
 
     def halt(self, graceful=True, reset=True):
 
@@ -385,8 +394,12 @@ class MyJobs(JSBASE):
             self.model_job.destroy()
             self.model_worker.destroy()
             # delete the queue
-            while self.queue.get_nowait() != None:
+            while self.queue_jobs_start.get_nowait() != None:
                 pass
+            while self.queue_return.get_nowait() != None:
+                pass
+
+            self._init_ = False
 
     def results(self, ids, timeout=10):
         res = {}
@@ -414,6 +427,7 @@ class MyJobs(JSBASE):
         js_shell "j.servers.myjobs.test()"
         :return:
         """
+        self.workers_start()
         self.test1()
         self.test2()
         self.test3()
@@ -425,17 +439,15 @@ class MyJobs(JSBASE):
         :return:
         """
 
-        def kill():
+        j.tools.logger.debug = True
+
+        def reset():
             # kill leftovers from last time, if any
-            session = j.servers.tmux.session_get("main")
-            session.window_remove("myworker_worker")
-            self.init(reset=True, start=False)
+            self.init(reset=True)
             jobs = self.model_job.find()
             assert len(jobs) == 0
-            assert self.queue.qsize() == 0
-            self.workers_subprocess = True
-
-        kill()
+            assert self.queue_jobs_start.qsize() == 0
+            assert self.queue_return.qsize() == 0
 
         def add(a, b):
             return a + b
@@ -453,41 +465,39 @@ class MyJobs(JSBASE):
 
             time.sleep(2)
 
+        reset()
+
         # test the behaviour for 1 job in process, only gevent for data handling
-        j.servers.myjobs.schedule(add_error, 1, 2)
-        self._start(onetime=True)
+        jobid = self.schedule(add_error, 1, 2)
+
+        self.worker_start(onetime=True)
+        job = self.model_job.get(jobid)
+        assert job.error == "s"
+        assert job.result == ""
+        assert job.state == "ERROR"
+        assert job.time_stop > 0
 
         jobs = self.model_job.find()
+
         assert len(jobs) == 1
         job = jobs[0]
         assert job.error == "s"
-        assert job.id == 0
         assert job.result == ""
         assert job.state == "ERROR"
         assert job.time_stop > 0
 
         j.servers.myjobs.schedule(add, 1, 2)
-        self._start(onetime=True)
+        self.worker_start(onetime=True)
 
         jobs = self.model_job.find()
         assert len(jobs) == 2
         job = jobs[1]
         assert job.error == ""
-        assert job.id == 1
         assert job.result == "3"
         assert job.state == "OK"
         assert job.time_stop > 0
 
-        res = self.results([1])
-
-        assert res == {1: "3"}  # is the result back
-
-        assert 3 == j.servers.myjobs.schedule(add, 1, 2, inprocess=True)
-
         # lets start from scratch, now we know the super basic stuff is working
-
-        self.workers_subprocess = False  # will test with independent worker in tmux
-
         self.init(reset=True)
 
         for x in range(10):
@@ -499,24 +509,37 @@ class MyJobs(JSBASE):
 
         assert len(jobs) == 11
 
-        assert self.queue.qsize() == 11  # there need to be 12 jobs in queue
+        assert self.queue_jobs_start.qsize() == 11  # there need to be 12 jobs in queue
 
-        def tmuxexec():
-            # lets now run the job executor in tmux, see it runs well in process
-            cmd = 'js_shell "j.servers.myjobs.worker_start_inprocess()"'
-            j.servers.tmux.execute(
-                cmd, session="main", window="myworker_worker", pane="main", session_reset=False, window_reset=True
-            )
+        # nothing got started yet
 
-            time.sleep(1)
-            assert self.queue.qsize() == 0
+        def tmux_start():
+            w = self.model_worker.new()
+            cmd = j.servers.startupcmd.get(name="myjobs_worker")
+            cmd.cmd_start = "j.servers.myjobs.worker_start_inprocess(worker_id=%s)" % w.id
+            cmd.process_strings = "/sandbox/var/cmds/myjobs_worker.py"
+            cmd.interpreter = "jumpscale"
+            cmd.stop(force=True)
+            cmd.start()
+            print("WORKER STARTED IN TMUX")
 
-        tmuxexec()
+        tmux_start()
+        self.dataloop = gevent.spawn(self._data_loop)
 
-        print("WORKER STARTED IN TMUX")
+        job = jobs[0]
+
+        res = self.results([job.id])
+
+        assert res == {job.id: "3"}  # is the result back
+
+        assert 3 == j.servers.myjobs.schedule(add, 1, 2, inprocess=True)
 
         print("will wait for results")
-        assert self.results([1, 2, 3], timeout=1) == {1: "3", 2: "3", 3: "3"}
+        assert self.results([jobs[2].id, jobs[3].id, jobs[4].id], timeout=1) == {
+            jobs[2].id: "3",
+            jobs[3].id: "3",
+            jobs[4].id: "3",
+        }
 
         jobs = self.model_job.find()
         errors = [job for job in jobs if job.state == "ERROR"]
@@ -636,5 +659,3 @@ class MyJobs(JSBASE):
             return j.data.serializers.json.dumps([1, 2])
 
         self.result_queue_get()
-
-

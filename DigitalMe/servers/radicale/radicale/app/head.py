@@ -19,5 +19,3 @@ class ApplicationHeadMixin:
         """Manage HEAD request."""
         status, headers, answer = self.do_GET(environ, base_prefix, path, user)
         return status, headers, None
-
-

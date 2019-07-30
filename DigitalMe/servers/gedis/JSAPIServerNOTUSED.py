@@ -42,5 +42,3 @@ class JSAPIServer:
         handler = WebsocketRequestHandler(self.instance, self.cmds, self.actors, self.cmds_meta)
         handler.handle(websocket, addr)
         return []
-
-

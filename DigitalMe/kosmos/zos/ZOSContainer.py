@@ -578,5 +578,3 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
 class ZOSContainers(j.application.JSBaseConfigsClass):
     _CHILDCLASS = ZOSContainer
-
-

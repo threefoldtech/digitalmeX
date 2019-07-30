@@ -83,5 +83,3 @@ def search(k, graph, rootobjects):
         return []
 
     return inner(k, None, graph, roots, None)
-
-

@@ -79,5 +79,3 @@ class BaseTest:
         answer = self.application(args, start_response)
 
         return (int(status.split()[0]), dict(headers), answer[0].decode("utf-8") if answer else None)
-
-

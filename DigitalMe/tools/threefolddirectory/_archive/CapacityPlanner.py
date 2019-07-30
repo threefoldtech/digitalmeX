@@ -332,5 +332,3 @@ class CapacityPlanner(JSBASE):
         reverse_proxy = self.web_gateway_add_host(web_gateway_service, domain, name=name)
         service.schedule_action("update_reverse_proxy", args={"reverse_proxy": reverse_proxy.name}).wait(die=True)
         return
-
-

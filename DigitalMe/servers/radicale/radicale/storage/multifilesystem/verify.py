@@ -70,5 +70,3 @@ class CollectionVerifyMixin:
                         collection.get_meta("tag"),
                     )
         return item_errors == 0 and collection_errors == 0
-
-

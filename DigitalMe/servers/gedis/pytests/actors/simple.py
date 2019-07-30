@@ -28,5 +28,3 @@ class simple(JSBASE):
 
     def echo(self, input):
         return input
-
-

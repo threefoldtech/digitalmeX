@@ -110,5 +110,3 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
         """
         cmd = "cd  %s;lapis build" % self._web_path
         j.sal.process.execute(cmd)
-
-

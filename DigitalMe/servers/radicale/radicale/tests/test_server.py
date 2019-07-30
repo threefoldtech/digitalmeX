@@ -197,5 +197,3 @@ class TestBaseServerRequests:
             p.terminate()
             p.wait()
         assert p.returncode == 0
-
-

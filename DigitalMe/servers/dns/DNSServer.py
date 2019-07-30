@@ -174,5 +174,3 @@ class DNSServer(DatagramServer, j.application.JSBaseConfigClass):
 class DNSServers(j.application.JSBaseConfigsClass):
     _name = "servers"
     _CHILDCLASS = DNSServer
-
-

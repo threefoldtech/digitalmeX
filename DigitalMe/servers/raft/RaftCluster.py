@@ -60,5 +60,3 @@ class RaftCluster(JSConfigBase):
                 "then based on own addr decide to start locally or not"
             )
             # from IPython import embed;embed(colors='Linux')
-
-

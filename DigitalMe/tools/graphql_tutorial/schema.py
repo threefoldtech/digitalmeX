@@ -59,5 +59,3 @@ class Subscription(graphene.ObjectType):
 
 
 schema = graphene.Schema(query=Query, subscription=Subscription)
-
-

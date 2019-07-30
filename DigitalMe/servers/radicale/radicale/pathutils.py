@@ -227,5 +227,3 @@ def name_from_path(path, collection):
     if name and not is_safe_path_component(name):
         raise ValueError("%r is not a component in collection %r" % (name, collection.path))
     return name
-
-

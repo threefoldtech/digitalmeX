@@ -201,5 +201,3 @@ class OpenPublish(JSConfigClient):
                 break
         else:
             raise ValueError("No website found with this name: {}".format(name))
-
-

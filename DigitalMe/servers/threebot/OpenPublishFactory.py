@@ -39,5 +39,3 @@ class OpenPublishFactory(JSConfigs):
             self._log_info("Open Publish framework started")
         else:
             self.default.servers_start()
-
-

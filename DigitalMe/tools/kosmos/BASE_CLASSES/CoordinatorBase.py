@@ -25,5 +25,3 @@ class CoordinatorBase(j.application.JSFactoryConfigsBaseClass):
 
     def __str__(self):
         return "coordinator:%s" % self._name
-
-

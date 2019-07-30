@@ -119,5 +119,3 @@ class WebsocketResponseWriter:
 
     def error(self, msg):
         self.socket.send(msg)
-
-

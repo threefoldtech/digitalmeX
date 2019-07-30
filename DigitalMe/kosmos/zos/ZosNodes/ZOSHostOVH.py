@@ -14,5 +14,3 @@ class ZOSHostOVH(ZOSInstance):
 
     def _init(self, **kwargs):
         pass
-
-

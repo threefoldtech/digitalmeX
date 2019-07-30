@@ -120,5 +120,3 @@ class GeventGunServer(WebSocketApplication, j.application.JSBaseClass):
     def sendall(self, resp):
         for client in self.ws.handler.server.clients.values():
             client.ws.send(json.dumps(resp))
-
-

@@ -508,5 +508,3 @@ class Farmer(JSBASE):
             ns_password=ns_password,
         )
         return
-
-

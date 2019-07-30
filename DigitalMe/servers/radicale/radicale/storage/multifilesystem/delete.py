@@ -44,5 +44,3 @@ class CollectionDeleteMixin:
             # Track the change
             self._update_history_etag(href, None)
             self._clean_history()
-
-
