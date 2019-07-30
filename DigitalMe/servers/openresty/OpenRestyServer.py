@@ -46,15 +46,15 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
             self.install()
 
     def install(self):
-        # copy the templates to the right location
-        j.sal.fs.copyDirTree("%s/web_resources/" % self._dirpath, self._web_path)
-        # link individual files & create a directory TODO:*1
 
         # get weblib
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
         j.sal.fs.symlink("%s/static" % weblibs_path, "{}/static/weblibs".format(self._web_path), overwriteTarget=True)
 
+        # copy the templates to the right location
+        j.sal.fs.copyDirTree("%s/web_resources/" % self._dirpath, self._web_path)
+        # link individual files & create a directory TODO:*1
         self.status = "installed"
 
         self.save()
