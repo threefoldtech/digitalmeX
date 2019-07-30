@@ -39,11 +39,9 @@ class ServerRackFactory(JSBASE):
         js_shell 'j.servers.rack.start(namespace="test", secret="1234")'
 
         """
-        sr = ServerRack()
         if not self.current:
-            self.current = sr
-        else:
-            raise RuntimeError("can only work with 1 rack for now")
+            self.current = ServerRack()
+        return self.current
 
     def install(self):
         """
