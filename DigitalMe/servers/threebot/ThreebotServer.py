@@ -14,9 +14,8 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.open_publish.1
         name* = "main" (S)
-        executor = "tmux"
-        adminsecret_ = "123456"
-        
+        executor = tmux,corex (E)
+        adminsecret_ = "123456"  (S)      
         """
 
     def _init(self, **kwargs):
@@ -32,7 +31,6 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     def start(self, background=False):
 
         if not background:
-
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
             # Start Sonic Server
@@ -54,7 +52,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             rack.add("dns", dns)
 
-            openresty = j.servers.openresty.get("threebot")
+            openresty = j.servers.openresty.get("threebot", executor=self.executor)
             j.servers.openresty.build()
             openresty.start()
             self._gedis_server = j.servers.gedis.get("main", port=8900)
@@ -67,24 +65,23 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
-            S = """
+            cmd_start = """
             from gevent import monkey
             monkey.patch_all(subprocess=False)
             from Jumpscale import j
-            j.servers.rack._grack_server_start()
-            """
+            j.servers.threebotserver.get({name}, executor='{executor}')
+            j.servers.threebotserver.{name}.start(background=False)
+            """.format(name=self.name, executor=self.executor)
 
-            S = j.core.tools.text_replace(S, args)
-
-            s = j.servers.startupcmd.new(name="threebot")
-            s.cmd_start = S
-            s.executor = self.executor
-            s.interpreter = "python"
-            s.timeout = 10
-            s.ports = [8900, 8901]
-            if s.is_running():
-                s.stop()
-            s.start()
+            startup = j.servers.startupcmd.new(name="threebot_{}".format(self.name))
+            startup.cmd_start = cmd_start
+            startup.executor = self.executor
+            startup.interpreter = "python"
+            startup.timeout = 10
+            startup.ports = [8900, 4444, 5354, 1491]
+            if startup.is_running():
+                startup.stop()
+            startup.start()
 
     def auto_update(self):
         while True:

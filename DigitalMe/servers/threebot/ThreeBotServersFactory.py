@@ -25,7 +25,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
     def install(self):
         j.builders.web.openresty.install()
         j.builders.runtimes.lua.install()
-        j.builders.db.zdb.instal()
+        j.builders.db.zdb.install()
         j.builders.apps.sonic.install()
 
     def bcdb_get(self, name, secret="", use_zdb=False):
