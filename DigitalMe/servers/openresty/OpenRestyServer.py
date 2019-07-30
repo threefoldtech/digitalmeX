@@ -1,3 +1,6 @@
+from .ReverseProxy import ReverseProxies
+from .Wiki import Wikis
+from .Website import Websites
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
@@ -6,10 +9,6 @@ JSBASE = j.application.JSBaseClass
 # WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
 # WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
 # OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
-
-from .Website import Websites
-from .Wiki import Wikis
-from .ReverseProxy import ReverseProxies
 
 
 class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
@@ -53,7 +52,7 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
 
         # get weblib
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
-        weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=False)
+        weblibs_path = j.clients.git.getContentPathFromURLorPath(url, pull=True)
         j.sal.fs.symlink("%s/static" % weblibs_path, "{}/static/weblibs".format(self._web_path), overwriteTarget=True)
 
         self.status = "installed"

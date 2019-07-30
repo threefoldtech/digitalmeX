@@ -51,9 +51,9 @@ class GedisClient(JSConfigBase):
 
     def ping(self):
         test = self._redis.execute_command("ping")
-        if test != b"PONG":
-            return False
-        return True
+        if test:
+            return True
+        return False
 
     def auth(self, bot_id):
         nacl_cl = j.data.nacl.get()

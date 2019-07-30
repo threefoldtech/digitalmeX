@@ -1,8 +1,8 @@
+from .ThreebotServer import ThreeBotServer
 from Jumpscale import j
 from .OpenPublish import OpenPublish
 
 JSConfigs = j.application.JSBaseConfigsClass
-from .ThreebotServer import ThreeBotServer
 
 
 class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
@@ -21,6 +21,12 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
         if not self._default:
             self._default = self.get("default")
         return self._default
+
+    def install(self):
+        j.builders.web.openresty.install()
+        j.builders.runtimes.lua.install()
+        j.builders.db.zdb.instal()
+        j.builders.apps.sonic.install()
 
     def bcdb_get(self, name, secret="", use_zdb=False):
         return self.default.bcdb_get(name, secret, use_zdb)
