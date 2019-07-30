@@ -73,7 +73,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             j.servers.threebotserver.{name}.start(background=False)
             """.format(name=self.name, executor=self.executor)
 
-            startup = j.servers.startupcmd.new(name="threebot_{}".format(self.name))
+            startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
             startup.cmd_start = cmd_start
             startup.executor = self.executor
             startup.interpreter = "python"
