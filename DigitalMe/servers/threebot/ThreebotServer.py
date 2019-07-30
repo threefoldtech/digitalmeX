@@ -66,11 +66,11 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
             cmd_start = """
-            from gevent import monkey
-            monkey.patch_all(subprocess=False)
-            from Jumpscale import j
-            j.servers.threebotserver.get({name}, executor='{executor}')
-            j.servers.threebotserver.{name}.start(background=False)
+from gevent import monkey
+monkey.patch_all(subprocess=False)
+from Jumpscale import j
+j.servers.threebotserver.get({name}, executor='{executor}')
+j.servers.threebotserver.{name}.start(background=False)
             """.format(name=self.name, executor=self.executor)
 
             startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
