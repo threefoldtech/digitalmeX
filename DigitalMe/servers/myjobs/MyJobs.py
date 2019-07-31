@@ -109,16 +109,34 @@ class MyJobs(JSBASE):
     def workers_count(self):
         return len(self.workers.values())
 
-    def start(self):
+    def start(self, debug=False, fixed_workers=None):
         """
-        always in subprocess, cannot see the output
-        will add worker(s) when needed, when there is more work
+
+        kosmos -p "j.servers.myjobs.start()"
+        kosmos -p "j.servers.myjobs.start(debug=True)"
+        kosmos -p "j.servers.myjobs.start(debug=True,fixed_workers=10)"
+
+        if non debug and fixed workers is None:
+            always in subprocess, cannot see the output
+            will add worker(s) when needed, when there is more work
+
+        to test can but debug on True and run in separate console
 
         :return:
         """
         self.init(reset=False)
-        self.mainloop = gevent.spawn(self._main_loop)
+        if not debug:
+            if not fixed_workers:
+                self.mainloop = gevent.spawn(self._main_loop)
+            else:
+                self._main_loop_fixed(nr=fixed_workers, debug=debug)  # does not wait, no need to do in gevent
         self.dataloop = gevent.spawn(self._data_loop)  # returns the data
+        if debug:
+            j.tools.logger.debug = True
+            if not fixed_workers:
+                self._main_loop()
+            else:
+                self._main_loop_fixed(nr=fixed_workers, debug=debug)
 
     def worker_start(self, onetime=False, subprocess=True, worker_id=None):
         self.init()
@@ -196,6 +214,19 @@ class MyJobs(JSBASE):
             r = self._data_process_1time(timeout=0)
         return res
 
+    def _main_loop_fixed(self, nr=10, debug=False):
+        """
+        will not dynamically allocate the workers, will be a fixed pool
+        :param nr:
+        :param debug:
+        :return:
+        """
+
+        for i in range(nr):
+            self.worker_start()
+        if debug:
+            j.shell()
+
     def _main_loop(self):
 
         self._log_debug("monitor start")
@@ -252,13 +283,13 @@ class MyJobs(JSBASE):
                         self.model_job.set(job)
                         print(job)
                         # make sure right nr of workers are active
-                        self._worker_start()
+                        self.worker_start()
 
             if test_workers_more():
                 # test if we need to add workers
                 while test_workers_more():
                     print("WORKERS START")
-                    self._worker_start()
+                    self.worker_start()
             else:
 
                 # test if we have too many workers
@@ -431,6 +462,7 @@ class MyJobs(JSBASE):
         self.test1()
         self.test2()
         self.test3()
+
         print("TEST MYWORKERS FOR 3 TESTS DONE")
 
     def test1(self):
@@ -532,8 +564,9 @@ class MyJobs(JSBASE):
             cmd.stop(force=True)
             cmd.start()
             print("WORKER STARTED IN TMUX")
+            return cmd
 
-        tmux_start()
+        cmd = tmux_start()
         self.dataloop = gevent.spawn(self._data_loop)
 
         job = jobs[0]
@@ -568,11 +601,12 @@ class MyJobs(JSBASE):
         assert job_return.id == 11
         assert job_return.state == "OK"
 
-        kill()
+        cmd.stop(force=True)
 
         # TMUX and in process tests are done, lets now see if as subprocess it works
 
-        self.init(reset=True, start=True)
+        self.init(reset=True)
+        self.start()
 
         print("wait to schedule jobs")
         gevent.sleep(2)
@@ -616,10 +650,11 @@ class MyJobs(JSBASE):
 
     def test2(self):
         """
-        js_shell "j.servers.myjobs.test2()"
+        kosmos "j.servers.myjobs.test2()"
         :return:
         """
         self.init(reset=True)
+        self.start()
 
         def wait_2sec():
             import time
@@ -637,12 +672,16 @@ class MyJobs(JSBASE):
 
         self.halt(reset=True)
 
-    def test3(self):
+    def test3(self, start=True, count=100):
         """
-        js_shell "j.servers.myjobs.test3()"
+        kosmos -p "j.servers.myjobs.test3()"
+        kosmos -p "j.servers.myjobs.test3(start=False,count=10)"
+        kosmos -p "j.servers.myjobs.test3(start=False,count=100)"
         :return:
         """
         self.init(reset=True)
+        if start:
+            self.start()
         self.workers_nr_max = 100
 
         def wait_1sec():
@@ -652,20 +691,9 @@ class MyJobs(JSBASE):
             return "OK"
 
         ids = []
-        for x in range(100):
+        for x in range(count):
             ids.append(self.schedule(wait_1sec))
 
         res = self.results(ids)
 
         j.shell()
-
-    def test4(self):
-        """
-        js_shell "j.servers.myjobs.test2()"
-        :return:
-        """
-
-        def use_jumpscale():
-            return j.data.serializers.json.dumps([1, 2])
-
-        self.result_queue_get()

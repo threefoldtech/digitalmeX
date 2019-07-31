@@ -11,12 +11,23 @@ def MyWorker(worker_id=999999, onetime=False, showout=False):
 
     from Jumpscale import j
 
+    # make sure all traces of existing clients are gone
+    j.application.subprocess_prepare()
+
     w = None
 
     j.clients.redis._cache_clear()  # make sure we have redis connections empty, because comes from parent
 
-    queue_jobs_start = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:start", fromcache=False)
-    queue_return = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:return", fromcache=False)
+    # MAKE SURE YOU DON'T REUSE SOCKETS FROM MOTHER PROCESSS
+    j.core.db.source = "worker"  # this allows us to test
+    redisclient = j.core.db
+
+    queue_jobs_start = j.clients.redis.queue_get(redisclient=redisclient, key="queue:jobs:start", fromcache=False)
+    queue_return = j.clients.redis.queue_get(redisclient=redisclient, key="queue:jobs:return", fromcache=False)
+
+    # test we are using the right redis client
+    assert queue_jobs_start._db_.source == "worker"
+    assert queue_return._db_.source == "worker"
 
     def return_data(cat, obj):
         data = j.data.serializers.msgpack.dumps([cat, obj.id, obj._json])
@@ -58,10 +69,16 @@ def MyWorker(worker_id=999999, onetime=False, showout=False):
 
     sys.excepthook = my_excepthook
 
-    bcdb = j.data.bcdb.get("myjobs", storclient=j.clients.rdb.client_get())
+    storclient = j.clients.rdb.client_get(redisclient=redisclient)
+    assert storclient._redis.source == "worker"
+
+    bcdb = j.data.bcdb.get("myjobs", storclient=storclient)
+    # TODO: should test here too that we are using the right redis, its important we no-where reuse a socket
     model_job = bcdb.model_get_from_url("jumpscale.myjobs.job")
     model_action = bcdb.model_get_from_url("jumpscale.myjobs.action")
     model_worker = bcdb.model_get_from_url("jumpscale.myjobs.worker")
+
+    assert model_worker.storclient._redis.source == "worker"
 
     w = model_worker.get(worker_id)
     w.state = "init"
