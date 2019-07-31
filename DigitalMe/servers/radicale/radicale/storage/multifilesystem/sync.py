@@ -65,8 +65,7 @@ class CollectionSyncMixin:
             old_token_path = os.path.join(token_folder, old_token_name)
             try:
                 # Race: Another process might have deleted the file.
-                with open(old_token_path, "rb") as f:
-                    old_state = pickle.load(f)
+                old_state = pickle.load(j.sal.bcdbfs.file_read(old_token_path))
             except (FileNotFoundError, pickle.UnpicklingError, ValueError) as e:
                 if isinstance(e, (pickle.UnpicklingError, ValueError)):
                     logger.warning(
@@ -74,13 +73,13 @@ class CollectionSyncMixin:
                     )
                     # Delete the damaged file
                     try:
-                        os.remove(old_token_path)
+                        j.sal.bcdbfs.file_remove(old_token_path)
                     except (FileNotFoundError, PermissionError):
                         pass
                 raise ValueError("Token not found: %r" % old_token)
         # write the new token state or update the modification time of
         # existing token state
-        if not os.path.exists(token_path):
+        if not j.sal.bcdbfs.file_exists(token_path):
             self._makedirs_synced(token_folder)
             try:
                 # Race: Other processes might have created and locked the file.

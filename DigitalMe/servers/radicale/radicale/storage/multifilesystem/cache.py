@@ -8,7 +8,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This library is distributed in the hope that it will be useful,
+# This library is dstributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -28,14 +28,14 @@ class CollectionCacheMixin:
         """Delete all ``names`` in ``folder`` that are older than ``max_age``.
         """
         age_limit = time.time() - max_age if max_age is not None else None
-        modified = False
+
         for name in names:
             if not pathutils.is_safe_filesystem_path_component(name):
                 continue
             if age_limit is not None:
                 try:
                     # Race: Another process might have deleted the file.
-                    mtime = os.path.getmtime(os.path.join(folder, name))
+                    mtime = j.sal.bcdbfs.getmtime(os.path.join(folder, name))
                 except FileNotFoundError:
                     continue
                 if mtime > age_limit:
@@ -44,12 +44,9 @@ class CollectionCacheMixin:
             # Race: Another process might have deleted or locked the
             # file.
             try:
-                os.remove(os.path.join(folder, name))
+                j.sal.bcdbfs.file_remove(os.path.join(folder, name))
             except (FileNotFoundError, PermissionError):
                 continue
-            modified = True
-        if modified:
-            cls._sync_directory(folder)
 
     def _item_cache_hash(self, raw_text):
         _hash = md5()
@@ -80,10 +77,10 @@ class CollectionCacheMixin:
         cache_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "item")
         cache_hash = uid = etag = text = name = tag = start = end = None
         try:
-            with open(os.path.join(cache_folder, href), "rb") as f:
-                cache_hash, *content = pickle.load(f)
-                if cache_hash == input_hash:
-                    uid, etag, text, name, tag, start, end = content
+            file_contents = j.sal.bcdbfs.file_read(os.path.join(cache_folder, href))
+            cache_hash, *content = pickle.loads(file_contents)
+            if cache_hash == input_hash:
+                uid, etag, text, name, tag, start, end = content
         except FileNotFoundError:
             pass
         except (pickle.UnpicklingError, ValueError) as e:
@@ -96,7 +93,7 @@ class CollectionCacheMixin:
             cache_folder,
             (
                 e.name
-                for e in os.scandir(cache_folder)
-                if not os.path.isfile(os.path.join(self._filesystem_path, e.name))
+                for e in list_files_and_dirs(cache_folder)
+                if not j.sal.bcdbfs.is_file(os.path.join(self._filesystem_path, e.name))
             ),
         )

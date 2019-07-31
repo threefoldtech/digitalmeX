@@ -34,26 +34,13 @@ class CollectionCreateCollectionMixin:
 
         parent_dir = os.path.dirname(filesystem_path)
         cls._makedirs_synced(parent_dir)
-
-        # Create a temporary directory with an unsafe name
-        with TemporaryDirectory(prefix=".Radicale.tmp-", dir=parent_dir) as tmp_dir:
-            # The temporary directory itself can't be renamed
-            tmp_filesystem_path = os.path.join(tmp_dir, "collection")
-            os.makedirs(tmp_filesystem_path)
-            self = cls(pathutils.unstrip_path(sane_path, True), filesystem_path=tmp_filesystem_path)
-            self.set_meta(props)
-            if items is not None:
-                if props.get("tag") == "VCALENDAR":
-                    self._upload_all_nonatomic(items, suffix=".ics")
-                elif props.get("tag") == "VADDRESSBOOK":
-                    self._upload_all_nonatomic(items, suffix=".vcf")
-
-            # This operation is not atomic on the filesystem level but it's
-            # very unlikely that one rename operations succeeds while the
-            # other fails or that only one gets written to disk.
-            if os.path.exists(filesystem_path):
-                os.rename(filesystem_path, os.path.join(tmp_dir, "delete"))
-            os.rename(tmp_filesystem_path, filesystem_path)
-            cls._sync_directory(parent_dir)
+        cls._makedirs_synced(filesystem_path)
+        self = cls(pathutils.unstrip_path(sane_path, True), filesystem_path=filesystem_path)
+        self.set_meta(props)
+        if items is not None:
+            if props.get("tag") == "VCALENDAR":
+                self._upload_all_nonatomic(items, suffix=".ics")
+            elif props.get("tag") == "VADDRESSBOOK":
+                self._upload_all_nonatomic(items, suffix=".vcf")
 
         return cls(pathutils.unstrip_path(sane_path, True))

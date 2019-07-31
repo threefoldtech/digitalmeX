@@ -2,7 +2,6 @@ from Jumpscale import j
 
 # import os
 import sys
-
 # from importlib import import_module
 
 JSBASE = j.application.JSBaseClass

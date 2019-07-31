@@ -39,8 +39,8 @@ class CollectionDiscoverMixin:
             return
 
         # Check if the path exists and if it leads to a collection or an item
-        if not os.path.isdir(filesystem_path):
-            if attributes and os.path.isfile(filesystem_path):
+        if not j.sal.bcdbfs.is_dir(filesystem_path):
+            if attributes and j.sal.bcdbfs.is_file(filesystem_path):
                 href = attributes.pop()
             else:
                 return
@@ -63,10 +63,11 @@ class CollectionDiscoverMixin:
             with child_context_manager(sane_path, href):
                 yield collection._get(href)
 
-        for entry in os.scandir(filesystem_path):
-            if not entry.is_dir():
+        for entry in j.sal.bcdfs.list_files_and_dirs(filesystem_path):
+            if not j.sal.bcdfs.is_dir(entry):
                 continue
-            href = entry.name
+            import ntpath
+            href = ntpath.basename(entry)
             if not pathutils.is_safe_filesystem_path_component(href):
                 if not href.startswith(".Radicale"):
                     logger.debug("Skipping collection %r in %r", href, sane_path)
