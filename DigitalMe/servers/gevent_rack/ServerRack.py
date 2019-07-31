@@ -2,6 +2,7 @@ from Jumpscale import j
 
 # import os
 import sys
+
 # from importlib import import_module
 
 JSBASE = j.application.JSBaseClass
@@ -71,26 +72,30 @@ class ServerRack(JSBASE):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
-
         if not app:
 
-            from bottle import route, template, request, Bottle, abort, template
+            from bottle import route, template, request, Bottle, abort, template, response
+            # the decorator
+            def enable_cors(fn):
+                def _enable_cors(*args, **kwargs):
+                    # set CORS headers
+                    response.headers['Access-Control-Allow-Origin'] = '*'
+                    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, OPTIONS'
+                    response.headers[
+                        'Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+                    if request.method != 'OPTIONS':
+                        # actual request; reply with the actual response
+                        return fn(*args, **kwargs)
+
+                return _enable_cors
 
             app = Bottle()
 
-            @app.route("/")
-            def index():
-                return "<b>Hello World</b>!"
-
-            @app.route("/hello/<name>")
-            def hello(name):
-                return template("<b>Hello {{name}}</b>!", name=name)
-
-            @app.route("/stream")
-            def stream():
-                yield "START"
-                yield "MIDDLE"
-                yield "END"
+            @app.route("/<url:re:.+>")
+            @enable_cors
+            def index(url):
+                return j.sal.bcdbfs.file_read("/" + url)
 
         if not websocket:
             server = WSGIServer(("0.0.0.0", port), app)
@@ -236,3 +241,5 @@ class ServerRack(JSBASE):
                     import traceback
 
                     traceback.print_exc()
+
+

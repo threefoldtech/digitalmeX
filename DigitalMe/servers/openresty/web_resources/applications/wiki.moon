@@ -20,7 +20,7 @@ class WikiApp extends lapis.Application
             scheme = "wss"
         @url = scheme .. "://" .. req.host
         if req.port
-            @url = @url .. ":" .. req.port
+            @url = @url .. ":" .. 4444
 
         @metadata = common.load_metadata(@name)
         return render: "wiki.index", layout: false

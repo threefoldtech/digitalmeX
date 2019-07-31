@@ -69,8 +69,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 from gevent import monkey
 monkey.patch_all(subprocess=False)
 from Jumpscale import j
-j.servers.threebot.get("{name}", executor='{executor}')
-j.servers.threebot.{name}.start(background=False)
+j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
             """.format(name=self.name, executor=self.executor)
 
             startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
