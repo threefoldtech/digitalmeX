@@ -473,17 +473,17 @@ class MyJobs(JSBASE):
 
         j.tools.logger.debug = True
 
-        # # TO TEST DEBUG WINDOW
-        # def sometging():
-        #     while True:
-        #         self._log_debug("test")
-        #         self._log_info("test")
-        #         self._log_warning("test")
-        #         time.sleep(1)
-        #
-        # self.dataloop = gevent.spawn(sometging)
-        #
-        # j.shell()
+        # TO TEST DEBUG WINDOW
+        def sometging():
+            while True:
+                self._log_debug("test")
+                self._log_info("test")
+                self._log_warning("test")
+                time.sleep(1)
+
+        self.dataloop = gevent.spawn(sometging)
+
+        j.shell()
 
         def reset():
             # kill leftovers from last time, if any
