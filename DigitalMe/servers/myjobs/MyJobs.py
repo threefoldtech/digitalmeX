@@ -465,6 +465,33 @@ class MyJobs(JSBASE):
 
         print("TEST MYWORKERS FOR 3 TESTS DONE")
 
+    def test_spawn(self):
+        """
+        kosmos -p "j.servers.myjobs.test_spawn()"
+
+        note the -p it will make sure the monkey patching happens
+
+        this testfunction will test the debug window
+
+        :return:
+        """
+
+        j.core.myenv.config["LOGGER_PANEL_NRLINES"] = 15  # means 15 lines in panel  (-1 means auto, 0 means none)
+        j.tools.logger.debug = True
+
+        def something():
+            counter = 1
+            while True:
+                counter += 1
+                self._log_debug("test")
+                self._log_info("test:%s" % counter)
+                self._log_warning("test")
+                time.sleep(1)
+
+        self.dataloop = gevent.spawn(something)
+
+        j.shell()  # you will see the shell is now interactive but yet still the something greenlet is running
+
     def test1(self):
         """
         kosmos "j.servers.myjobs.test1()"
@@ -472,18 +499,6 @@ class MyJobs(JSBASE):
         """
 
         j.tools.logger.debug = True
-
-        # # TO TEST DEBUG WINDOW
-        # def sometging():
-        #     while True:
-        #         self._log_debug("test")
-        #         self._log_info("test")
-        #         self._log_warning("test")
-        #         time.sleep(1)
-        #
-        # self.dataloop = gevent.spawn(sometging)
-        #
-        # j.shell()
 
         def reset():
             # kill leftovers from last time, if any
