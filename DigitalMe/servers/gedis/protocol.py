@@ -15,7 +15,7 @@ class RedisCommandParser(PythonParser):
 
         self._sock = socket
 
-        self._buffer = SocketBuffer(self._sock, self.socket_read_size, socket_timeout=0)
+        self._buffer = SocketBuffer(self._sock, self.socket_read_size)
 
         self.encoder = Encoder(encoding="utf-8", encoding_errors="strict", decode_responses=False)
 
