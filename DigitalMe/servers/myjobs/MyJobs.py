@@ -464,7 +464,7 @@ class MyJobs(JSBASE):
 
             self._init_ = False
 
-    def results(self, ids=None, timeout=10):
+    def results(self, ids=None, timeout=100):
         """
 
         :param ids: if not specified then will use self.scheduled_ids
@@ -487,7 +487,7 @@ class MyJobs(JSBASE):
                     res[id] = job.result
                     ids = ids[1:]
                 else:
-                    raise RuntimeError("job in eror:\n%s" % job)
+                    raise RuntimeError("job in error:\n%s" % job) from Exception(job.error)
             if len(ids) > 0:
                 gevent.sleep(0.1)
                 counter += 1

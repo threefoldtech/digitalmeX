@@ -147,13 +147,14 @@ def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
                     tb = sys.exc_info()[-1]
                     if debug:
                         pudb.post_mortem(tb)
-                    e += "\n" + j.core.errorhandler._trace_get("", e, tb)
-                    job.error = str(e) + "\nCOULD NOT GET TO METHOD, IMPORT ERROR."
+                    err = str(e)
+                    err += "\n" + j.core.errorhandler._trace_get("", e, tb)
+                    job.error = err + "\nCOULD NOT LOAD METHOD {}\n {}".format(action.methodname, action.code)
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
                     if showout:
-                        print("ERROR:%s" % e)
+                        j.core.errorhandler._trace_print(job.error)
                     if onetime:
                         return
                     continue
@@ -164,8 +165,11 @@ def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
                     tb = sys.exc_info()[-1]
                     if debug:
                         pudb.post_mortem(tb)
+                    err = str(e)
+                    err += "\n" + j.core.errorhandler._trace_get("", e, tb)
+                    job.error = err + "\nCOULD NOT EXECUTE METHOD {}.\n {}".format(action.methodname, action.code)
+                    j.core.errorhandler._trace_print(job.error)
                     # TODO: need to get the stacktract and format properly just like we do in the caller
-                    job.error = str(e)
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
