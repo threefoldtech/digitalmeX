@@ -1,10 +1,10 @@
 from Jumpscale import j
 
 from .WGClient import WGClients
-from .WGServer import WGServers
+from .WGServer import WGServerFactory
 
 
-class WGFactory(j.application.JSBaseConfigsFactoryClass):
+class WGFactory(j.application.JSBaseConfigsClass):
     """
     wireguard factory
 
@@ -13,11 +13,26 @@ class WGFactory(j.application.JSBaseConfigsFactoryClass):
     """
 
     __jslocation__ = "j.tools.wireguard"
-
-    _CHILDCLASSES = [WGClients, WGServers]
+    _CHILDCLASS = WGServerFactory
 
     def test(self):
         """
-        kosmos -p 'j.tools.wireguard.test()"
+        kosmos -p 'j.tools.wireguard.test()'
         :return:
         """
+        wg = self.get(name="test", sshclient_name="do_gw9")
+        wg.install()
+        # wg.executor.installer.wireguard_go()
+
+        j.shell()
+
+        # get client linked to server
+        cl = wg.clients.get(name="me")
+        cl.install()
+
+        j.shell()
+
+        wg.configure()
+        wg.start()
+
+        j.shell()
