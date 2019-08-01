@@ -1,19 +1,23 @@
-# import pudb
+from Jumpscale import j
+
+import pudb
 import sys
 import traceback
 import time
 
 
-def MyWorker(worker_id=999999, onetime=False, showout=False):
+def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
     """
     :return:
     """
 
-    from Jumpscale import j
+    if debug:
+        j.application.debug = True
+        j.core.myenv.debug = True
 
     # make sure all traces of existing clients are gone
     j.application.subprocess_prepare()
-
+    j.data.bcdb._bcdb_instances = {}
     w = None
 
     j.clients.redis._cache_clear()  # make sure we have redis connections empty, because comes from parent
@@ -72,7 +76,7 @@ def MyWorker(worker_id=999999, onetime=False, showout=False):
     storclient = j.clients.rdb.client_get(redisclient=redisclient)
     assert storclient._redis.source == "worker"
 
-    bcdb = j.data.bcdb.get("myjobs", storclient=storclient)
+    bcdb = j.data.bcdb.get("myjobs", storclient=storclient, fromcache=False)
     # TODO: should test here too that we are using the right redis, its important we no-where reuse a socket
     model_job = bcdb.model_get_from_url("jumpscale.myjobs.job")
     model_action = bcdb.model_get_from_url("jumpscale.myjobs.action")
@@ -140,6 +144,10 @@ def MyWorker(worker_id=999999, onetime=False, showout=False):
                     exec(action.code)
                     method = eval(action.methodname)
                 except Exception as e:
+                    tb = sys.exc_info()[-1]
+                    if debug:
+                        pudb.post_mortem(tb)
+                    e += "\n" + j.core.errorhandler._trace_get("", e, tb)
                     job.error = str(e) + "\nCOULD NOT GET TO METHOD, IMPORT ERROR."
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
@@ -153,6 +161,10 @@ def MyWorker(worker_id=999999, onetime=False, showout=False):
                 try:
                     res = method(*args, **kwargs)
                 except Exception as e:
+                    tb = sys.exc_info()[-1]
+                    if debug:
+                        pudb.post_mortem(tb)
+                    # TODO: need to get the stacktract and format properly just like we do in the caller
                     job.error = str(e)
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch

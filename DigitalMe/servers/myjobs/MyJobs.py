@@ -65,6 +65,7 @@ class MyJobs(JSBASE):
         self.model_action = None
         self.model_worker = None
         self._init_ = False
+        self.scheduled_ids = []
 
     def init(self, reset=False):
         """
@@ -138,7 +139,7 @@ class MyJobs(JSBASE):
             else:
                 self._main_loop_fixed(nr=fixed_workers, debug=debug)
 
-    def worker_start(self, onetime=False, subprocess=True, worker_id=None):
+    def worker_start(self, onetime=False, subprocess=True, worker_id=None, debug=False):
         self.init()
         if onetime:
             subprocess = False
@@ -155,10 +156,36 @@ class MyJobs(JSBASE):
             self.workers[w.id] = worker
         else:
             excepthook_old = sys.excepthook
-            MyWorker(w.id, onetime=onetime)
+            MyWorker(w.id, onetime=onetime, debug=debug)
             # will make sure the data comes back
             self._data_process_untill_empty(timeout=5)
             sys.excepthook = excepthook_old
+
+    def dataloop_start(self):
+        if not self.dataloop:
+            self.dataloop = gevent.spawn(self._data_loop)
+
+    def workers_start_corex(self, nrworkers=3, debug=False):
+        """
+        kosmos "j.servers.myjobs.workers_start_corex(1)"
+        """
+        # j.builders.apps.corex.install()
+        # j.servers.corex.default.start()  # starts corex at port 1500
+
+        for nr in range(nrworkers):
+            cmd = j.servers.startupcmd.get(name="workers_%s" % nr)
+            if debug:
+                cmd.cmd_start = "j.servers.myjobs.worker_start(subprocess=False,debug=True)"
+            else:
+                cmd.cmd_start = "j.servers.myjobs.worker_start(subprocess=False,debug=False)"
+            # COREX has still issues so fall back on tmux
+            cmd.executor = "tmux"
+            cmd.interpreter = "jumpscale"
+            cmd.start(reset=True)
+
+        self.dataloop_start()
+
+        self._log_info("visit http://localhost:1500/ for seeing the corex webscreen")
 
     def worker_start_inprocess(self, worker_id=None):
         """
@@ -191,6 +218,7 @@ class MyJobs(JSBASE):
             job = self.model_job.new(data=ddict)
             job.id = objid
             job.save()
+            # print(job)
             for queue_name in job.return_queues:
                 queue = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs:%s" % queue_name)
                 queue.put(job.id)
@@ -202,13 +230,14 @@ class MyJobs(JSBASE):
         else:
             raise RuntimeError("return queue does not have right obj")
 
-    def _data_process_untill_empty(self, timeout=5):
+    def _data_process_untill_empty(self, timeout=0):
+        self.init()
         res = []
 
         # need to wait till first one comes
         r = self._data_process_1time(timeout=timeout)
         if not r:
-            raise RuntimeError("timeout did not get data back")
+            return
 
         while r:
             r = self._data_process_1time(timeout=0)
@@ -398,6 +427,9 @@ class MyJobs(JSBASE):
 
         self.queue_jobs_start.put(job.id)
 
+        if job.id not in self.scheduled_ids:
+            self.scheduled_ids.append(job.id)
+
         return job.id
 
     def halt(self, graceful=True, reset=True):
@@ -432,10 +464,20 @@ class MyJobs(JSBASE):
 
             self._init_ = False
 
-    def results(self, ids, timeout=10):
+    def results(self, ids=None, timeout=10):
+        """
+
+        :param ids: if not specified then will use self.scheduled_ids
+        :param timeout:
+        :param processdata:
+        :return:
+        """
+        if not ids:
+            ids = self.scheduled_ids
         res = {}
         counter = 0
         while len(ids) > 0:
+            self._data_process_untill_empty()
             id = ids[0]
             job = self.model_job.get(id)
             if job == None:
@@ -488,7 +530,7 @@ class MyJobs(JSBASE):
                 self._log_warning("test")
                 time.sleep(1)
 
-        self.dataloop = gevent.spawn(something)
+        gevent.spawn(something)
 
         j.shell()  # you will see the shell is now interactive but yet still the something greenlet is running
 
@@ -714,3 +756,31 @@ class MyJobs(JSBASE):
         res = self.results(ids)
 
         j.shell()
+
+    def test4(self, start=True, count=20):
+        """
+        kosmos -p "j.servers.myjobs.test4()"
+        kosmos -p "j.servers.myjobs.test4(start=False,count=3)"
+        :return:
+        """
+        if start:
+            j.servers.myjobs.workers_start_corex(4)
+
+        def wait_1sec():
+            import time
+
+            time.sleep(1)
+            return "OK"
+
+        ids = []
+        self._data_process_untill_empty()
+        for x in range(count):
+            ids.append(j.servers.myjobs.schedule(wait_1sec))
+
+        print(ids)
+
+        res = j.servers.myjobs.results(ids)
+        for id in ids:
+            assert res[id] == "OK"
+
+        print("TESTOK")
