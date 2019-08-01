@@ -92,8 +92,8 @@ Getting a new worker is done using `myworker(id=999999, onetime=False, showout=F
 
 ### Loops
  with two loops 
-- mainloop:
-- dataloop:
+- mainloop: this one creates subprocesses for workers automatically (and decrease) only relevant if not workers started in e.g. tmux
+- dataloop: gets the return objects from workers (redis queues) and processes them towards the BCBD
 
 #### mainloop
 
