@@ -74,8 +74,12 @@ class Collection(
         return os.path.join(filesystem_folder, "collection-root")
 
     @contextlib.contextmanager
-    def _atomic_write(self, path, mode="w", newline=None, sync_directory=True, replace_fn=os.replace):
+    def _atomic_write(self, path, mode="w", newline=None, replace_fn=os.replace):
         directory = os.path.dirname(path)
+
+        if not j.sal.bcdbfs.exists(directory):
+            j.sal.bcdbfs.dir_create(directory)
+
         tmp = NamedTemporaryFile(
             mode=mode,
             dir=directory,
@@ -93,12 +97,14 @@ class Collection(
                 raise RuntimeError("Fsync'ing file %r failed: %s" % (path, e)) from e
             tmp.close()
             replace_fn(tmp.name, path)
+            j.sal.bcdbfs.file_create_empty(path)
+            with open(path, "w") as f:
+                j.sal.bcdbfs.file_write(path, f.read())
         except BaseException:
             tmp.close()
             os.remove(tmp.name)
+            os.removedirs(directory)
             raise
-        if sync_directory:
-            self._sync_directory(directory)
 
     @classmethod
     def _fsync(cls, fd):
@@ -139,8 +145,7 @@ class Collection(
             # Create parent dirs recursively
             cls._makedirs_synced(parent_filesystem_path)
         # Possible race!
-        os.makedirs(filesystem_path, exist_ok=True)
-        cls._sync_directory(parent_filesystem_path)
+        j.sal.bcdbfs.dir_create(filesystem_path)
 
     @property
     def last_modified(self):
@@ -149,7 +154,7 @@ class Collection(
             (self._props_path,) if os.path.exists(self._props_path) else (),
             (os.path.join(self._filesystem_path, h) for h in self._list()),
         )
-        last = max(map(os.path.getmtime, relevant_files))
+        last = max(map(j.sal.bcdbfs.getmtime, relevant_files))
         return time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(last))
 
     @property

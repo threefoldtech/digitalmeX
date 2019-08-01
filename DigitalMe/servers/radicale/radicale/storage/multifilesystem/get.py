@@ -29,10 +29,10 @@ class CollectionGetMixin:
         self._item_cache_cleaned = False
 
     def _list(self):
-        for entry in os.scandir(self._filesystem_path):
-            if not entry.is_file():
-                continue
-            href = entry.name
+        for entry in j.sal.bcdbfs.list_files(self._filesystem_path):
+            import ntpat
+
+            href = ntpath.basename(entry)
             if not pathutils.is_safe_filesystem_path_component(href):
                 if not href.startswith(".Radicale"):
                     logger.debug("Skipping item %r in %r", href, self.path)
@@ -53,8 +53,7 @@ class CollectionGetMixin:
         else:
             path = os.path.join(self._filesystem_path, href)
         try:
-            with open(path, "rb") as f:
-                raw_text = f.read()
+            raw_text = j.sal.bcdbfs.file_read(path)
         except (FileNotFoundError, IsADirectoryError):
             return None
         except PermissionError:
@@ -90,7 +89,7 @@ class CollectionGetMixin:
                     if not self._item_cache_cleaned:
                         self._item_cache_cleaned = True
                         self._clean_item_cache()
-        last_modified = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(os.path.getmtime(path)))
+        last_modified = time.strftime("%a, %d %b %Y %H:%M:%S GMT", time.gmtime(j.sal.bcdbfs.getmtime(path)))
         # Don't keep reference to ``vobject_item``, because it requires a lot
         # of memory.
         return radicale_item.Item(
@@ -113,9 +112,9 @@ class CollectionGetMixin:
             if files is None:
                 # List dir after hrefs returned one item, the iterator may be
                 # empty and the for-loop is never executed.
-                files = os.listdir(self._filesystem_path)
+                files = j.sal.bcdbfs(self._filesystem_path)
             path = os.path.join(self._filesystem_path, href)
-            if not pathutils.is_safe_filesystem_path_component(href) or href not in files and os.path.lexists(path):
+            if not pathutils.is_safe_filesystem_path_component(href) or href not in files and j.sal.bcdbfs.exists(path):
                 logger.debug("Can't translate name safely to filesystem: %r", href)
                 yield (href, None)
             else:

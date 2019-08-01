@@ -30,8 +30,8 @@ class CollectionMetaMixin:
         if self._lock.locked == "w" or self._meta_cache is None:
             try:
                 try:
-                    with open(self._props_path, encoding=self._encoding) as f:
-                        self._meta_cache = json.load(f)
+                    contents = j.sal.bcdbfs.file_read(self._props_path).encode(self._encoding)
+                    self._meta_cache = json.load(contents)
                 except FileNotFoundError:
                     self._meta_cache = {}
                 radicale_item.check_and_sanitize_props(self._meta_cache)

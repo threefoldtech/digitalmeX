@@ -2,7 +2,7 @@
 mermaid.initialize({ startOnLoad: false });
 
 function docsifyConfig(name, repo) {
-    basePath = "/docsites/" + name;
+    basePath = "http://172.17.0.2:4442/docsites/" + name;
     TeamWidget.avatarPrefix = basePath;
 
     window.$docsify = {

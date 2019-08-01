@@ -33,8 +33,8 @@ class CollectionHistoryMixin:
         """
         history_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "history")
         try:
-            with open(os.path.join(history_folder, href), "rb") as f:
-                cache_etag, history_etag = pickle.load(f)
+            contents = j.sal.bcdbfs.file_get(os.path.join(history_folder, href)
+            cache_etag, history_etag = pickle.loads(contents)
         except (FileNotFoundError, pickle.UnpicklingError, ValueError) as e:
             if isinstance(e, (pickle.UnpicklingError, ValueError)):
                 logger.warning("Failed to load history cache entry %r in %r: %s", href, self.path, e, exc_info=True)
@@ -59,11 +59,11 @@ class CollectionHistoryMixin:
         history cache."""
         history_folder = os.path.join(self._filesystem_path, ".Radicale.cache", "history")
         try:
-            for entry in os.scandir(history_folder):
-                href = entry.name
+            for entry in j.sal.bcdbfs.list_files_and_dirs(history_folder):
+                href = entry
                 if not pathutils.is_safe_filesystem_path_component(href):
                     continue
-                if os.path.isfile(os.path.join(self._filesystem_path, href)):
+                if j.sal.bcdbfs.is_file(os.path.join(self._filesystem_path, href)):
                     continue
                 yield href
         except FileNotFoundError:
