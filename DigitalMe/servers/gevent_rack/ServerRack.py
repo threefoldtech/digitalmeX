@@ -2,7 +2,7 @@ from Jumpscale import j
 
 # import os
 import sys
-
+import mimetypes
 # from importlib import import_module
 
 JSBASE = j.application.JSBaseClass
@@ -98,7 +98,12 @@ class ServerRack(JSBASE):
             @app.route("/<url:re:.+>")
             @enable_cors
             def index(url):
-                return j.sal.bcdbfs.file_read("/" + url)
+                try:
+                    file = j.sal.bcdbfs.file_read("/" + url)
+                except RuntimeError:
+                    abort(404)
+                response.headers["Content-Type"] = mimetypes.guess_type(url)[0]
+                return file
 
         if not websocket:
             server = WSGIServer(("0.0.0.0", port), app)

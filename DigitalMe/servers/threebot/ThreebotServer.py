@@ -54,6 +54,13 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             j.servers.openresty.build()
+            url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
+            tf_grid = j.tools.markdowndocs.load(url, name="grid")
+            tf_grid.write()
+            url = "https://github.com/threefoldfoundation/info_foundation/tree/development/docs"
+            tf_foundation = j.tools.markdowndocs.load(url, name="foundation")
+            tf_foundation.write()
+
             openresty.start()
             self._gedis_server = j.servers.gedis.get("main", port=8900)
 
@@ -66,13 +73,14 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
             cmd_start = """
-            from gevent import monkey
-            monkey.patch_all(subprocess=False)
-            from Jumpscale import j
-            j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
+from gevent import monkey
+monkey.patch_all(subprocess=False)
+from Jumpscale import j
+j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
             """.format(
                 name=self.name, executor=self.executor
             )
+
             startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
             startup.cmd_start = cmd_start
             startup.executor = self.executor
