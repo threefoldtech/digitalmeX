@@ -2,20 +2,20 @@ from Jumpscale import j
 
 
 class sonic(j.application.JSBaseClass):
-    def _init(self, **kwargs):
-        self.sonic_client = j.clients.sonic.default
 
-    def query(self, text, schema_out):
+    def query(self, name, text, schema_out):
         """
         ```in
+        name = "" (S)
         text = "" (S)
         ```
         ```out
         res = (LS)
         ```
+        :param name: Docsite name
         :param text: text to search for in all files
         :return:
         """
         out = schema_out.new()
-        out.res = j.sal.bcdbfs.search(text)
+        out.res = j.sal.bcdbfs.search(text, location="/docsites/{}".format(name))
         return out

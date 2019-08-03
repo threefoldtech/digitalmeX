@@ -33,12 +33,6 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         if not background:
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
-            # Start Sonic Server
-            sonic_server = j.servers.sonic.default
-            sonic_server.start()
-
-            # is not the right way, need to use config classes but maybe ok for now
-            j.tools.markdowndocs.sonic_client_set(sonic_server.default_client)
 
             rack = j.servers.rack.get()
 
@@ -60,7 +54,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             url = "https://github.com/threefoldfoundation/info_foundation/tree/development/docs"
             tf_foundation = j.tools.markdowndocs.load(url, name="foundation")
             tf_foundation.write()
-
+            openresty.install()
             openresty.start()
             self._gedis_server = j.servers.gedis.get("main", port=8900)
 
@@ -68,6 +62,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             self._gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
 
             rack.add("gedis", self._gedis_server.gedis_server)
+            rack.bottle_server_add()
             rack.start()
 
         else:
@@ -85,8 +80,8 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
             startup.cmd_start = cmd_start
             startup.executor = self.executor
             startup.interpreter = "python"
-            startup.timeout = 10
-            startup.ports = [8900, 4444, 5354, 1491]
+            startup.timeout = 5 * 60
+            startup.ports = [8900, 4444, 8090]
             if startup.is_running():
                 startup.stop()
             startup.start()
