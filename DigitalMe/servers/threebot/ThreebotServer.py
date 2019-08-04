@@ -48,12 +48,15 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             j.servers.openresty.build()
-            url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
-            tf_grid = j.tools.markdowndocs.load(url, name="grid")
-            tf_grid.write()
-            url = "https://github.com/threefoldfoundation/info_foundation/tree/development/docs"
-            tf_foundation = j.tools.markdowndocs.load(url, name="foundation")
-            tf_foundation.write()
+            wikis_load_cmd = """
+from Jumpscale import j
+j.tools.markdowndocs.load_wikis()
+            """
+            wikis_loader = j.servers.startupcmd.get(
+                "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
+            )
+            if not wikis_loader.is_running():
+                wikis_loader.start()
             openresty.install()
             openresty.start()
             self._gedis_server = j.servers.gedis.get("main", port=8900)
