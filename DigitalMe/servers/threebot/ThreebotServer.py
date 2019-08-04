@@ -21,6 +21,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     def _init(self, **kwargs):
         self._gedis_server = None
         self.dns_server = None
+        self.content = ""
 
     @property
     def gedis_server(self):
@@ -93,3 +94,35 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
         while True:
             self._log_info("Reload for docsites done")
             gevent.sleep(300)
+
+    def package_add(self, package_url):
+        path = j.clients.git.getContentPathFromURLorPath(package_url)
+
+        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
+            self.content = f.read()
+        exec(self.content)
+        eval("install")()
+
+    def package_start(self, package_url):
+        path = j.clients.git.getContentPathFromURLorPath(package_url)
+        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
+            self.content = f.read()
+        exec(self.content)
+        # TODO: check if already installed or not
+        eval("start")()
+
+    def package_uninstall(self, package_url):
+        path = j.clients.git.getContentPathFromURLorPath(package_url)
+        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
+            self.content = f.read()
+        exec(self.content)
+        eval("uninstall")()
+
+    def package_upgrade(self, package_url):
+        path = j.clients.git.getContentPathFromURLorPath(package_url)
+        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
+            self.content = f.read()
+        exec(self.content)
+        # TODO: check if already installed or not
+        eval("upgrade")()
+
