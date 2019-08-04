@@ -233,13 +233,15 @@ class GedisServer(JSBaseConfig):
             raise RuntimeError("sslkeys_generate: gedis server is not configure to use ssl")
 
         path = os.path.dirname(self.code_generated_dir)
+        key = j.sal.fs.joinPaths(path, "ca.key")
+        cert = j.sal.fs.joinPaths(path, "ca.crt")
+        if os.path.exists(key) and os.path.exists(cert):
+            return key, cert
         res = j.sal.ssl.ca_cert_generate(path)
         if res:
             self._log_info("generated sslkeys for gedis in %s" % path)
         else:
             self._log_info("using existing key and cerificate for gedis @ %s" % path)
-        key = j.sal.fs.joinPaths(path, "ca.key")
-        cert = j.sal.fs.joinPaths(path, "ca.crt")
         return key, cert
 
     def start(self):
