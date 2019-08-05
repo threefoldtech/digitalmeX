@@ -37,15 +37,9 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             rack = j.servers.rack.get()
 
-            app = j.servers.gedis_websocket.default.app
-            rack.websocket_server_add("websocket", 4444, app)
-
             # TODO, needs to be possible to run ssl and not but still use the same gedis backend, should not have to run 2x
             # gedis = j.servers.gedis.get("main_ssl", ssl=True, port=8901)
             # rack.add("gedis_ssl", gedis)
-
-            dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
-            rack.add("dns", dns)
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             j.servers.openresty.build()
@@ -64,9 +58,7 @@ j.tools.markdowndocs.load_wikis()
 
             self._gedis_server.actors_add("%s/base_actors" % self._dirpath)
             self._gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
-
-            rack.add("gedis", self._gedis_server.gedis_server)
-            rack.bottle_server_add()
+            self.package_add(os.path.join(os.path.dirname(__file__)))
             rack.start()
 
         else:
@@ -103,13 +95,13 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
         exec(self.content)
         eval("install")()
 
-    def package_start(self, package_url):
+    def package_perpare(self, package_url):
         path = j.clients.git.getContentPathFromURLorPath(package_url)
         with open(j.sal.fs.joinPaths(path, "package.py")) as f:
             self.content = f.read()
         exec(self.content)
         # TODO: check if already installed or not
-        eval("start")()
+        eval("prepare")()
 
     def package_uninstall(self, package_url):
         path = j.clients.git.getContentPathFromURLorPath(package_url)
@@ -118,11 +110,11 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
         exec(self.content)
         eval("uninstall")()
 
-    def package_upgrade(self, package_url):
+    def package_update(self, package_url):
         path = j.clients.git.getContentPathFromURLorPath(package_url)
         with open(j.sal.fs.joinPaths(path, "package.py")) as f:
             self.content = f.read()
         exec(self.content)
         # TODO: check if already installed or not
-        eval("upgrade")()
+        eval("update")()
 
