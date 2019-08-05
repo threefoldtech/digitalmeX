@@ -25,7 +25,8 @@ class GedisClient(JSConfigBase):
     namespace = "default" (S)
     password_ = "" (S)
     ssl = False (B)
-    sslkey = "" (S)
+    ssl_keyfile = "" (S)
+    ssl_certfile = "" (S)
     
     """
 
@@ -132,12 +133,12 @@ class GedisClient(JSConfigBase):
             addr = self.host
             port = self.port
             secret = self.password_
-            ssl_certfile = self.sslkey
 
             if self.ssl:
-                if not self.sslkey:
-                    ssl_certfjoile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
-                self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, ssl_certfile))
+                if not self.ssl_keyfile:
+                    self.ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
+                    self.ssl_keyfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.key")
+                self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, self.ssl_certfile))
             else:
                 self._log_info("redisclient: %s:%s " % (addr, port))
 
@@ -146,7 +147,8 @@ class GedisClient(JSConfigBase):
                 port=port,
                 password=secret,
                 ssl=self.ssl,
-                ssl_ca_certs=ssl_certfile,
+                ssl_certfile=self.ssl_certfile,
+                ssl_keyfile=self.ssl_keyfile,
                 ping=True,
                 fromcache=False,
             )

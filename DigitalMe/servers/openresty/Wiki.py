@@ -32,10 +32,6 @@ class Wiki(j.application.JSBaseConfigClass):
             include vhosts/websocket.conf.loc;
             include vhosts/gdrive.conf.loc;
 
-            location /docsites/ {
-                alias /sandbox/var/docsites/;
-            }
-
             location / {
                 set $name '{{obj.name}}';
                 default_type text/html;
@@ -55,10 +51,6 @@ class Wiki(j.application.JSBaseConfigClass):
             include vhosts/static.conf.loc;
             include vhosts/websocket.conf.loc;
             include vhosts/gdrive.conf.loc;
-
-            location /docsites/ {
-                alias /sandbox/var/docsites/;
-            }
 
             location / {
                 set $name '{{obj.name}}_dev';
