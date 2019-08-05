@@ -277,7 +277,7 @@ class MyJobs(JSBASE):
             self._log_debug("monitor run")
 
             # #there is already 1 working, lets give 2 sec time before we start monitoring
-            # time.sleep(2)
+            # gevent.sleep(2)
 
             # TEST for timeout
             wids = [key for key in self.workers.keys()]
@@ -382,6 +382,7 @@ class MyJobs(JSBASE):
         :param kwargs:
         :return:
         """
+        print("executing method with *args {} and **kwargs {} ".format(args, kwargs))
         if inprocess:
             return method(*args, **kwargs)
         self.init()
@@ -478,14 +479,13 @@ class MyJobs(JSBASE):
         counter = 0
         while len(ids) > 0:
             self._data_process_untill_empty()
-            id = ids[0]
+            id = ids.pop(0)
             job = self.model_job.get(id)
             if job == None:
                 raise RuntimeError("job:%s not found" % id)
             if job.time_stop != 0:
                 if job.state == "OK":
                     res[id] = job.result
-                    ids = ids[1:]
                 else:
                     raise RuntimeError("job in error:\n%s" % job) from Exception(job.error)
             if len(ids) > 0:
@@ -495,6 +495,7 @@ class MyJobs(JSBASE):
                     raise RuntimeError("timeout for results with jobids:%s" % ids)
         return res
 
+    workers_start = workers_start_corex
     def test(self):
         """
         js_shell "j.servers.myjobs.test()"
@@ -528,11 +529,33 @@ class MyJobs(JSBASE):
                 self._log_debug("test")
                 self._log_info("test:%s" % counter)
                 self._log_warning("test")
-                time.sleep(1)
+                gevent.sleep(1)
 
         gevent.spawn(something)
 
         j.shell()  # you will see the shell is now interactive but yet still the something greenlet is running
+
+    def test_simple(self):
+        """
+        kosmos "j.servers.myjobs.test_simple()"
+        :return:
+        """
+        j.tools.logger.debug = True
+
+        def reset():
+            # kill leftovers from last time, if any
+            self.init(reset=True)
+            jobs = self.model_job.find()
+            assert len(jobs) == 0
+            assert self.queue_jobs_start.qsize() == 0
+            assert self.queue_return.qsize() == 0
+
+        def add(a, b):
+            return a + b
+        self.worker_start(onetime=True)
+        job = self.schedule(add, 1,2)
+        print(self.results([job]))
+      
 
     def test1(self):
         """
@@ -559,19 +582,20 @@ class MyJobs(JSBASE):
         def wait():
             import time
 
-            time.sleep(10000)
+            gevent.sleep(10000)
 
         def wait_2sec():
             import time
 
-            time.sleep(2)
+            gevent.sleep(2)
 
         reset()
+
+        self.worker_start(onetime=True)
 
         # test the behaviour for 1 job in process, only gevent for data handling
         jobid = self.schedule(add_error, 1, 2)
 
-        self.worker_start(onetime=True)
         job = self.model_job.get(jobid)
         assert job.error == "s"
         assert job.result == ""
@@ -653,7 +677,7 @@ class MyJobs(JSBASE):
         q.reset()  # lets make sure its empty
 
         j.servers.myjobs.schedule(add, 1, 2, return_queues=[queue_name])
-        time.sleep(0.5)
+        gevent.sleep(0.5)
         assert q.qsize() == 1
         job_return = j.servers.myjobs.wait("myself")
         assert job_return.result == "3"
@@ -718,7 +742,7 @@ class MyJobs(JSBASE):
         def wait_2sec():
             import time
 
-            time.sleep(2)
+            gevent.sleep(2)
 
         for x in range(40):
             self.schedule(wait_2sec)
@@ -746,7 +770,7 @@ class MyJobs(JSBASE):
         def wait_1sec():
             import time
 
-            time.sleep(1)
+            gevent.sleep(1)
             return "OK"
 
         ids = []
@@ -769,7 +793,7 @@ class MyJobs(JSBASE):
         def wait_1sec():
             import time
 
-            time.sleep(1)
+            gevent.sleep(1)
             return "OK"
 
         ids = []

@@ -3,7 +3,7 @@ from Jumpscale import j
 import pudb
 import sys
 import traceback
-import time
+import gevent
 
 
 def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
@@ -95,7 +95,7 @@ def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
             res = None
             while not res:
                 res = queue_jobs_start.get(timeout=0)
-                time.sleep(0.1)
+                gevent.sleep(0.1)
                 print("jobget")
         else:
             res = queue_jobs_start.get(timeout=10)
@@ -148,13 +148,14 @@ def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
                     if debug:
                         pudb.post_mortem(tb)
                     err = str(e)
-                    err += "\n" + j.core.errorhandler._trace_get("", e, tb)
+                    # err += "\n" + j.core.errorhandler._trace_get("", e, tb)
                     job.error = err + "\nCOULD NOT LOAD METHOD {}\n {}".format(action.methodname, action.code)
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
                     return_job_obj(job)
                     if showout:
-                        j.core.errorhandler._trace_print(job.error)
+                        print(job.error)
+                        # j.core.errorhandler._trace_print(job.error)
                     if onetime:
                         return
                     continue
@@ -166,9 +167,10 @@ def MyWorker(worker_id=999999, onetime=False, showout=True, debug=False):
                     if debug:
                         pudb.post_mortem(tb)
                     err = str(e)
-                    err += "\n" + j.core.errorhandler._trace_get("", e, tb)
+                    # err += "\n" + j.core.errorhandler._trace_get("", e, tb)
                     job.error = err + "\nCOULD NOT EXECUTE METHOD {}.\n {}".format(action.methodname, action.code)
-                    j.core.errorhandler._trace_print(job.error)
+                    print(job.error)
+                    # j.core.errorhandler._trace_print(job.error)
                     # TODO: need to get the stacktract and format properly just like we do in the caller
                     job.state = "ERROR"
                     job.time_stop = j.data.time.epoch
