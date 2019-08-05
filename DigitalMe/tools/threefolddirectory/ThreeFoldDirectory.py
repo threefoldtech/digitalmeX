@@ -19,7 +19,7 @@ class ThreeFoldDirectory(j.application.JSFactoryConfigsBaseClass):
     def zerotier_client(self):
         if not self._zerotier_client:
             if not j.clients.zerotier.exists("sysadmin"):
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Please configure your zerotier sysadmin client: j.clients.zerotier.get(name='sysadmin', token_=TOKEN)"
                 )
             self._zerotier_client = j.clients.zerotier.get("sysadmin")
@@ -70,10 +70,10 @@ class ThreeFoldDirectory(j.application.JSFactoryConfigsBaseClass):
         res = self.node_find(zerotier_addr=zerotier_addr)
         if len(res) == 0:
             if die:
-                raise RuntimeError("could not find node: zerotier_addr=%s" % (zerotier_addr))
+                raise j.exceptions.Base("could not find node: zerotier_addr=%s" % (zerotier_addr))
             return None
         elif len(res) > 1:
-            raise RuntimeError("found too many nodes, should only be 1: zerotier_addr=%s" % (zerotier_addr))
+            raise j.exceptions.Base("found too many nodes, should only be 1: zerotier_addr=%s" % (zerotier_addr))
         else:
             return res[0]
 

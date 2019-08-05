@@ -81,7 +81,7 @@ class RwLockWrapper:
     def acquire(self, blocking=True):
         assert self._cm is None
         if not blocking:
-            raise NotImplementedError
+            raise j.exceptions.NotImplemented
         cm = self._lock.acquire("w")
         cm.__enter__()
         self._cm = cm

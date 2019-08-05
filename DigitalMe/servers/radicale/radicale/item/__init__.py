@@ -57,15 +57,15 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
 
     """
     if tag and tag not in ("VCALENDAR", "VADDRESSBOOK"):
-        raise ValueError("Unsupported collection tag: %r" % tag)
+        raise j.exceptions.Value("Unsupported collection tag: %r" % tag)
     if not is_collection and len(vobject_items) != 1:
-        raise ValueError("Item contains %d components" % len(vobject_items))
+        raise j.exceptions.Value("Item contains %d components" % len(vobject_items))
     if tag == "VCALENDAR":
         if len(vobject_items) > 1:
-            raise RuntimeError("VCALENDAR collection contains %d " "components" % len(vobject_items))
+            raise j.exceptions.Base("VCALENDAR collection contains %d " "components" % len(vobject_items))
         vobject_item = vobject_items[0]
         if vobject_item.name != "VCALENDAR":
-            raise ValueError("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
+            raise j.exceptions.Value("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
         component_uids = set()
         for component in vobject_item.components():
             if component.name in ("VTODO", "VEVENT", "VJOURNAL"):
@@ -82,7 +82,9 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
             if component_name is None or is_collection:
                 component_name = component.name
             elif component_name != component.name:
-                raise ValueError("Multiple component types in object: %r, %r" % (component_name, component.name))
+                raise j.exceptions.Value(
+                    "Multiple component types in object: %r, %r" % (component_name, component.name)
+                )
             if component_name not in ("VTODO", "VEVENT", "VJOURNAL"):
                 continue
             component_uid = get_uid(component)
@@ -91,7 +93,7 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                 object_uid = component_uid
                 if not component_uid:
                     if not is_collection:
-                        raise ValueError("%s component without UID in object" % component_name)
+                        raise j.exceptions.Value("%s component without UID in object" % component_name)
                     component_uid = find_available_uid(component_uids.__contains__)
                     component_uids.add(component_uid)
                     if hasattr(component, "uid"):
@@ -99,9 +101,9 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                     else:
                         component.add("UID").value = component_uid
             elif not object_uid or not component_uid:
-                raise ValueError("Multiple %s components without UID in " "object" % component_name)
+                raise j.exceptions.Value("Multiple %s components without UID in " "object" % component_name)
             elif object_uid != component_uid:
-                raise ValueError(
+                raise j.exceptions.Value(
                     "Multiple %s components with different UIDs in object: "
                     "%r, %r" % (component_name, object_uid, component_uid)
                 )
@@ -109,7 +111,7 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
             try:
                 component.rruleset
             except Exception as e:
-                raise ValueError("invalid recurrence rules in %s" % component.name) from e
+                raise j.exceptions.Value("invalid recurrence rules in %s" % component.name) from e
     elif tag == "VADDRESSBOOK":
         # https://tools.ietf.org/html/rfc6352#section-5.1
         object_uids = set()
@@ -124,11 +126,11 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                 # contacts
                 continue
             if vobject_item.name != "VCARD":
-                raise ValueError("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
+                raise j.exceptions.Value("Item type %r not supported in %r " "collection" % (vobject_item.name, tag))
             object_uid = get_uid(vobject_item)
             if not object_uid:
                 if not is_collection:
-                    raise ValueError("%s object without UID" % vobject_item.name)
+                    raise j.exceptions.Value("%s object without UID" % vobject_item.name)
                 object_uid = find_available_uid(object_uids.__contains__)
                 object_uids.add(object_uid)
                 if hasattr(vobject_item, "uid"):
@@ -137,14 +139,16 @@ def check_and_sanitize_items(vobject_items, is_collection=False, tag=None):
                     vobject_item.add("UID").value = object_uid
     else:
         for i in vobject_items:
-            raise ValueError("Item type %r not supported in %s collection" % (i.name, repr(tag) if tag else "generic"))
+            raise j.exceptions.Value(
+                "Item type %r not supported in %s collection" % (i.name, repr(tag) if tag else "generic")
+            )
 
 
 def check_and_sanitize_props(props):
     """Check collection properties for common errors."""
     tag = props.get("tag")
     if tag and tag not in ("VCALENDAR", "VADDRESSBOOK"):
-        raise ValueError("Unsupported collection tag: %r" % tag)
+        raise j.exceptions.Value("Unsupported collection tag: %r" % tag)
 
 
 def find_available_uid(exists_fn, suffix=""):
@@ -156,7 +160,7 @@ def find_available_uid(exists_fn, suffix=""):
         if not exists_fn(name):
             return name
     # something is wrong with the PRNG
-    raise RuntimeError("No unique random sequence found")
+    raise j.exceptions.Base("No unique random sequence found")
 
 
 def get_etag(text):
@@ -239,7 +243,7 @@ def find_tag_and_time_range(vobject_item):
             3,
             6,
         ):
-            raise RuntimeError("Unsupported in Python < 3.6: %s" % e) from e
+            raise j.exceptions.Base("Unsupported in Python < 3.6: %s" % e) from e
         raise
 
 
@@ -288,10 +292,10 @@ class Item:
 
         """
         if text is None and vobject_item is None:
-            raise ValueError("at least one of 'text' or 'vobject_item' must be set")
+            raise j.exceptions.Value("at least one of 'text' or 'vobject_item' must be set")
         if collection_path is None:
             if collection is None:
-                raise ValueError("at least one of 'collection_path' or " "'collection' must be set")
+                raise j.exceptions.Value("at least one of 'collection_path' or " "'collection' must be set")
             collection_path = collection.path
         assert collection_path == pathutils.strip_path(pathutils.sanitize_path(collection_path))
         self._collection_path = collection_path
@@ -311,7 +315,7 @@ class Item:
             try:
                 self._text = self.vobject_item.serialize()
             except Exception as e:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Failed to serialize item %r from %r: %s" % (self.href, self._collection_path, e)
                 ) from e
         return self._text
@@ -322,7 +326,9 @@ class Item:
             try:
                 self._vobject_item = vobject.readOne(self._text)
             except Exception as e:
-                raise RuntimeError("Failed to parse item %r from %r: %s" % (self.href, self._collection_path, e)) from e
+                raise j.exceptions.Base(
+                    "Failed to parse item %r from %r: %s" % (self.href, self._collection_path, e)
+                ) from e
         return self._vobject_item
 
     @property

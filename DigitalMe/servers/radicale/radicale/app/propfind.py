@@ -70,7 +70,7 @@ def xml_propfind(base_prefix, path, xml_request, allowed_items, user):
 def xml_propfind_response(base_prefix, path, item, props, user, write=False, propname=False, allprop=False):
     """Build and return a PROPFIND response."""
     if propname and allprop or (props and (propname or allprop)):
-        raise ValueError("Only use one of props, propname and allprops")
+        raise j.exceptions.Value("Only use one of props, propname and allprops")
     is_collection = isinstance(item, storage.BaseCollection)
     if is_collection:
         is_leaf = item.get_meta("tag") in ("VADDRESSBOOK", "VCALENDAR")

@@ -11,7 +11,7 @@ class KosmosUniverse(j.application.JSBaseClass):
         if attr in self.__class__._MODEL.schema.properties_list:
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
-        # raise RuntimeError("could not find attribute:%s"%attr)
+        # raise j.exceptions.Base("could not find attribute:%s"%attr)
 
     def __dir__(self):
         r = self.__class__._MODEL.schema.properties_list

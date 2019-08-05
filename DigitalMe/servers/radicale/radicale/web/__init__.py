@@ -28,7 +28,7 @@ def load(configuration):
     try:
         class_ = import_module(module).Web
     except Exception as e:
-        raise RuntimeError("Failed to load web module %r: %s" % (module, e)) from e
+        raise j.exceptions.Base("Failed to load web module %r: %s" % (module, e)) from e
     logger.info("Web type is %r", web_type)
     return class_(configuration)
 
@@ -47,4 +47,4 @@ class BaseWeb:
         ``user`` is empty for anonymous users.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

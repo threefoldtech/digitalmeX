@@ -27,7 +27,7 @@ class CollectionUploadMixin:
         try:
             self._store_item_cache(href, item)
         except Exception as e:
-            raise ValueError("Failed to store item %r in collection %r: %s" % (href, self.path, e)) from e
+            raise j.exceptions.Value("Failed to store item %r in collection %r: %s" % (href, self.path, e)) from e
         path = pathutils.path_to_filesystem(self._filesystem_path, href)
         with self._atomic_write(path, newline="") as fd:
             fd.write(item.serialize())
@@ -54,7 +54,9 @@ class CollectionUploadMixin:
             try:
                 cache_content = self._item_cache_content(item)
             except Exception as e:
-                raise ValueError("Failed to store item %r in temporary collection %r: %s" % (uid, self.path, e)) from e
+                raise j.exceptions.Value(
+                    "Failed to store item %r in temporary collection %r: %s" % (uid, self.path, e)
+                ) from e
             href_candidates = []
             if os.name in ("nt", "posix"):
                 href_candidates.append(lambda: uid if uid.lower().endswith(suffix.lower()) else uid + suffix)

@@ -53,7 +53,7 @@ class ApplicationPutMixin:
                 tags = {value: key for key, value in xmlutils.MIMETYPES.items()}
                 tag = radicale_item.predict_tag_of_whole_collection(vobject_items, tags.get(content_type))
                 if not tag:
-                    raise ValueError("Can't determine collection tag")
+                    raise j.exceptions.Value("Can't determine collection tag")
                 collection_path = pathutils.strip_path(path)
             elif (
                 write_whole_collection is not None

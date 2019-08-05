@@ -25,7 +25,7 @@ class gdrive(j.application.JSBaseClass):
         cl = j.clients.gdrive.main
 
         if not doctype in doctypes_map:
-            raise RuntimeError("invalid type")
+            raise j.exceptions.Base("invalid type")
 
         service_name = doctypes_map[doctype]
         if doctype in ["doc", "sheet"]:

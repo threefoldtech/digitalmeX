@@ -36,7 +36,7 @@ class CollectionMetaMixin:
                     self._meta_cache = {}
                 radicale_item.check_and_sanitize_props(self._meta_cache)
             except ValueError as e:
-                raise RuntimeError("Failed to load properties of collection " "%r: %s" % (self.path, e)) from e
+                raise j.exceptions.Base("Failed to load properties of collection " "%r: %s" % (self.path, e)) from e
         return self._meta_cache.get(key) if key else self._meta_cache
 
     def set_meta(self, props):

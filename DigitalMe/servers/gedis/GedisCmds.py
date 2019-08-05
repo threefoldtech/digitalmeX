@@ -36,7 +36,7 @@ class GedisCmds(JSBASE):
         JSBASE.__init__(self)
 
         if path is "" and data is None:
-            raise RuntimeError("path cannot be None")
+            raise j.exceptions.Base("path cannot be None")
 
         self.path = path
         self.server = server
@@ -142,7 +142,7 @@ class GedisCmds(JSBASE):
                 if state == "COMMENT":
                     state = "CODE"
                     continue
-                raise RuntimeError()
+                raise j.exceptions.Base()
             if lstrip.startswith("```") or lstrip.startswith("'''"):
                 if state.startswith("SCHEMA"):  # are already in schema go back to comment
                     state = "COMMENT"
@@ -153,7 +153,7 @@ class GedisCmds(JSBASE):
                     else:
                         state = "SCHEMAI"
                     continue
-                raise RuntimeError()
+                raise j.exceptions.Base()
             if state == "SCHEMAI":
                 schema_in += "%s\n" % line
                 continue
@@ -166,7 +166,7 @@ class GedisCmds(JSBASE):
             if state == "CODE" or state == "DEF":
                 code += "%s\n" % line
                 continue
-            raise RuntimeError()
+            raise j.exceptions.Base()
 
         # cmd.code = j.core.text.strip(code)
         cmd.comment = j.core.text.strip(comment)
@@ -200,7 +200,7 @@ class GedisCmds(JSBASE):
         if "#" in url:
             url = url.split("#", 1)[0].strip()
         if "!" in url:
-            raise RuntimeError("cannot have ! in url")
+            raise j.exceptions.Base("cannot have ! in url")
         url2, content2 = self._schema_get(url)
         if not url2:
             # means we did not find it yet

@@ -82,25 +82,25 @@ class RwLock:
     @contextlib.contextmanager
     def acquire(self, mode):
         if mode not in "rw":
-            raise ValueError("Invalid mode: %r" % mode)
+            raise j.exceptions.Value("Invalid mode: %r" % mode)
         with open(self._path, "w+") as lock_file:
             if os.name == "nt":
                 handle = msvcrt.get_osfhandle(lock_file.fileno())
                 flags = LOCKFILE_EXCLUSIVE_LOCK if mode == "w" else 0
                 overlapped = Overlapped()
                 if not lock_file_ex(handle, flags, 0, 1, 0, overlapped):
-                    raise RuntimeError("Locking the storage failed: %s" % ctypes.FormatError())
+                    raise j.exceptions.Base("Locking the storage failed: %s" % ctypes.FormatError())
             elif os.name == "posix":
                 _cmd = fcntl.LOCK_EX if mode == "w" else fcntl.LOCK_SH
                 try:
                     fcntl.flock(lock_file.fileno(), _cmd)
                 except OSError as e:
-                    raise RuntimeError("Locking the storage failed: %s" % e) from e
+                    raise j.exceptions.Base("Locking the storage failed: %s" % e) from e
             else:
-                raise RuntimeError("Locking the storage failed: " "Unsupported operating system")
+                raise j.exceptions.Base("Locking the storage failed: " "Unsupported operating system")
             with self._lock:
                 if self._writer or mode == "w" and self._readers != 0:
-                    raise RuntimeError("Locking the storage failed: " "Guarantees failed")
+                    raise j.exceptions.Base("Locking the storage failed: " "Guarantees failed")
                 if mode == "r":
                     self._readers += 1
                 else:
@@ -222,8 +222,8 @@ def name_from_path(path, collection):
     assert sanitize_path(path) == path
     start = unstrip_path(collection.path, True)
     if not (path + "/").startswith(start):
-        raise ValueError("%r doesn't start with %r" % (path, start))
+        raise j.exceptions.Value("%r doesn't start with %r" % (path, start))
     name = path[len(start) :]
     if name and not is_safe_path_component(name):
-        raise ValueError("%r is not a component in collection %r" % (name, collection.path))
+        raise j.exceptions.Value("%r is not a component in collection %r" % (name, collection.path))
     return name

@@ -55,7 +55,7 @@ class FarmerFactory(JSBASE):
     @property
     def bcdb(self):
         if self.zdb is None:
-            raise RuntimeError("you need to set self.zdb with a zerodb connection")
+            raise j.exceptions.Base("you need to set self.zdb with a zerodb connection")
         if self._bcdb is None:
             self._bcdb = j.data.bcdb.get(self.zdb)
         return self._bcdb
@@ -63,7 +63,7 @@ class FarmerFactory(JSBASE):
     @property
     def models(self):
         if self.zdb is None:
-            raise RuntimeError("you need to set self.zdb with a zerodb connection")
+            raise j.exceptions.Base("you need to set self.zdb with a zerodb connection")
         if self._models is None:
             models_path = j.clients.git.getContentPathFromURLorPath(
                 "https://github.com/threefoldtech/digital_me/tree/development_simple/packages/threefold/models"

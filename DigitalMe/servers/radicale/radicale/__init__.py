@@ -56,7 +56,7 @@ def application(environ, start_response):
     if _application is None:
         _init_application(config_path, environ["wsgi.errors"])
     if _application_config_path != config_path:
-        raise ValueError(
+        raise j.exceptions.Value(
             "RADICALE_CONFIG must not change: %s != %s" % (repr(config_path), repr(_application_config_path))
         )
     return _application(environ, start_response)

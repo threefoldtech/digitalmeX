@@ -447,7 +447,7 @@ class BaseRequestsMixIn:
             namespace = "urn:ietf:params:xml:ns:carddav"
             report = "addressbook-query"
         else:
-            raise ValueError("Unsupported kind: %r" % kind)
+            raise j.exceptions.Value("Unsupported kind: %r" % kind)
         status, _, _ = self.request("DELETE", path)
         assert status in (200, 404)
         status, _, _ = create_collection_fn(path)

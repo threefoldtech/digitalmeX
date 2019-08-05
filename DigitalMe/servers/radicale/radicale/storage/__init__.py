@@ -50,7 +50,7 @@ def load(configuration):
     try:
         class_ = import_module(module).Collection
     except Exception as e:
-        raise RuntimeError("Failed to load storage module %r: %s" % (module, e)) from e
+        raise j.exceptions.Base("Failed to load storage module %r: %s" % (module, e)) from e
     logger.info("Storage type is %r", storage_type)
 
     class CollectionCopy(class_):
@@ -112,7 +112,7 @@ class BaseCollection:
         The root collection "/" must always exist.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     @classmethod
     def move(cls, item, to_collection, to_href):
@@ -126,7 +126,7 @@ class BaseCollection:
         same name might already exist.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     @property
     def etag(self):
@@ -156,7 +156,7 @@ class BaseCollection:
         collection.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def sync(self, old_token=None):
         """Get the current sync token and changed items for synchronization.
@@ -171,7 +171,7 @@ class BaseCollection:
         """
         token = "http://radicale.org/ns/sync/%s" % self.etag.strip('"')
         if old_token:
-            raise ValueError("Sync token are not supported")
+            raise j.exceptions.Value("Sync token are not supported")
         return token, (item.href for item in self.get_all())
 
     def get_multi(self, hrefs):
@@ -184,11 +184,11 @@ class BaseCollection:
         exist.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_all(self):
         """Fetch all items."""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_filtered(self, filters):
         """Fetch all items with optional filtering.
@@ -223,7 +223,7 @@ class BaseCollection:
 
     def upload(self, href, item):
         """Upload a new or replace an existing item."""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def delete(self, href=None):
         """Delete an item.
@@ -231,7 +231,7 @@ class BaseCollection:
         When ``href`` is ``None``, delete the collection.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def get_meta(self, key=None):
         """Get metadata value for collection.
@@ -240,7 +240,7 @@ class BaseCollection:
         a dict with all properties
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def set_meta(self, props):
         """Set metadata values for collection.
@@ -248,12 +248,12 @@ class BaseCollection:
         ``props`` a dict with values for properties.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     @property
     def last_modified(self):
         """Get the HTTP-datetime of when the collection was modified."""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     def serialize(self):
         """Get the unicode string representing the whole collection."""
@@ -325,9 +325,9 @@ class BaseCollection:
         ``user`` is the name of the logged in user or empty.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented
 
     @classmethod
     def verify(cls):
         """Check the storage for errors."""
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

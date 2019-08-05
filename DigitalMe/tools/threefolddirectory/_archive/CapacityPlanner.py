@@ -35,7 +35,7 @@ class CapacityPlanner(JSBASE):
     @staticmethod
     def get_3bot_robot():
         if "3bot" not in j.clients.zrobot.robots:
-            raise RuntimeError("You need to configure zrobot client for 3bot firstly")
+            raise j.exceptions.Base("You need to configure zrobot client for 3bot firstly")
         return j.clients.zrobot.robots["3bot"]
 
     @staticmethod
@@ -310,10 +310,10 @@ class CapacityPlanner(JSBASE):
                     zt_nw = zt_client.network_get(management_network_id)
                     zt_nw.member_add(zt_identity)
                     if not j.tools.timer.execute_until(lambda: cont.mgmt_addr, 7200, 1):
-                        raise RuntimeError("Failed to get zt ip for traefik {}".format(self.name))
+                        raise j.exceptions.Base("Failed to get zt ip for traefik {}".format(self.name))
                 break
         else:
-            raise RuntimeError("No robot containers found")
+            raise j.exceptions.Base("No robot containers found")
 
         data = {
             "mgmtNic": {"id": management_network_id, "ztClient": management_network_id},

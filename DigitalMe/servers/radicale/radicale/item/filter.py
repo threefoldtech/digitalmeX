@@ -91,7 +91,7 @@ def comp_match(item, filter_, level=0):
             if not comp_match(item, child, level=level + 1):
                 return False
         else:
-            raise ValueError("Unexpected %r in comp-filter" % child.tag)
+            raise j.exceptions.Value("Unexpected %r in comp-filter" % child.tag)
     return True
 
 
@@ -123,7 +123,7 @@ def prop_match(vobject_item, filter_, ns):
             if not param_filter_match(vobject_item, child, name, ns):
                 return False
         else:
-            raise ValueError("Unexpected %r in prop-filter" % child.tag)
+            raise j.exceptions.Value("Unexpected %r in prop-filter" % child.tag)
     return True
 
 
@@ -207,14 +207,14 @@ def visit_time_ranges(vobject_item, child_name, range_fn, infinity_fn):
                 recurrences.append(comp.recurrence_id.value)
                 if comp.rruleset:
                     # Prevent possible infinite loop
-                    raise ValueError("Overwritten recurrence with RRULESET")
+                    raise j.exceptions.Value("Overwritten recurrence with RRULESET")
                 yield comp, True, ()
             else:
                 if main is not None:
-                    raise ValueError("Multiple main components")
+                    raise j.exceptions.Value("Multiple main components")
                 main = comp
         if main is None:
-            raise ValueError("Main component missing")
+            raise j.exceptions.Value("Main component missing")
         yield main, False, recurrences
 
     # Comments give the lines in the tables of the specification
@@ -416,7 +416,7 @@ def text_match(vobject_item, filter_, child_name, ns, attrib_name=None):
             return value.startswith(text)
         if match_type == "ends-with":
             return value.endswith(text)
-        raise ValueError("Unexpected text-match match-type: %r" % match_type)
+        raise j.exceptions.Value("Unexpected text-match match-type: %r" % match_type)
 
     children = getattr(vobject_item, "%s_list" % child_name, [])
     if attrib_name:

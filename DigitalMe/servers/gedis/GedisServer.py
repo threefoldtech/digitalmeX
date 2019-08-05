@@ -101,7 +101,7 @@ class GedisServer(JSBaseConfig):
         :return:
         """
         if not j.sal.fs.isDir(path):
-            raise ValueError("actor_add: path needs to point to an existing directory")
+            raise j.exceptions.Value("actor_add: path needs to point to an existing directory")
 
         files = j.sal.fs.listFilesInDir(path, recursive=False, filter="*.py")
         for file_path in files:
@@ -122,7 +122,7 @@ class GedisServer(JSBaseConfig):
             self.namespaces.append(namespace)
 
         if not j.sal.fs.exists(path):
-            raise ValueError("actor_add: cannot find actor at %s" % path)
+            raise j.exceptions.Value("actor_add: cannot find actor at %s" % path)
 
         self._log_debug("actor_add:%s:%s", namespace, path)
         name = actor_name(path, namespace)
@@ -230,7 +230,7 @@ class GedisServer(JSBaseConfig):
 
     def sslkeys_generate(self):
         if not self.ssl:
-            raise RuntimeError("sslkeys_generate: gedis server is not configure to use ssl")
+            raise j.exceptions.Base("sslkeys_generate: gedis server is not configure to use ssl")
 
         path = os.path.dirname(self.code_generated_dir)
         res = j.sal.ssl.ca_cert_generate(path)

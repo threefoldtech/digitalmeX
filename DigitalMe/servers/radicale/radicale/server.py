@@ -180,7 +180,7 @@ class ParallelHTTPSServer(ParallelHTTPServer):
             except socket.timeout:
                 raise
             except Exception as e:
-                raise RuntimeError("SSL handshake failed: %s" % e) from e
+                raise j.exceptions.Base("SSL handshake failed: %s" % e) from e
         except Exception:
             try:
                 self.handle_error(request, client_address)
@@ -268,7 +268,7 @@ def serve(configuration, shutdown_socket=None):
             try:
                 open(filename, "r").close()
             except OSError as e:
-                raise RuntimeError("Failed to read SSL %s %r: %s" % (name, filename, e)) from e
+                raise j.exceptions.Base("Failed to read SSL %s %r: %s" % (name, filename, e)) from e
 
     class RequestHandlerCopy(RequestHandler):
         """Copy, avoids overriding the original class attributes."""
@@ -297,7 +297,7 @@ def serve(configuration, shutdown_socket=None):
             server = ServerCopy(server_address, RequestHandlerCopy)
             server.set_app(application)
         except OSError as e:
-            raise RuntimeError("Failed to start server %r: %s" % (server_address, e)) from e
+            raise j.exceptions.Base("Failed to start server %r: %s" % (server_address, e)) from e
         servers[server.socket] = server
         logger.info(
             "Listening to %r on port %d%s",
@@ -323,7 +323,7 @@ def serve(configuration, shutdown_socket=None):
         while True:
             rlist, _, xlist = select.select(sockets, [], sockets, select_timeout)
             if xlist:
-                raise RuntimeError("unhandled socket error")
+                raise j.exceptions.Base("unhandled socket error")
             if shutdown_socket in rlist:
                 logger.info("Stopping Radicale")
                 break

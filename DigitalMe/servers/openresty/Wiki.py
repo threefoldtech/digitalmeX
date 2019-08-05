@@ -80,7 +80,7 @@ class Wiki(j.application.JSBaseConfigClass):
     def generate(self, pull=True):
         try:
             if not j.sal.fs.exists(self.docsite_path):
-                raise RuntimeError("%s does not exists, cannot generate docs from ")
+                raise j.exceptions.Base("%s does not exists, cannot generate docs from ")
 
             docs_path = "{}/docs".format(self.docsite_path)
             doc_site = j.tools.markdowndocs.load(docs_path, name=self.name, pull=pull)

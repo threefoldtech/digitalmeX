@@ -302,7 +302,7 @@ class Application(
 
     def access(self, user, path, permission, item=None):
         if permission not in "rw":
-            raise ValueError("Invalid permission argument: %r" % permission)
+            raise j.exceptions.Value("Invalid permission argument: %r" % permission)
         if not item:
             permissions = permission + permission.upper()
             parent_permissions = permission
@@ -329,7 +329,7 @@ class Application(
             return b""
         content = environ["wsgi.input"].read(content_length)
         if len(content) < content_length:
-            raise RuntimeError("Request body too short: %d" % len(content))
+            raise j.exceptions.Base("Request body too short: %d" % len(content))
         return content
 
     def read_content(self, environ):
@@ -345,7 +345,7 @@ class Application(
             xml_content = ET.fromstring(content)
         except ET.ParseError as e:
             logger.debug("Request content (Invalid XML):\n%s", content)
-            raise RuntimeError("Failed to parse XML: %s" % e) from e
+            raise j.exceptions.Base("Failed to parse XML: %s" % e) from e
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("Request content:\n%s", xmlutils.pretty_xml(xml_content))
         return xml_content

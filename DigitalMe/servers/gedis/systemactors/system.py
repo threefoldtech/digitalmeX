@@ -148,7 +148,7 @@ class system(JSBASE):
                 if key == "":
                     key = args[nr - 1].decode()
                     if not j.data.types.string.check(key):
-                        raise RuntimeError("%s: key:%s need to be string" % (args, key))
+                        raise j.exceptions.Base("%s: key:%s need to be string" % (args, key))
                 else:
                     res2[key] = args[nr - 1].decode()
                     key = ""

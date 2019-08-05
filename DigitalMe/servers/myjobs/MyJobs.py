@@ -13,13 +13,13 @@ schema_job = """
 category*= ""
 time_start = 0 (T)
 time_stop = 0 (T)
-state* = "new,error,ok" [E]
+state* = "new,error,ok" (E)
 timeout = 0
 action_id* = 0
-args = ""   #json
-kwargs = "" #json
-result = "" #json
-error = ""
+args = (json)
+kwargs = (dict)
+result = (dict)
+error = (dict)
 return_queues = (LS)
 
 
@@ -43,7 +43,7 @@ time_start = 0 (T)
 last_update = 0 (T)
 current_job = (I)
 error = "" (S)
-state* = "new,error,ok" [E]
+state* = "new,error,ok" (E)
 pid = 0
 halt = false (B)
 
@@ -155,11 +155,9 @@ class MyJobs(JSBASE):
             worker = gipc.start_process(target=MyWorker, args=(w.id,))
             self.workers[w.id] = worker
         else:
-            excepthook_old = sys.excepthook
             MyWorker(w.id, onetime=onetime, debug=debug)
             # will make sure the data comes back
             self._data_process_untill_empty(timeout=5)
-            sys.excepthook = excepthook_old
 
     def dataloop_start(self):
         if not self.dataloop:
@@ -206,7 +204,7 @@ class MyJobs(JSBASE):
         r = self.queue_return.get(timeout=timeout)
         if r == None:
             return
-        cat, objid, json_ = j.data.serializers.msgpack.loads(r)
+        cat, objid, json_ = j.data.serializers.msgpack.loads(r)  # change to json
         if cat not in ["E"]:
             ddict = j.data.serializers.json.loads(json_)
         if cat == "W":
@@ -228,7 +226,7 @@ class MyJobs(JSBASE):
             j.core.tools.pprint(worker)
             sys.exit(1)
         else:
-            raise RuntimeError("return queue does not have right obj")
+            raise j.exceptions.Base("return queue does not have right obj")
 
     def _data_process_untill_empty(self, timeout=0):
         self.init()
@@ -287,7 +285,7 @@ class MyJobs(JSBASE):
                 else:
                     continue
                 if gproc.exitcode != None:
-                    raise RuntimeError("subprocess should never have been exitted")
+                    raise j.exceptions.Base("subprocess should never have been exitted")
                 w = self.model_worker.get(wid)
                 if w == None:
                     # should always find the worker
@@ -328,7 +326,7 @@ class MyJobs(JSBASE):
                 for wid in active_workers:
                     gproc = self.workers[wid]
                     if gproc.exitcode != None:
-                        raise RuntimeError("subprocess should never have been exit-ed")
+                        raise j.exceptions.Base("subprocess should never have been exit-ed")
                     w = self.model_worker.get(wid)
                     if w == None:
                         continue
@@ -395,7 +393,7 @@ class MyJobs(JSBASE):
                 methodname = line.split("(", 1)[0].strip().replace("def ", "")
 
         if methodname == "":
-            raise RuntimeError("defname cannot be empty")
+            raise j.exceptions.Base("defname cannot be empty")
 
         key = j.data.hash.md5_string(code)
         new, action = self.action_get(key)
@@ -423,7 +421,7 @@ class MyJobs(JSBASE):
 
         if gevent and return_queues != []:
             # self.return_queues[job.id]
-            raise RuntimeError("need to implement")
+            raise j.exceptions.Base("need to implement")
 
         self.queue_jobs_start.put(job.id)
 
@@ -481,18 +479,18 @@ class MyJobs(JSBASE):
             id = ids[0]
             job = self.model_job.get(id)
             if job == None:
-                raise RuntimeError("job:%s not found" % id)
+                raise j.exceptions.Base("job:%s not found" % id)
             if job.time_stop != 0:
                 if job.state == "OK":
                     res[id] = job.result
                     ids = ids[1:]
                 else:
-                    raise RuntimeError("job in error:\n%s" % job) from Exception(job.error)
+                    raise j.exceptions.Base("job in error:\n%s" % job) from Exception(job.error)
             if len(ids) > 0:
                 gevent.sleep(0.1)
                 counter += 1
                 if counter > timeout * 10:
-                    raise RuntimeError("timeout for results with jobids:%s" % ids)
+                    raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
         return res
 
     def test(self):
@@ -554,7 +552,7 @@ class MyJobs(JSBASE):
             return a + b
 
         def add_error(a, b):
-            raise RuntimeError("s")
+            raise j.exceptions.Base("s")
 
         def wait():
             import time
