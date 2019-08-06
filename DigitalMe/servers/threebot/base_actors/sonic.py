@@ -2,7 +2,6 @@ from Jumpscale import j
 
 
 class sonic(j.application.JSBaseClass):
-
     def query(self, name, text, schema_out):
         """
         ```in

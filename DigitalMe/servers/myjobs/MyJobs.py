@@ -494,6 +494,7 @@ class MyJobs(JSBASE):
         return res
 
     workers_start = workers_start_corex
+
     def test(self):
         """
         js_shell "j.servers.myjobs.test()"
@@ -550,10 +551,10 @@ class MyJobs(JSBASE):
 
         def add(a, b):
             return a + b
+
         self.worker_start(onetime=True)
-        job = self.schedule(add, 1,2)
+        job = self.schedule(add, 1, 2)
         print(self.results([job]))
-      
 
     def test1(self):
         """

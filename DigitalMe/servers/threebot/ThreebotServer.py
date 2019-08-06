@@ -117,4 +117,3 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
         exec(self.content)
         # TODO: check if already installed or not
         eval("update")()
-
