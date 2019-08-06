@@ -205,6 +205,8 @@ class MyJobs(JSBASE):
             return
         thedata = j.data.serializers.json.loads(r)  # change to json
         cat = thedata["cat"]
+        if cat is None:
+            import ipdb; ipdb.set_trace()
         if cat not in ["E"]:
             ddict = thedata
         if cat == "W":
@@ -226,12 +228,13 @@ class MyJobs(JSBASE):
                 queue.put(job.id)
             return job
         elif cat == "E":
-            print("error here...")
-            # worker = self.model_worker.get(json_)
-            # j.core.tools.pprint(worker)
-            # sys.exit(1)
-        # else:
-        #     raise j.exceptions.Base("return queue does not have right obj")
+            cat, objid, json_ = thedata
+
+            worker = self.model_worker.get(json_)
+            j.core.tools.pprint(worker)
+            sys.exit(1)
+        else:
+            raise j.exceptions.Base("return queue does not have right obj")
 
     def _data_process_untill_empty(self, timeout=0):
         self.init()
@@ -557,8 +560,35 @@ class MyJobs(JSBASE):
         def add(a, b):
             return a + b
 
-        self.worker_start(onetime=True)
         job = self.schedule(add, 1, 2)
+
+        self.worker_start(onetime=True)
+        print(self.results([job]))
+
+
+
+    def test_simple_error(self):
+        """
+        kosmos "j.servers.myjobs.test_simple_error()"
+        :return:
+        """
+        j.tools.logger.debug = True
+
+        def reset():
+            # kill leftovers from last time, if any
+            self.init(reset=True)
+            jobs = self.model_job.find()
+            assert len(jobs) == 0
+            assert self.queue_jobs_start.qsize() == 0
+            assert self.queue_return.qsize() == 0
+
+        def add(a, b):
+            raise ValueError("aaa")
+            return a + b
+
+        job = self.schedule(add, 1, 2)
+
+        self.worker_start(onetime=True)
         print(self.results([job]))
 
     def test1(self):
