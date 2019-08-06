@@ -3,6 +3,7 @@ from Jumpscale import j
 # import os
 import sys
 import mimetypes
+
 # from importlib import import_module
 
 JSBASE = j.application.JSBaseClass
@@ -68,7 +69,16 @@ class ServerRack(JSBASE):
     #     else:
     #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False):
+    def bottle_server_add(
+        self,
+        name="bottle",
+        port=4442,
+        app=None,
+        websocket=False,
+        ssl=True,
+        ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
+        ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
+    ):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
@@ -105,10 +115,25 @@ class ServerRack(JSBASE):
                 response.headers["Content-Type"] = mimetypes.guess_type(url)[0]
                 return file
 
-        if not websocket:
-            server = WSGIServer(("0.0.0.0", port), app)
+        if ssl:
+            if not j.sal.fs.exists(ssl_keyfile):
+                raise RuntimeError("SSL: keyfile not exists")
+            if not j.sal.fs.exists(ssl_certfile):
+                raise RuntimeError("SSL: certfile not exists")
+
+            if not websocket:
+                server = WSGIServer(("0.0.0.0", port), app, keyfile=ssl_keyfile, certfile=ssl_certfile)
+            else:
+                server = WSGIServer(
+                    ("0.0.0.0", port), app, handler_class=WebSocketHandler, keyfile=ssl_keyfile, certfile=ssl_certfile
+                )
+
         else:
-            server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
+
+            if not websocket:
+                server = WSGIServer(("0.0.0.0", port), app)
+            else:
+                server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
 
         self.add(name=name, server=server)
 
@@ -167,7 +192,15 @@ class ServerRack(JSBASE):
 
         self.add(name=name, server=server)
 
-    def websocket_server_add(self, name="websocket", port=4444, appclass=None,ssl=True, ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key", ssl_certfile = "/etc/ssl/resty-auto-ssl-fallback.crt"):
+    def websocket_server_add(
+        self,
+        name="websocket",
+        port=4444,
+        appclass=None,
+        ssl=True,
+        ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
+        ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
+    ):
 
         from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
         from collections import OrderedDict
@@ -188,10 +221,12 @@ class ServerRack(JSBASE):
 
         if ssl:
             if not j.sal.fs.exists(ssl_keyfile):
-                raise RuntimeError('SSL: keyfile not exists')
+                raise RuntimeError("SSL: keyfile not exists")
             if not j.sal.fs.exists(ssl_certfile):
-                raise RuntimeError('SSL: certfile not exists')
-            server = WebSocketServer(("", port), Resource(OrderedDict([("/", appclass)])), keyfile=ssl_keyfile,certfile=ssl_certfile)
+                raise RuntimeError("SSL: certfile not exists")
+            server = WebSocketServer(
+                ("", port), Resource(OrderedDict([("/", appclass)])), keyfile=ssl_keyfile, certfile=ssl_certfile
+            )
         else:
             server = WebSocketServer(("", port), Resource(OrderedDict([("/", appclass)])))
 
