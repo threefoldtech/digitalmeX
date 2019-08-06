@@ -13,7 +13,8 @@ class MyWorker(j.application.JSBaseClass):
 
     def error_handler(self, logdict):
         # j.shell()
-        cat = "L"
+        cat = "E"
+        logdict["cat"] = cat
         data = j.data.serializers.json.dumps(logdict)
         self.queue_return.put(data)
 
@@ -146,11 +147,11 @@ class MyWorker(j.application.JSBaseClass):
                         method = eval(action.methodname)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
-                        # logdict = self.log2str(
-                        #     tb=tb, error=e, message="cannot compile action", data=action, stdout=self.showout
-                        # )
+                        logdict = j.core.tools.log(
+                            tb=tb, exception=e, msg="cannot compile action", data=action.code, stdout=self.showout
+                        )
 
-                        job.error = {"error": str(e)}
+                        job.error = logdict
                         job.state = "ERROR"
                         job.time_stop = j.data.time.epoch
                         job.save()
@@ -167,10 +168,10 @@ class MyWorker(j.application.JSBaseClass):
                         res = method(*args, **kwargs)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
-                        # logdict = self.log(
-                        #     tb=tb, error=e, message="cannot execute action", data=action, stdout=self.showout
-                        # )
-                        job.error = {"error":str(e)}
+                        logdict = j.core.tools.log(
+                            tb=tb, exception=e, msg="cannot execute action", data=action.code, stdout=self.showout
+                        )
+                        job.error = logdict
                         job.state = "ERROR"
                         job.time_stop = j.data.time.epoch
                         job.save()

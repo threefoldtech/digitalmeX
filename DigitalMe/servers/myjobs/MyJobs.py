@@ -12,7 +12,7 @@ schema_job = """
 category*= ""
 time_start = 0 (T)
 time_stop = 0 (T)
-state* = "new,error,ok" (E)
+state* = "NEW"
 timeout = 0
 action_id* = 0
 args = (json)
@@ -42,7 +42,7 @@ time_start = 0 (T)
 last_update = 0 (T)
 current_job = (I)
 error = "" (S)
-state* = "new,error,ok" (E)
+state* = "NEW"
 pid = 0
 halt = false (B)
 
@@ -228,10 +228,11 @@ class MyJobs(JSBASE):
                 queue.put(job.id)
             return job
         elif cat == "E":
-            cat, objid, json_ = thedata
+            print(thedata["message"])
+            # cat, objid, json_ = thedata
 
-            worker = self.model_worker.get(json_)
-            j.core.tools.pprint(worker)
+            # worker = self.model_worker.get(json_)
+            # j.core.tools.pprint(worker)
             sys.exit(1)
         else:
             raise j.exceptions.Base("return queue does not have right obj")
