@@ -276,7 +276,6 @@ var generateSlide = function (res) {
             // Ignore work_report response and wait for getting next question
             GEDIS_CLIENT.execute(EXEC_OBJ).then(function (res) {
                 res = JSON.parse(res);
-                res = JSON.parse(res);
                 generateSlide(res);
             });
         });
@@ -292,13 +291,11 @@ EXEC_OBJ["args"] = {
 };
 GEDIS_CLIENT.execute(EXEC_OBJ).then(function (res) {
     res = JSON.parse(res);
-    res = JSON.parse(res);
     EXEC_OBJ['command'] = "work_get";
     EXEC_OBJ['args'] = {
         "sessionid": res['sessionid']
     }
     GEDIS_CLIENT.execute(EXEC_OBJ).then(function (res) {
-        res = JSON.parse(res);
         res = JSON.parse(res);
         generateSlide(res);
     });
