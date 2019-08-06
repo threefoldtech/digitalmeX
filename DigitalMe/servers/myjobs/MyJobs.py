@@ -2,7 +2,6 @@ import inspect
 from Jumpscale import j
 import gipc
 import gevent
-import time
 import sys
 from .MyWorker import MyWorker
 
@@ -204,15 +203,20 @@ class MyJobs(JSBASE):
         r = self.queue_return.get(timeout=timeout)
         if r == None:
             return
-        cat, objid, json_ = j.data.serializers.msgpack.loads(r)  # change to json
+        thedata = j.data.serializers.json.loads(r)  # change to json
+        cat = thedata["cat"]
         if cat not in ["E"]:
-            ddict = j.data.serializers.json.loads(json_)
+            ddict = thedata
         if cat == "W":
+            cat, objid, json_ = thedata
+
             worker = self.model_worker.new(data=ddict)
             worker.id = objid
             worker.save()
             return worker
         elif cat == "J":
+            cat, objid, json_ = thedata
+
             job = self.model_job.new(data=ddict)
             job.id = objid
             job.save()
@@ -222,11 +226,12 @@ class MyJobs(JSBASE):
                 queue.put(job.id)
             return job
         elif cat == "E":
-            worker = self.model_worker.get(json_)
-            j.core.tools.pprint(worker)
-            sys.exit(1)
-        else:
-            raise j.exceptions.Base("return queue does not have right obj")
+            print("error here...")
+            # worker = self.model_worker.get(json_)
+            # j.core.tools.pprint(worker)
+            # sys.exit(1)
+        # else:
+        #     raise j.exceptions.Base("return queue does not have right obj")
 
     def _data_process_untill_empty(self, timeout=0):
         self.init()

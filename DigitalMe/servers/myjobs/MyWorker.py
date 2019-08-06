@@ -3,7 +3,7 @@ from Jumpscale import j
 import pudb
 import sys
 import traceback
-import time
+import gevent
 
 
 class MyWorker(j.application.JSBaseClass):
@@ -12,7 +12,7 @@ class MyWorker(j.application.JSBaseClass):
         self.queue_return.put(data)
 
     def error_handler(self, logdict):
-        j.shell()
+        # j.shell()
         cat = "L"
         data = j.data.serializers.json.dumps(logdict)
         self.queue_return.put(data)
@@ -62,18 +62,18 @@ class MyWorker(j.application.JSBaseClass):
         self.model_job = self.bcdb.model_get_from_url("jumpscale.myjobs.job")
         self.model_action = self.bcdb.model_get_from_url("jumpscale.myjobs.action")
         self.model_worker = self.bcdb.model_get_from_url("jumpscale.myjobs.worker")
-        self.model_job.readonly = True
-        self.model_action.readonly = True
-        self.model_worker.readonly = True
+        # self.model_job.readonly = True
+        # self.model_action.readonly = True
+        # self.model_worker.readonly = True
 
-        self.model_worker.trigger_add(self._save_data)
-        self.model_job.trigger_add(self._save_job)
+        # self.model_worker.trigger_add(self._save_data)
+        # self.model_job.trigger_add(self._save_job)
 
-        self.data = self.model_worker.get(self.data.id)
-        self.data.state = "init"
+        self.data = self.model_worker.get(worker_id)
+        self.data.state = "new"
         self.data.current_job = 2147483647  # means nil
         self.data.id = worker_id
-        self.data.save()  # save in bcdb will not happen because readonly is True, it will trigger the triggers
+        # self.data.save()  # save in bcdb will not happen because readonly is True, it will trigger the triggers
 
         self.start()
 
@@ -81,13 +81,11 @@ class MyWorker(j.application.JSBaseClass):
         if action == "save":
             self.return_data("W", obj)
         j.shell()
-        q
 
     def _save_job(self, obj, action, propertyname):
         if action == "save":
             self.return_data("J", obj)
         j.shell()
-        q
 
     def start(self):
 
@@ -97,7 +95,7 @@ class MyWorker(j.application.JSBaseClass):
                 res = None
                 while not res:
                     res = self.queue_jobs_start.get(timeout=0)
-                    time.sleep(0.1)
+                    gevent.sleep(0.1)
                     print("jobget")
             else:
                 res = self.queue_jobs_start.get(timeout=10)
@@ -131,8 +129,8 @@ class MyWorker(j.application.JSBaseClass):
                     action = self.model_action.get(job.action_id, die=False)
                     if action == None:
                         raise j.exceptions.Base("ERROR: action:%s not found" % job.action_id)
-                    kwargs = j.data.serializers.json.loads(job.kwargs)
-                    args = j.data.serializers.json.loads(job.args)
+                    kwargs =  job.kwargs #j.data.serializers.json.loads(job.kwargs)
+                    args = job.args
 
                     self.data.last_update = j.data.time.epoch
                     self.data.current_job = jobid  # set current jobid
@@ -148,11 +146,11 @@ class MyWorker(j.application.JSBaseClass):
                         method = eval(action.methodname)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
-                        logdict = self.log(
-                            tb=tb, error=e, message="cannot compile action", data=action, stdout=self.showout
-                        )
+                        # logdict = self.log2str(
+                        #     tb=tb, error=e, message="cannot compile action", data=action, stdout=self.showout
+                        # )
 
-                        job.error = logdict
+                        job.error = {"error": str(e)}
                         job.state = "ERROR"
                         job.time_stop = j.data.time.epoch
                         job.save()
@@ -165,13 +163,14 @@ class MyWorker(j.application.JSBaseClass):
                         continue
 
                     try:
+                        # import ipdb; ipdb.set_trace()
                         res = method(*args, **kwargs)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
-                        logdict = self.log(
-                            tb=tb, error=e, message="cannot execute action", data=action, stdout=self.showout
-                        )
-                        job.error = logdict
+                        # logdict = self.log(
+                        #     tb=tb, error=e, message="cannot execute action", data=action, stdout=self.showout
+                        # )
+                        job.error = {"error":str(e)}
                         job.state = "ERROR"
                         job.time_stop = j.data.time.epoch
                         job.save()
@@ -186,7 +185,7 @@ class MyWorker(j.application.JSBaseClass):
                         continue
 
                     try:
-                        job.result = j.data.serializers.json.dumps(res)
+                        job.result = j.data.serializers.json.dumps({"result": res})
                     except Exception as e:
                         job.error = (
                             str(e) + "\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
