@@ -137,7 +137,17 @@ class ServerRack(JSBASE):
 
         self.add(name=name, server=server)
 
-    def webdav_server_add(self, name="webdav", path="/tmp", port=4443, webdavprovider=None, user_mapping={}):
+    def webdav_server_add(
+            self,
+            name="webdav",
+            path="/tmp",
+            port=4443,
+            webdavprovider=None,
+            user_mapping={},
+            ssl=True,
+            ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
+            ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
+    ):
         """
         to test manually: wsgidav --root . --server gevent -p 8888 -H 0.0.0.0 --auth anonymous
         don't forget to install first using: kosmos 'j.servers.rack._server_test_start()'
@@ -187,7 +197,14 @@ class ServerRack(JSBASE):
         # server = wsgi.Server(**server_args)
         # server.start()
 
-        server = WSGIServer(("0.0.0.0", port), application=app)
+        if ssl:
+            if not j.sal.fs.exists(ssl_keyfile):
+                raise RuntimeError("SSL: keyfile not exists")
+            if not j.sal.fs.exists(ssl_certfile):
+                raise RuntimeError("SSL: certfile not exists")
+            server = WSGIServer(("0.0.0.0", port), application=app, keyfile=ssl_keyfile, certfile=ssl_certfile)
+        else:
+            server = WSGIServer(("0.0.0.0", port), application=app)
         # server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/9999 " + server.base_env["SERVER_SOFTWARE"]})
 
         self.add(name=name, server=server)
