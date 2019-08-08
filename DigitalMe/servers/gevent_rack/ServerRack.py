@@ -76,8 +76,6 @@ class ServerRack(JSBASE):
         app=None,
         websocket=False,
         ssl=True,
-        ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
-        ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
     ):
 
         from gevent.pywsgi import WSGIServer
@@ -116,6 +114,7 @@ class ServerRack(JSBASE):
                 return file
 
         if ssl:
+            ssl_keyfile, ssl_certfile = self._get_cert()
             if not j.sal.fs.exists(ssl_keyfile):
                 raise RuntimeError("SSL: keyfile not exists")
             if not j.sal.fs.exists(ssl_certfile):
@@ -137,17 +136,23 @@ class ServerRack(JSBASE):
 
         self.add(name=name, server=server)
 
-    def webdav_server_add(
-            self,
-            name="webdav",
-            path="/tmp",
-            port=4443,
-            webdavprovider=None,
-            user_mapping={},
-            ssl=True,
-            ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
-            ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
-    ):
+    def _get_cert(self):
+        # FIXME: sometimes returns incorrect values (in the first request)
+        certs_path = "/etc/resty-auto-ssl/letsencrypt/certs/"
+
+        while True:
+            domains = j.sal.fs.listDirsInDir(certs_path)
+            if domains:
+                domain = domains[0]
+                ssl_keyfile = j.sal.fs.joinPaths(domain, "privkey.pem")
+                ssl_certfile = j.sal.fs.joinPaths(domain, "cert.pem")
+                break
+            else:
+                gevent.sleep(1)
+
+        return ssl_keyfile, ssl_certfile
+
+    def webdav_server_add(self, name="webdav", path="/tmp", port=4443, webdavprovider=None, user_mapping={}):
         """
         to test manually: wsgidav --root . --server gevent -p 8888 -H 0.0.0.0 --auth anonymous
         don't forget to install first using: kosmos 'j.servers.rack._server_test_start()'
@@ -215,8 +220,6 @@ class ServerRack(JSBASE):
         port=4444,
         appclass=None,
         ssl=True,
-        ssl_keyfile="/etc/ssl/resty-auto-ssl-fallback.key",
-        ssl_certfile="/etc/ssl/resty-auto-ssl-fallback.crt",
     ):
 
         from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
@@ -237,6 +240,7 @@ class ServerRack(JSBASE):
             appclass = EchoApplication
 
         if ssl:
+            ssl_keyfile, ssl_certfile = self._get_cert()
             if not j.sal.fs.exists(ssl_keyfile):
                 raise RuntimeError("SSL: keyfile not exists")
             if not j.sal.fs.exists(ssl_certfile):
