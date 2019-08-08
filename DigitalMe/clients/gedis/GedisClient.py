@@ -27,7 +27,7 @@ class GedisClient(JSConfigBase):
     ssl = False (B)
     ssl_keyfile = "" (S)
     ssl_certfile = "" (S)
-    
+    ssl_ca_certs = "" (S)
     """
 
     def _init(self, **kwargs):
@@ -135,6 +135,16 @@ class GedisClient(JSConfigBase):
             secret = self.password_
 
             if self.ssl:
+
+                if not self.ssl_keyfile and not self.ssl_certfile:
+                    ssl_keyfile = '/etc/ssl/resty-auto-ssl-fallback.key'
+                    ssl_certfile = '/etc/ssl/resty-auto-ssl-fallback.crt'
+
+                    if j.sal.fs.exists(ssl_keyfile):
+                        self.ssl_keyfile = ssl_keyfile
+                    if j.sal.fs.exists(ssl_certfile):
+                        self.ssl_certfile = ssl_certfile
+
                 if not self.ssl_keyfile:
                     self.ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
                     self.ssl_keyfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.key")
@@ -147,6 +157,7 @@ class GedisClient(JSConfigBase):
                 port=port,
                 password=secret,
                 ssl=self.ssl,
+                ssl_ca_certs=self.ssl_ca_certs or self.ssl_certfile,
                 ssl_certfile=self.ssl_certfile,
                 ssl_keyfile=self.ssl_keyfile,
                 ping=True,

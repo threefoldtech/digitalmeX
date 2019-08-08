@@ -29,6 +29,8 @@ class GedisServer(JSBaseConfig):
         port = 9900 (ipport)
         ssl = False (B)
         secret_ = "" (S)
+        ssl_keyfile = "" (S)
+        ssl_certfile = "" (S)
         """
 
     def _init(self, **kwargs):
@@ -38,8 +40,6 @@ class GedisServer(JSBaseConfig):
         self.actors = {}  # the code as set by the gediscmds class = actor cmds
         self.schema_urls = []  # used at python client side
 
-        self.ssl_priv_key_path = None
-        self.ssl_cert_path = None
 
         self.address = "{}:{}".format(self.host, self.port)
 
@@ -77,15 +77,35 @@ class GedisServer(JSBaseConfig):
     @property
     def gedis_server(self):
         if self.ssl:
-            self.ssl_priv_key_path, self.ssl_cert_path = self.sslkeys_generate()
+            if not self.ssl_keyfile and not self.ssl_certfile:
+                ssl_keyfile = '/etc/ssl/resty-auto-ssl-fallback.key'
+                ssl_certfile = '/etc/ssl/resty-auto-ssl-fallback.crt'
+
+                if j.sal.fs.exists(ssl_keyfile):
+                    self.ssl_keyfile = ssl_keyfile
+                if j.sal.fs.exists(ssl_certfile):
+                    self.ssl_certfile = ssl_certfile
+
+            if not self.ssl_keyfile and not self.ssl_certfile:
+                self.ssl_keyfile , self.ssl_certfile = self.sslkeys_generate()
+
+            else:
+                if not j.sal.fs.exists(self.ssl_keyfile):
+                    raise RuntimeError('SSL: Error keyfile not found')
+
+                if not j.sal.fs.exists(self.ssl_certfile):
+                    raise RuntimeError('SSL: Error certfile not found')
+
+            self._log_info("Gedis SSL: using keyfile {0} and certfile {1}".format(self.ssl_keyfile, self.ssl_certfile))
+
             # Server always supports SSL
             # client can use to talk to it in SSL or not
             gedis_server = StreamServer(
                 (self.host, self.port),
                 spawn=Pool(),
                 handle=self.handler.handle_gedis,
-                keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path,
+                keyfile=self.ssl_keyfile,
+                certfile=self.ssl_certfile,
             )
         else:
             gedis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handler.handle_gedis)
@@ -235,13 +255,17 @@ class GedisServer(JSBaseConfig):
         path = os.path.dirname(self.code_generated_dir)
         key = j.sal.fs.joinPaths(path, "ca.key")
         cert = j.sal.fs.joinPaths(path, "ca.crt")
+
         if os.path.exists(key) and os.path.exists(cert):
             return key, cert
-        res = j.sal.ssl.ca_cert_generate(path)
-        if res:
-            self._log_info("generated sslkeys for gedis in %s" % path)
-        else:
-            self._log_info("using existing key and cerificate for gedis @ %s" % path)
+
+        j.sal.process.execute('openssl req -newkey rsa:2048 -nodes -keyout ca.key -x509 -days 365 -out ca.crt -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=localhost"'.format(key, cert), showout=False)
+
+        # res = j.sal.ssl.ca_cert_generate(path)
+        # if res:
+        #     self._log_info("generated sslkeys for gedis in %s" % path)
+        # else:
+        #     self._log_info("using existing key and cerificate for gedis @ %s" % path)
         return key, cert
 
     def start(self):

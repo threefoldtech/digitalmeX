@@ -55,7 +55,9 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
         # copy the templates to the right location
         j.sal.fs.copyDirTree("%s/web_resources/" % self._dirpath, self._web_path)
         # link individual files & create a directory TODO:*1
-
+        lualib_dir = "/sandbox/openresty/lualib"
+        if not j.sal.fs.exists(lualib_dir):
+            j.sal.fs.createDir(lualib_dir)
         j.sal.fs.copyFile("%s/web_resources/lualib/redis.lua" % self._dirpath, "/sandbox/openresty/lualib/redis.lua")
         j.sal.fs.copyFile(
             "%s/web_resources/lualib/websocket.lua" % self._dirpath, "/sandbox/openresty/lualib/websocket.lua"

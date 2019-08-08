@@ -69,7 +69,14 @@ class ServerRack(JSBASE):
     #     else:
     #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False):
+    def bottle_server_add(
+        self,
+        name="bottle",
+        port=4442,
+        app=None,
+        websocket=False,
+        ssl=True,
+    ):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
@@ -106,12 +113,44 @@ class ServerRack(JSBASE):
                 response.headers["Content-Type"] = mimetypes.guess_type(url)[0]
                 return file
 
-        if not websocket:
-            server = WSGIServer(("0.0.0.0", port), app)
+        if ssl:
+            ssl_keyfile, ssl_certfile = self._get_cert()
+            if not j.sal.fs.exists(ssl_keyfile):
+                raise RuntimeError("SSL: keyfile not exists")
+            if not j.sal.fs.exists(ssl_certfile):
+                raise RuntimeError("SSL: certfile not exists")
+
+            if not websocket:
+                server = WSGIServer(("0.0.0.0", port), app, keyfile=ssl_keyfile, certfile=ssl_certfile)
+            else:
+                server = WSGIServer(
+                    ("0.0.0.0", port), app, handler_class=WebSocketHandler, keyfile=ssl_keyfile, certfile=ssl_certfile
+                )
+
         else:
-            server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
+
+            if not websocket:
+                server = WSGIServer(("0.0.0.0", port), app)
+            else:
+                server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
 
         self.add(name=name, server=server)
+
+    def _get_cert(self):
+        # FIXME: sometimes returns incorrect values (in the first request)
+        certs_path = "/etc/resty-auto-ssl/letsencrypt/certs/"
+
+        while True:
+            domains = j.sal.fs.listDirsInDir(certs_path)
+            if domains:
+                domain = domains[0]
+                ssl_keyfile = j.sal.fs.joinPaths(domain, "privkey.pem")
+                ssl_certfile = j.sal.fs.joinPaths(domain, "cert.pem")
+                break
+            else:
+                gevent.sleep(1)
+
+        return ssl_keyfile, ssl_certfile
 
     def webdav_server_add(self, name="webdav", path="/tmp", port=4443, webdavprovider=None, user_mapping={}):
         """
@@ -163,12 +202,25 @@ class ServerRack(JSBASE):
         # server = wsgi.Server(**server_args)
         # server.start()
 
-        server = WSGIServer(("0.0.0.0", port), application=app)
+        if ssl:
+            if not j.sal.fs.exists(ssl_keyfile):
+                raise RuntimeError("SSL: keyfile not exists")
+            if not j.sal.fs.exists(ssl_certfile):
+                raise RuntimeError("SSL: certfile not exists")
+            server = WSGIServer(("0.0.0.0", port), application=app, keyfile=ssl_keyfile, certfile=ssl_certfile)
+        else:
+            server = WSGIServer(("0.0.0.0", port), application=app)
         # server.set_environ({"SERVER_SOFTWARE": "WsgiDAV/9999 " + server.base_env["SERVER_SOFTWARE"]})
 
         self.add(name=name, server=server)
 
-    def websocket_server_add(self, name="websocket", port=4444, appclass=None):
+    def websocket_server_add(
+        self,
+        name="websocket",
+        port=4444,
+        appclass=None,
+        ssl=True,
+    ):
 
         from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
         from collections import OrderedDict
@@ -187,7 +239,17 @@ class ServerRack(JSBASE):
 
             appclass = EchoApplication
 
-        server = WebSocketServer(("", port), Resource(OrderedDict([("/", appclass)])))
+        if ssl:
+            ssl_keyfile, ssl_certfile = self._get_cert()
+            if not j.sal.fs.exists(ssl_keyfile):
+                raise RuntimeError("SSL: keyfile not exists")
+            if not j.sal.fs.exists(ssl_certfile):
+                raise RuntimeError("SSL: certfile not exists")
+            server = WebSocketServer(
+                ("", port), Resource(OrderedDict([("/", appclass)])), keyfile=ssl_keyfile, certfile=ssl_certfile
+            )
+        else:
+            server = WebSocketServer(("", port), Resource(OrderedDict([("/", appclass)])))
 
         self.add(name=name, server=server)
 
@@ -215,6 +277,7 @@ class ServerRack(JSBASE):
         from geventwebsocket.handler import WebSocketHandler
 
         server = WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler)
+
         self.add(name=name, server=server)
 
     def start(self):

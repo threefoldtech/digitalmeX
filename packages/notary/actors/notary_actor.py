@@ -12,8 +12,8 @@ class RegisterError(RuntimeError):
 
 
 class notary_actor(JSBASE):
-    def __init__(self):
-        self.bcdb = j.data.bcdb.bcdb_instances["notary_bcdb"]
+    def __init__(self, *args, **kwarsg):
+        self.bcdb = j.data.bcdb.get("notary_bcdb")
         self.tfchain = j.clients.tfchain.new("notary", network_type="TEST")
 
     def _bot_verify_key(self, bot_id):
