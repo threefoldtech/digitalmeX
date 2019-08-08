@@ -206,7 +206,9 @@ class MyJobs(JSBASE):
         thedata = j.data.serializers.json.loads(r)  # change to json
         cat = thedata["cat"]
         if cat is None:
-            import ipdb; ipdb.set_trace()
+            import ipdb
+
+            ipdb.set_trace()
         if cat not in ["E"]:
             ddict = thedata
         if cat == "W":
@@ -565,8 +567,6 @@ class MyJobs(JSBASE):
 
         self.worker_start(onetime=True)
         print(self.results([job]))
-
-
 
     def test_simple_error(self):
         """

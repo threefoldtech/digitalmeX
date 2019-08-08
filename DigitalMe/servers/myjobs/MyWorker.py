@@ -130,7 +130,7 @@ class MyWorker(j.application.JSBaseClass):
                     action = self.model_action.get(job.action_id, die=False)
                     if action == None:
                         raise j.exceptions.Base("ERROR: action:%s not found" % job.action_id)
-                    kwargs =  job.kwargs #j.data.serializers.json.loads(job.kwargs)
+                    kwargs = job.kwargs  # j.data.serializers.json.loads(job.kwargs)
                     args = job.args
 
                     self.data.last_update = j.data.time.epoch
