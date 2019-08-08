@@ -51,9 +51,9 @@ class notary_actor(JSBASE):
 
         content_hash = _hash_content(threebot_identifier, content)
 
-        model = self.bcdb.models.get("threefold.grid.notary.reservation")
+        model = self.bcdb.model_get_from_url("threefold.grid.notary.reservation")
 
-        result = model.get_by_hash(content_hash)
+        result = model.find(hash=content_hash)
         if result:
             raise KeyError(
                 "reservation already exists in the notary. This should never happens, make sure you set include a unique field in your content"
@@ -79,15 +79,14 @@ class notary_actor(JSBASE):
         !threefold.grid.notary.reservation
         ```
         """
-        model = self.bcdb.models.get("threefold.grid.notary.reservation")
-        result = model.get_by_hash(hash)
+        model = self.bcdb.model_get_from_url("threefold.grid.notary.reservation")
+        result = model.find(hash=hash)
         if not result:
             raise KeyError("reservation not found")
         if len(result) > 1:
-            raise RuntimeError("found 2 reservation with that hash, this should never happens")
+            raise RuntimeError("Found more than one reservation with the same hash")
 
-        return result[0]
-
+        return schema_out.new(serializeddata=j.data.serializers.jsxdata.dumps(result[0]))
 
 def _hash_content(threebot_id, content):
     """
