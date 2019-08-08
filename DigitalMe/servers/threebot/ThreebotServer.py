@@ -42,7 +42,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             # rack.add("gedis_ssl", gedis)
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
-            j.servers.openresty.build()
+            # j.servers.openresty.build() # build from threebot builder or server from a seperate call
             wikis_load_cmd = """
 from Jumpscale import j
 j.tools.markdowndocs.load_wikis()
