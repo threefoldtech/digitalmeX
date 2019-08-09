@@ -1,0 +1,10 @@
+@url = tf.capacity.farm.1
+iyo_organization* = (S)
+name* = (S)
+wallet_addresses = (LS)
+city* = (S)
+country* = (S)
+continent* = (S)
+latitude = (F)
+longitude = (F)
+email = (email)
