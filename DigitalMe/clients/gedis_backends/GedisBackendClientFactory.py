@@ -16,9 +16,9 @@ class GedisBackendClientFactory(JSConfigBase):
             data = {}
         if not create and instance not in self.list():
             if die:
-                raise RuntimeError("could not find instance:%s" % (instance))
+                raise j.exceptions.Base("could not find instance:%s" % (instance))
             else:
                 return None
         if type not in ALLOWED_TYPES:
-            raise RuntimeError("Specified type not allowed")
+            raise j.exceptions.Base("Specified type not allowed")
         return ALLOWED_TYPES[type](instance=instance, data=data, interactive=interactive, parent=self)

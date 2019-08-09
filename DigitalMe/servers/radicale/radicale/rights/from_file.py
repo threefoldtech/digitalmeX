@@ -33,9 +33,9 @@ class Rights(rights.BaseRights):
         rights_config = configparser.ConfigParser({"login": user_escaped, "path": sane_path_escaped})
         try:
             if not rights_config.read(self.filename):
-                raise RuntimeError("No such file: %r" % self.filename)
+                raise j.exceptions.Base("No such file: %r" % self.filename)
         except Exception as e:
-            raise RuntimeError("Failed to load rights file %r: %s" % (self.filename, e)) from e
+            raise j.exceptions.Base("Failed to load rights file %r: %s" % (self.filename, e)) from e
         for section in rights_config.sections():
             try:
                 user_pattern = rights_config.get(section, "user")
@@ -45,7 +45,9 @@ class Rights(rights.BaseRights):
                     collection_pattern.format(*map(re.escape, user_match.groups())), sane_path
                 )
             except Exception as e:
-                raise RuntimeError("Error in section %r of rights file %r: " "%s" % (section, self.filename, e)) from e
+                raise j.exceptions.Base(
+                    "Error in section %r of rights file %r: " "%s" % (section, self.filename, e)
+                ) from e
             if user_match and collection_match:
                 logger.debug(
                     "Rule %r:%r matches %r:%r from section %r",

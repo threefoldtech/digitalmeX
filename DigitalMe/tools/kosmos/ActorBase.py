@@ -77,9 +77,9 @@ class ActorBase(JSBASE):
         :return:
         """
         if "stateobj" in data:
-            raise RuntimeError("cannot update stateobj, needs to happe from within service/coordinator")
+            raise j.exceptions.Base("cannot update stateobj, needs to happe from within service/coordinator")
         if "stateobj" in data:
-            raise RuntimeError("cannot update state, needs to happe from within service/coordinator")
+            raise j.exceptions.Base("cannot update state, needs to happe from within service/coordinator")
         self.data.__dict__.update(data)
 
     def data_get(self):

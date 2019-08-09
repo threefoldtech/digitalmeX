@@ -39,7 +39,7 @@ def _command_split(cmd, namespace="system"):
         actor = "system"
         cmd = cmd_parts[0]
     else:
-        raise RuntimeError("cmd not properly formatted")
+        raise j.exceptions.Base("cmd not properly formatted")
 
     return namespace, actor, cmd
 
@@ -173,7 +173,7 @@ class GedisSocket:
         """
         raw_request = self._parser.read_request()
         if not raw_request:
-            raise ValueError("malformatted request")
+            raise j.exceptions.Value("malformatted request")
         return Request(raw_request)
 
     @property
@@ -205,7 +205,7 @@ class Handler(JSBASE):
 
         # BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
         # w=self.t
-        # raise RuntimeError("d")
+        # raise j.exceptions.Base("d")
         gedis_socket = GedisSocket(socket)
 
         try:
@@ -313,7 +313,7 @@ class Handler(JSBASE):
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "the content is not valid capnp while you provided content_type=capnp\n%s\n%s"
                         % (e, request.arguments[0])
                     )
@@ -325,7 +325,7 @@ class Handler(JSBASE):
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "the content is not valid json while you provided content_type=json\n%s\n%s"
                         % (str, request.arguments[0])
                     )
@@ -340,11 +340,11 @@ class Handler(JSBASE):
         elif request.content_type == "capnp":
             args = capnp_decode(request=request, command=command)
         else:
-            raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+            raise j.exceptions.Value("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
         method_arguments = command.cmdobj.args
         if "schema_out" in method_arguments:
-            raise RuntimeError("schema_out should not be in arguments of method")
+            raise j.exceptions.Base("schema_out should not be in arguments of method")
 
         params = {}
 
@@ -444,6 +444,6 @@ def dm_verify(dm_id, epoch, signed_message):
     record = tfchain.threebot.record_get(dm_id)
     verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
     if verify_key.verify(signed_message) != epoch:
-        raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
+        raise j.exceptions.Permission("You couldn't authenticate your 3bot: {}".format(dm_id))
 
     return True

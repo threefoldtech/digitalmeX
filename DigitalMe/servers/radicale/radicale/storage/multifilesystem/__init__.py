@@ -94,7 +94,7 @@ class Collection(
             try:
                 self._fsync(tmp.fileno())
             except OSError as e:
-                raise RuntimeError("Fsync'ing file %r failed: %s" % (path, e)) from e
+                raise j.exceptions.Base("Fsync'ing file %r failed: %s" % (path, e)) from e
             tmp.close()
             replace_fn(tmp.name, path)
             j.sal.bcdbfs.file_create_empty(path)
@@ -128,7 +128,7 @@ class Collection(
                 finally:
                     os.close(fd)
             except OSError as e:
-                raise RuntimeError("Fsync'ing directory %r failed: %s" % (path, e)) from e
+                raise j.exceptions.Base("Fsync'ing directory %r failed: %s" % (path, e)) from e
 
     @classmethod
     def _makedirs_synced(cls, filesystem_path):

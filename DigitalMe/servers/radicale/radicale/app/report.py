@@ -141,22 +141,22 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
             if len(filter_) == 0:
                 return True
             if len(filter_) > 1:
-                raise ValueError("Filter with %d children" % len(filter_))
+                raise j.exceptions.Value("Filter with %d children" % len(filter_))
             if filter_[0].tag != xmlutils.make_tag("C", "comp-filter"):
-                raise ValueError("Unexpected %r in filter" % filter_[0].tag)
+                raise j.exceptions.Value("Unexpected %r in filter" % filter_[0].tag)
             return radicale_filter.comp_match(item, filter_[0])
         if tag == "VADDRESSBOOK" and filter_.tag != xmlutils.make_tag("CR", filter_):
             for child in filter_:
                 if child.tag != xmlutils.make_tag("CR", "prop-filter"):
-                    raise ValueError("Unexpected %r in filter" % child.tag)
+                    raise j.exceptions.Value("Unexpected %r in filter" % child.tag)
             test = filter_.get("test", "anyof")
             if test == "anyof":
                 return any(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
             if test == "allof":
                 return all(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
-            raise ValueError("Unsupported filter test: %r" % test)
+            raise j.exceptions.Value("Unsupported filter test: %r" % test)
             return all(radicale_filter.prop_match(item.vobject_item, f, "CR") for f in filter_)
-        raise ValueError("unsupported filter %r for %r" % (filter_.tag, tag))
+        raise j.exceptions.Value("unsupported filter %r for %r" % (filter_.tag, tag))
 
     while retrieved_items:
         # ``item.vobject_item`` might be accessed during filtering.
@@ -168,9 +168,11 @@ def xml_report(base_prefix, path, xml_request, collection, unlock_storage_fn):
                 if not all(match(item, filter_) for filter_ in filters):
                     continue
             except ValueError as e:
-                raise ValueError("Failed to filter item %r from %r: %s" % (item.href, collection.path, e)) from e
+                raise j.exceptions.Value(
+                    "Failed to filter item %r from %r: %s" % (item.href, collection.path, e)
+                ) from e
             except Exception as e:
-                raise RuntimeError("Failed to filter item %r from %r: %s" % (item.href, collection.path, e)) from e
+                raise j.exceptions.Base("Failed to filter item %r from %r: %s" % (item.href, collection.path, e)) from e
 
         found_props = []
         not_found_props = []

@@ -167,7 +167,7 @@ class DNSServer(DatagramServer, j.application.JSBaseConfigClass):
         except Exception as e:
             if "refused" in str(e):
                 return False
-            raise RuntimeError("unexpected result")
+            raise j.exceptions.Base("unexpected result")
         return True
 
 

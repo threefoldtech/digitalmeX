@@ -32,7 +32,7 @@ class MulticastClient(JSConfigBase):
             bind_ip = addresses[0]["addr"]
             break
         else:
-            raise RuntimeError("You are not connected to zerotier")
+            raise j.exceptions.Base("You are not connected to zerotier")
 
         s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         s.bind((bind_ip, 0))

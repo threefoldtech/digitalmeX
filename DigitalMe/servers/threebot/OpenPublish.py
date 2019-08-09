@@ -178,7 +178,7 @@ class OpenPublish(JSConfigClient):
                 self.reload_server()
                 break
         else:
-            raise ValueError("No wiki found with this name: {}".format(name))
+            raise j.exceptions.Value("No wiki found with this name: {}".format(name))
 
     def remove_website(self, name):
         for website in self.websites:
@@ -206,4 +206,4 @@ class OpenPublish(JSConfigClient):
                 self.reload_server()
                 break
         else:
-            raise ValueError("No website found with this name: {}".format(name))
+            raise j.exceptions.Value("No website found with this name: {}".format(name))

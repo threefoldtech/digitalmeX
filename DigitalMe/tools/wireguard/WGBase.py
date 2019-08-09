@@ -19,7 +19,7 @@ class WGBase:
     @property
     def ssh(self):
         if self.islocal:
-            raise RuntimeError("cannot do ssh to local machine")
+            raise j.exceptions.Base("cannot do ssh to local machine")
         if not self._ssh:
             self._ssh = j.clients.ssh.get(name=self.sshclient_name, needexist=True)
         return self._ssh

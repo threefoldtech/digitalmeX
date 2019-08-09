@@ -28,7 +28,7 @@ class model_{{schema.key}}(JSBASE):
 
         res = self.model.set(data=data, key=id)
         if res.id is None:
-            raise RuntimeError("cannot be None")
+            raise j.exceptions.Base("cannot be None")
 
         if self.server_gedis.serializer:
             return self.server_gedis.return_serializer.dumps(res.ddict)

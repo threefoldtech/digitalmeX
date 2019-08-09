@@ -75,7 +75,7 @@ class Website(j.application.JSBaseConfigClass):
         if not config:
             config = self.CONFIG
         if not config and self.port == 80 and self.domain == "":
-            raise ValueError("port or domain needs to be set")
+            raise j.exceptions.Value("port or domain needs to be set")
 
         r = j.tools.jinja2.template_render(text=self.CONFIG, obj=self)
         j.sal.fs.writeFile("%s/servers/%s.conf" % (self._parent._parent._web_path, self.name), r)

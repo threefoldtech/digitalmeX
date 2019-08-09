@@ -195,13 +195,13 @@ class ZOSContainer(j.application.JSBaseConfigClass):
                     interface = route["dev"]
                     break
             else:
-                raise LookupError("Could not find default interface")
+                raise j.exceptions.NotFound("Could not find default interface")
         for ipaddress in self.client.ip.addr.list(interface):
             ip = netaddr.IPNetwork(ipaddress)
             if ip.version == 4:
                 break
         else:
-            raise LookupError("Failed to get default ip")
+            raise j.exceptions.NotFound("Failed to get default ip")
         return ip
 
     def add_nic(self, nic):
@@ -299,7 +299,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
             is_running = self.is_job_running(id)
 
         if is_running:
-            raise RuntimeError("Failed to stop job {}".format(id))
+            raise j.exceptions.Base("Failed to stop job {}".format(id))
 
     def is_port_listening(self, port, timeout=60, network=("tcp", "tcp6")):
         def is_listening():
@@ -341,7 +341,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
 
             if flag & 0x4 != 0:
                 erroMessage = " ".join(logs)
-                raise RuntimeError(erroMessage)
+                raise j.exceptions.Base(erroMessage)
 
         resp = self.client.subscribe(job.id)
         resp.stream(callback)
@@ -354,7 +354,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     def authorize_networks(self, nics):
         public_identity = self.public_identity
         if not public_identity:
-            raise RuntimeError("Failed to get zerotier public identity")
+            raise j.exceptions.Base("Failed to get zerotier public identity")
         for nic in nics:
             if nic["type"] == "zerotier":
                 client = j.clients.zerotier.get(nic["ztClient"], create=False, die=True, interactive=False)
@@ -418,13 +418,13 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #                 interface = route['dev']
     #                 break
     #         else:
-    #             raise LookupError('Could not find default interface')
+    #             raise j.exceptions.NotFound('Could not find default interface')
     #     for ipaddress in self.client.ip.addr.list(interface):
     #         ip = netaddr.IPNetwork(ipaddress)
     #         if ip.version == 4:
     #             break
     #     else:
-    #         raise LookupError('Failed to get default ip')
+    #         raise j.exceptions.NotFound('Failed to get default ip')
     #     return ip
     #
     # def add_nic(self, nic):
@@ -518,7 +518,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #         is_running = self.is_job_running(id)
     #
     #     if is_running:
-    #         raise RuntimeError('Failed to stop job {}'.format(id))
+    #         raise j.exceptions.Base('Failed to stop job {}'.format(id))
     #
     # def is_port_listening(self, port, timeout=60, network=('tcp', 'tcp6')):
     #     def is_listening():
@@ -562,7 +562,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
     #
     #         if flag & 0x4 != 0:
     #             erroMessage = " ".join(logs)
-    #             raise RuntimeError(erroMessage)
+    #             raise j.exceptions.Base(erroMessage)
     #     resp = self.client.subscribe(job.id)
     #     resp.stream(callback)
     #

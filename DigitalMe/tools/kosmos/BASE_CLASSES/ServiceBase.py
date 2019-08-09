@@ -99,7 +99,7 @@ class ServiceBase(j.application.JSBaseClass):
         hkey, key = self._action_key(action_id)
         r = j.clients.credis_core.hget(hkey, key)
         if r is None:
-            raise RuntimeError("cannot find action with id:%s" % action_id)
+            raise j.exceptions.Base("cannot find action with id:%s" % action_id)
         res = j.world.system._schema_service_action.schema.new(data=r)
         return res
 

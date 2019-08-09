@@ -35,24 +35,24 @@ DEFAULT_CONFIG_PATH = os.pathsep.join(["?/etc/radicale/config", "?~/.config/radi
 def positive_int(value):
     value = int(value)
     if value < 0:
-        raise ValueError("value is negative: %d" % value)
+        raise j.exceptions.Value("value is negative: %d" % value)
     return value
 
 
 def positive_float(value):
     value = float(value)
     if not math.isfinite(value):
-        raise ValueError("value is infinite")
+        raise j.exceptions.Value("value is infinite")
     if math.isnan(value):
-        raise ValueError("value is not a number")
+        raise j.exceptions.Value("value is not a number")
     if value < 0:
-        raise ValueError("value is negative: %f" % value)
+        raise j.exceptions.Value("value is negative: %f" % value)
     return value
 
 
 def logging_level(value):
     if value not in ("debug", "info", "warning", "error", "critical"):
-        raise ValueError("unsupported level: %r" % value)
+        raise j.exceptions.Value("unsupported level: %r" % value)
     return value
 
 
@@ -71,14 +71,14 @@ def list_of_ip_address(value):
             address, port = value.strip().rsplit(":", 1)
             return address.strip("[] "), int(port)
         except ValueError:
-            raise ValueError("malformed IP address: %r" % value)
+            raise j.exceptions.Value("malformed IP address: %r" % value)
 
     return [ip_address(s.strip()) for s in value.split(",")]
 
 
 def _convert_to_bool(value):
     if value.lower() not in RawConfigParser.BOOLEAN_STATES:
-        raise ValueError("Not a boolean: %r" % value)
+        raise j.exceptions.Value("Not a boolean: %r" % value)
     return RawConfigParser.BOOLEAN_STATES[value.lower()]
 
 
@@ -332,11 +332,11 @@ def load(paths=()):
             if not parser.read(path):
                 config = Configuration.SOURCE_MISSING
                 if not ignore_if_missing:
-                    raise RuntimeError("No such file: %r" % path)
+                    raise j.exceptions.Base("No such file: %r" % path)
             else:
                 config = {s: {o: parser[s][o] for o in parser.options(s)} for s in parser.sections()}
         except Exception as e:
-            raise RuntimeError("Failed to load %s: %s" % (config_source, e)) from e
+            raise j.exceptions.Base("Failed to load %s: %s" % (config_source, e)) from e
         configuration.update(config, config_source, internal=False)
     return configuration
 
@@ -379,7 +379,7 @@ class Configuration:
         new_values = {}
         for section in config:
             if section not in self._schema or not internal and self._schema[section].get("_internal", False):
-                raise RuntimeError("Invalid section %r in %s" % (section, source))
+                raise j.exceptions.Base("Invalid section %r in %s" % (section, source))
             new_values[section] = {}
             if "_allow_extra" in self._schema[section]:
                 allow_extra_options = self._schema[section]["_allow_extra"]
@@ -397,14 +397,14 @@ class Configuration:
                 elif allow_extra_options:
                     type_ = str
                 else:
-                    raise RuntimeError("Invalid option %r in section %r in " "%s" % (option, section, source))
+                    raise j.exceptions.Base("Invalid option %r in section %r in " "%s" % (option, section, source))
                 raw_value = config[section][option]
                 try:
                     if type_ == bool:
                         raw_value = _convert_to_bool(raw_value)
                     new_values[section][option] = type_(raw_value)
                 except Exception as e:
-                    raise RuntimeError(
+                    raise j.exceptions.Base(
                         "Invalid %s value for option %r in section %r in %s: "
                         "%r" % (type_.__name__, option, section, source, raw_value)
                     ) from e
@@ -451,13 +451,13 @@ class Configuration:
             schema = self._schema.copy()
             for section, options in plugin_schema.items():
                 if section not in schema or "type" not in schema[section] or "internal" not in schema[section]["type"]:
-                    raise ValueError("not a plugin section: %r" % section)
+                    raise j.exceptions.Value("not a plugin section: %r" % section)
                 schema[section] = schema[section].copy()
                 schema[section]["type"] = schema[section]["type"].copy()
                 schema[section]["type"]["internal"] = [self.get(section, "type")]
                 for option, value in options.items():
                     if option in schema[section]:
-                        raise ValueError("option already exists in %r: %r" % (section, option))
+                        raise j.exceptions.Value("option already exists in %r: %r" % (section, option))
                     schema[section][option] = value
         copy = self.__class__(schema)
         for config, source, allow_internal in self._configs[skip:]:

@@ -48,7 +48,7 @@ class ZOSInstance(j.application.JSFactoryConfigsBaseClass):
     #     :return:
     #     """
     #     if self.type not in ["physical","ovh","packetnet"]:
-    #         raise RuntimeError("platform '%s' not supported"%self.type)
+    #         raise j.exceptions.Base("platform '%s' not supported"%self.type)
     #     if name not in self.zos_virtual:
     #         zc = ZOSVirtual(name=name)
     #         zc.zos_node = self

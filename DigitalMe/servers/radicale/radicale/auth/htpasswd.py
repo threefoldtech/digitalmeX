@@ -38,13 +38,13 @@ class Auth(auth.BaseAuth):
             try:
                 from passlib.hash import apr_md5_crypt
             except ImportError as e:
-                raise RuntimeError("The htpasswd encryption method 'md5' requires " "the passlib module.") from e
+                raise j.exceptions.Base("The htpasswd encryption method 'md5' requires " "the passlib module.") from e
             self.verify = functools.partial(self._md5apr1, apr_md5_crypt)
         elif self.encryption == "bcrypt":
             try:
                 from passlib.hash import bcrypt
             except ImportError as e:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "The htpasswd encryption method 'bcrypt' requires " "the passlib module with bcrypt support."
                 ) from e
             # A call to `encrypt` raises passlib.exc.MissingBackendError with a
@@ -56,12 +56,12 @@ class Auth(auth.BaseAuth):
             try:
                 import crypt
             except ImportError as e:
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "The htpasswd encryption method 'crypt' requires " "the crypt() system support."
                 ) from e
             self.verify = functools.partial(self._crypt, crypt)
         else:
-            raise RuntimeError("The htpasswd encryption method %r is not " "supported." % self.encryption)
+            raise j.exceptions.Base("The htpasswd encryption method %r is not " "supported." % self.encryption)
 
     def _plain(self, hash_value, password):
         """Check if ``hash_value`` and ``password`` match, plain method."""
@@ -130,7 +130,7 @@ class Auth(auth.BaseAuth):
                             if login_ok and password_ok:
                                 return login
                         except ValueError as e:
-                            raise RuntimeError("Invalid htpasswd file %r: %s" % (self.filename, e)) from e
+                            raise j.exceptions.Base("Invalid htpasswd file %r: %s" % (self.filename, e)) from e
         except OSError as e:
-            raise RuntimeError("Failed to load htpasswd file %r: %s" % (self.filename, e)) from e
+            raise j.exceptions.Base("Failed to load htpasswd file %r: %s" % (self.filename, e)) from e
         return ""

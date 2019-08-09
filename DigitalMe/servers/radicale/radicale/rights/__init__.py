@@ -52,7 +52,7 @@ def load(configuration):
     try:
         class_ = import_module(module).Rights
     except Exception as e:
-        raise RuntimeError("Failed to load rights module %r: %s" % (module, e)) from e
+        raise j.exceptions.Base("Failed to load rights module %r: %s" % (module, e)) from e
     logger.info("Rights type is %r", rights_type)
     return class_(configuration)
 
@@ -77,4 +77,4 @@ class BaseRights:
         Returns granted rights.
 
         """
-        raise NotImplementedError
+        raise j.exceptions.NotImplemented

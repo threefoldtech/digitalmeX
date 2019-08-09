@@ -62,7 +62,7 @@ class Community(JSBASE):
         name = j.core.text.strip_to_ascii_dense(name)
         if name not in self.coordinators:
             if name not in self.coordinator_dna:
-                raise RuntimeError("did not find coordinator dna:%s" % name)
+                raise j.exceptions.Base("did not find coordinator dna:%s" % name)
             schema_obj = self.coordinator_dna[name].schema_obj
             if capnp_data is not None:
                 data = schema_obj.get(data=capnp_data)
@@ -121,7 +121,7 @@ class Community(JSBASE):
     def _module_fix(self, module, name, cat):
 
         if not "SCHEMA" in module.__dict__:
-            raise RuntimeError("could not find SCHEMA in module:%s" % module)
+            raise j.exceptions.Base("could not find SCHEMA in module:%s" % module)
 
         name = j.core.text.strip_to_ascii_dense(name)
 
@@ -133,7 +133,7 @@ class Community(JSBASE):
             if line.startswith("#"):
                 continue
             if line.startswith("@"):
-                raise RuntimeError(
+                raise j.exceptions.Base(
                     "Schema:\n%s\nshould not define name & url at start, will be added automatically." % name
                 )
             if "world.service.state.state" in line:
@@ -146,7 +146,7 @@ class Community(JSBASE):
 
         splitted = [item.strip().lower() for item in name.split("_")]
         if len(splitted) < 2:
-            raise RuntimeError(
+            raise j.exceptions.Base(
                 "unique name for coordinator or service needs to be at least 2 parts separated with .Now:%s" % name
             )
 

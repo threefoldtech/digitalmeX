@@ -50,7 +50,7 @@ class ServerRack(JSBASE):
 
     # def _nomonkeypatch_check(self):
     #     if self._monkeypatch_done:
-    #         raise RuntimeError(
+    #         raise j.exceptions.Base(
     #             "cannot start workers because gevent has been inited already, make sure you do gevent later"
     #         )
 
