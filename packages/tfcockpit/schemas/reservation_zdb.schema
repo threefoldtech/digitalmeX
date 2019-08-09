@@ -1,0 +1,6 @@
+@url = tfgrid.reservation.zdb.1
+size = (I)
+type = "seq,user" (E)
+password = (S)
+disk_type = "hdd,ssd" (E)
+public = false (B)

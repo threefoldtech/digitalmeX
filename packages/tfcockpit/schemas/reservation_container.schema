@@ -1,0 +1,11 @@
+@url = tfgrid.reservation.container.mount.1
+volume_id = (S)
+mountpoint = (S)
+
+@url = tfgrid.reservation.container.1
+flist = (S)
+environment = (dict)
+entrypoint = (S)
+interactive = true (B)
+volumes = (LO) !tfgrid.reservation.container.mount.1
+network = (O) !tfgrid.reservation.network.1

@@ -1,10 +1,9 @@
-@url = tf.capacity.farm.1
-iyo_organization* = (S)
+@url = tfgrid.farm.1
+3bot_id* = (S) 
+iyo_organization* = (S) # for backward compatibility
 name* = (S)
 wallet_addresses = (LS)
-city* = (S)
-country* = (S)
-continent* = (S)
-latitude = (F)
-longitude = (F)
+location = (O) !tfgrid.location.1
 email = (email)
+vta = (S)
+resource_price = (O) !tfgrid.node.resource.1
