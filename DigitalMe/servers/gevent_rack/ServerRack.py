@@ -69,14 +69,7 @@ class ServerRack(JSBASE):
     #     else:
     #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def bottle_server_add(
-        self,
-        name="bottle",
-        port=4442,
-        app=None,
-        websocket=False,
-        ssl=True,
-    ):
+    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False, ssl=True):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
@@ -214,13 +207,7 @@ class ServerRack(JSBASE):
 
         self.add(name=name, server=server)
 
-    def websocket_server_add(
-        self,
-        name="websocket",
-        port=4444,
-        appclass=None,
-        ssl=True,
-    ):
+    def websocket_server_add(self, name="websocket", port=4444, appclass=None, ssl=True):
 
         from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
         from collections import OrderedDict

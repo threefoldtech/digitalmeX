@@ -137,8 +137,8 @@ class GedisClient(JSConfigBase):
             if self.ssl:
 
                 if not self.ssl_keyfile and not self.ssl_certfile:
-                    ssl_keyfile = '/etc/ssl/resty-auto-ssl-fallback.key'
-                    ssl_certfile = '/etc/ssl/resty-auto-ssl-fallback.crt'
+                    ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key"
+                    ssl_certfile = "/etc/ssl/resty-auto-ssl-fallback.crt"
 
                     if j.sal.fs.exists(ssl_keyfile):
                         self.ssl_keyfile = ssl_keyfile

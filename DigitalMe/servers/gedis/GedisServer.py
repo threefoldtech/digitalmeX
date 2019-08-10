@@ -40,7 +40,6 @@ class GedisServer(JSBaseConfig):
         self.actors = {}  # the code as set by the gediscmds class = actor cmds
         self.schema_urls = []  # used at python client side
 
-
         self.address = "{}:{}".format(self.host, self.port)
 
         self.web_client_code = None
@@ -78,8 +77,8 @@ class GedisServer(JSBaseConfig):
     def gedis_server(self):
         if self.ssl:
             if not self.ssl_keyfile and not self.ssl_certfile:
-                ssl_keyfile = '/etc/ssl/resty-auto-ssl-fallback.key'
-                ssl_certfile = '/etc/ssl/resty-auto-ssl-fallback.crt'
+                ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key"
+                ssl_certfile = "/etc/ssl/resty-auto-ssl-fallback.crt"
 
                 if j.sal.fs.exists(ssl_keyfile):
                     self.ssl_keyfile = ssl_keyfile
@@ -87,14 +86,14 @@ class GedisServer(JSBaseConfig):
                     self.ssl_certfile = ssl_certfile
 
             if not self.ssl_keyfile and not self.ssl_certfile:
-                self.ssl_keyfile , self.ssl_certfile = self.sslkeys_generate()
+                self.ssl_keyfile, self.ssl_certfile = self.sslkeys_generate()
 
             else:
                 if not j.sal.fs.exists(self.ssl_keyfile):
-                    raise RuntimeError('SSL: Error keyfile not found')
+                    raise RuntimeError("SSL: Error keyfile not found")
 
                 if not j.sal.fs.exists(self.ssl_certfile):
-                    raise RuntimeError('SSL: Error certfile not found')
+                    raise RuntimeError("SSL: Error certfile not found")
 
             self._log_info("Gedis SSL: using keyfile {0} and certfile {1}".format(self.ssl_keyfile, self.ssl_certfile))
 
@@ -259,7 +258,12 @@ class GedisServer(JSBaseConfig):
         if os.path.exists(key) and os.path.exists(cert):
             return key, cert
 
-        j.sal.process.execute('openssl req -newkey rsa:2048 -nodes -keyout ca.key -x509 -days 365 -out ca.crt -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=localhost"'.format(key, cert), showout=False)
+        j.sal.process.execute(
+            'openssl req -newkey rsa:2048 -nodes -keyout ca.key -x509 -days 365 -out ca.crt -subj "/C=GB/ST=London/L=London/O=Global Security/OU=IT Department/CN=localhost"'.format(
+                key, cert
+            ),
+            showout=False,
+        )
 
         # res = j.sal.ssl.ca_cert_generate(path)
         # if res:
