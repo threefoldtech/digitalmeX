@@ -1,40 +1,33 @@
 @url = tfgrid.network.1
 net_id = (S)
 prefix_zero = (iprange)
-resources = (LO) !tfgrid.network.net_resource
-exit_point = (O) !tfgrid.network.exit_point
+resources = (LO) !tfgrid.network.net_resource.1
+exit_point = (O) !tfgrid.network.exit_point.1
 allocation_nr = (I)
 version = (I)
 
 @url = tfgrid.network.node_id.1
-id = (S)
+node_id = (S)
 farm_id = (S)
 reachability_v4 = "PUBLIC,HIDDEN" (E)
 reachability_v6 = "PUBLIC,HIDDEN" (E)
 
 @url = tfgrid.network.net_resource.1
-node_id = (O) !tfgrid.network.node_id
+node_id = (O) !tfgrid.network.node_id.1
 prefix = (iprange)
 link_local = (iprange)
-peers = (LO) ! tfgrid.network.peer
+peers = (LO) ! tfgrid.network.peer.1
 exit_point = (B)
 
 @url = tfgrid.network.peer.1
 prefix = (iprange)
-connection = (O) !tfgrid.network.wireguard
+connection = (O) !tfgrid.network.wireguard.1
 
 @url = tfgrid.network.wireguard.1
 ip = (ipaddr)
 port = (ipport)
 key = (S)
 private_key = (S)
-
-@url = tfgrid.network.exit_point.1
-ip4_conf = (O) !tfgrid.network.ip4_conf
-ip4_dnat = (O) !tfgrid.network.ip4_dnat
-
-ip6_conf = (O) !tfgrid.network.ip6_conf
-ip6_allow = (Lipaddr)
 
 @url = tfgrid.network.ip4_conf.1
 cidr = (iprange)
@@ -43,8 +36,14 @@ metric = (I)
 iface = (S)
 enable_nat = (B)
 
-@url = !tfgrid.network.ip6_conf.1
+@url = tfgrid.network.ip6_conf.1
 addr = (iprange)
 gateway = (ipaddr)
 metric = (I)
 iface = (S)
+
+@url = tfgrid.network.exit_point.1
+#ip4_conf = (O) !tfgrid.network.ip4_conf.1
+#ip4_dnat = (O) !tfgrid.network.ip4_dnat.1
+ip6_conf = (O) !tfgrid.network.ip6_conf.1
+ip6_allow = (Lipaddr)
