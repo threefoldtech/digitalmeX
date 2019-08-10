@@ -1,4 +1,3 @@
 @url = tfgrid.reservation.volume.1
-id = (S)
 size = (I)
 type = "HDD,SSD" (E)

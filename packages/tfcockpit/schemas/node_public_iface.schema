@@ -1,8 +1,0 @@
-@url = tfgrid.node.public_iface.1
-master = (S)
-type = "macvlan" (E)
-ipv4 = (ipaddr)
-ipv6 = (ipaddr)
-gw4 = (ipaddr)
-gw6 = (ipaddr)
-version = (I)

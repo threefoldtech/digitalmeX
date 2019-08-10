@@ -1,5 +1,5 @@
 @url = tfgrid.farm.1
-3bot_id* = (S) 
+threebot_id* = (S) 
 iyo_organization* = (S) # for backward compatibility
 name* = (S)
 wallet_addresses = (LS)
