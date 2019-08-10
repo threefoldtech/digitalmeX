@@ -1,0 +1,7 @@
+@url = tfgrid.node.proof.1
+hardware = (dict)
+hardware_hash = (S)
+disks = (dict)
+disks_hash = (S)
+created = (T)
+node_id* = (S) # link to the node

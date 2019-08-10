@@ -1,0 +1,17 @@
+@url = tfgrid.node.1
+node_id* = (S)
+farmer_id* = (S)
+os_version* = (S)
+parameters = (dict)
+created = (T)
+updated = (T)
+uptime = (I)
+address = (S)
+location = (O) !tfgrid.location.1
+total_resource = (O) !tfgrid.node.resource.1
+used_resource = (O) !tfgrid.node.resource.1
+reserved_resource = (O) !tfgrid.node.resource.1
+ifaces = (LO) !tfgrid.node.iface.1 # only for 0-OS v2
+public_config = (O)!tfgrid.node.public_iface.1 # only for 0-OS v2
+exit_node = (B) # only for 0-OS v2
+approved = false (B) # until the farm has confirmed the node belong to him, approved is false

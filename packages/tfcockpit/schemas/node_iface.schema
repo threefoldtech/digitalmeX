@@ -1,0 +1,4 @@
+@url = !tfgrid.node.iface.1
+name = (S)
+addrs = (Liprange)
+gateway = (Lipaddr)
