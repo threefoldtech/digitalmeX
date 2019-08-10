@@ -44,8 +44,8 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             # j.servers.openresty.build() # build from threebot builder or server from a seperate call
             wikis_load_cmd = """
-from Jumpscale import j
-j.tools.markdowndocs.load_wikis()
+            from Jumpscale import j
+            j.tools.markdowndocs.load_wikis()
             """
             wikis_loader = j.servers.startupcmd.get(
                 "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
@@ -64,14 +64,13 @@ j.tools.markdowndocs.load_wikis()
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
             cmd_start = """
-from gevent import monkey
-monkey.patch_all(subprocess=False)
-from Jumpscale import j
-j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
+            from gevent import monkey
+            monkey.patch_all(subprocess=False)
+            from Jumpscale import j
+            j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
             """.format(
                 name=self.name, executor=self.executor
             )
-
             startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
             startup.cmd_start = cmd_start
             startup.executor = self.executor
@@ -95,7 +94,7 @@ j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
         exec(self.content)
         eval("install")()
 
-    def package_perpare(self, package_url):
+    def package_prepare(self, package_url):
         path = j.clients.git.getContentPathFromURLorPath(package_url)
         with open(j.sal.fs.joinPaths(path, "package.py")) as f:
             self.content = f.read()
