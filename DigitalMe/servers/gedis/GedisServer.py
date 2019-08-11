@@ -295,7 +295,7 @@ class GedisServer(JSBaseConfig):
             h.cancel()
 
         self._log_info("stopping server")
-        self.gedis_server.stop()
+        self.gevent_server.stop()
 
     def test(self, name=""):
         if name:
