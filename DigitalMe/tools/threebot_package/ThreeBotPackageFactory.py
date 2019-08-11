@@ -3,7 +3,7 @@ from Jumpscale import j
 from .ThreeBotPackage import ThreeBotPackage
 
 
-class ThreeBotPackageFactory(j.application.JSBaseConfigClass):
+class ThreeBotPackageFactory(j.application.JSBaseConfigsClass):
     """
     deal with 3bot packages
 
@@ -16,7 +16,12 @@ class ThreeBotPackageFactory(j.application.JSBaseConfigClass):
         """
         kosmos -p 'j.tools.threebotpackage.test()'
         """
-        wg = self.get(name="test", giturl = )
 
+        branch = j.core.myenv.DEFAULTBRANCH
+
+        wg = self.get(
+            name="test",
+            giturl="https://github.com/threefoldtech/digitalmeX/tree/%s/threebot/packages/threefold/directory" % branch,
+        )
 
         j.shell()

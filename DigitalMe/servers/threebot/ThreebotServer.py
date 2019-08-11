@@ -93,7 +93,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
                 startup.stop()
             startup.start()
 
-    def auto_update(self):
-        while True:
-            self._log_info("Reload for docsites done")
-            gevent.sleep(300)
+    # def auto_update(self):
+    #     while True:
+    #         self._log_info("Reload for docsites done")
+    #         gevent.sleep(300)

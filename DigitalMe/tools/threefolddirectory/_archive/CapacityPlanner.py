@@ -98,7 +98,13 @@ class CapacityPlanner(JSBASE):
         """
         configs = []
         if pub_ssh_key:
-            configs = [{"path": "/root/.ssh/authorized_keys", "content": pub_ssh_key, "name": "sshkey"}]
+            configs = [
+                {
+                    "path": "%s/.ssh/authorized_keys" % j.core.myenv.config["DIR_HOME"],
+                    "content": pub_ssh_key,
+                    "name": "sshkey",
+                }
+            ]
         flist = "https://hub.grid.tf/tf-bootable/ubuntu:lts.flist"
         vm_service, ip_addresses = self._vm_reserve(
             node=node,
