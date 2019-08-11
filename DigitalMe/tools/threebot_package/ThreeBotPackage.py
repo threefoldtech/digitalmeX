@@ -28,5 +28,3 @@ class ThreeBotPackage(JSConfigBase):
         self.start = self._package.start
         self.stop = self._package.stop
         self.delete = self._package.delete
-
-        j.shell()
