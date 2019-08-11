@@ -90,15 +90,11 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             openresty.install()
 
             ip_addr = "0.0.0.0"
-            import os
-
             domain = os.environ.get("DOMAIN", "")
-            ws = openresty.websites.new(name="test", location=ip_addr, path="html", port=8080)
+            ws = openresty.websites.new(name="test", domain=domain, location=ip_addr, path="html", port=8080)
             ws.configure()
 
-            rp = openresty.reverseproxies.new(
-                name="testrp", port_source=80, domain=domain, port_dest=8080, ipaddr_dest=ip_addr
-            )
+            rp = openresty.reverseproxies.new(name="testrp", port_source=80, port_dest=8080, ipaddr_dest=ip_addr)
             rp.configure()
 
             if openresty.is_running():
@@ -119,8 +115,11 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             self._log_info("[+] test reverse proxy response OK")
 
             self._log_info("can now go to http://localhost:8080/index.html")
+
             self._log_info("now closing")
-            openresty.stop()
+            # openresty.stop()
+
+            self._log_info("TEST OK")
 
         tmux()
         # corex()
