@@ -29,3 +29,23 @@ ifaces = (LO) !tfgrid.node.iface.1 # only for 0-OS v2
 public_config = (O)!tfgrid.node.public_iface.1 # only for 0-OS v2
 exit_node = (B) # only for 0-OS v2
 approved = false (B) # until the farm has confirmed the node belong to him, approved is false
+
+
+@url = tfgrid.location.1
+city = (S)
+country = (S)
+continent = (S)
+latitude = (F)
+longitude = (F)
+
+
+@url = tfgrid.farm.1
+threebot_id* = (S) 
+iyo_organization* = (S) # for backward compatibility
+name* = (S)
+wallet_addresses = (LS)
+location = (O) !tfgrid.location.1
+email = (email)
+vta = (S)
+resource_price = (O) !tfgrid.node.resource.1
+

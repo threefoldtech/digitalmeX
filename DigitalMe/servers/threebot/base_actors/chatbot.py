@@ -9,9 +9,11 @@ class chatbot(JSBASE):
     """
     """
 
-    def _init(self, **kwargs):
-        server = j.servers.gedis.get(self._parent_name_get().split("_")[1])
-        self.chatbot = server.chatbot
+    def _init(self, gedis_server=None):
+        raise RuntimeError("is this used?")
+        assert gedis_server
+        self._gedis_server = gedis_server
+        self.chatbot = self._gedis_server.chatbot
 
         # check self.chatbot.chatflows for the existing chatflows
         # all required commands are here

@@ -52,7 +52,7 @@ class GedisCmds(JSBASE):
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
             klass = j.tools.codeloader.load(obj_key=cname, path=path, reload=False)
-            kobj = klass(self.server)  # this is the actor obj
+            kobj = klass(gedis_server=self.server)  # this is the actor obj
 
             key = "%s__%s" % (namespace, cname.replace(".", "_"))
 

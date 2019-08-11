@@ -19,9 +19,14 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         """
 
     def _init(self, **kwargs):
-        self._gedis_server = None
-        self.dns_server = None
         self.content = ""
+        self._rack = None
+
+    @property
+    def rack(self):
+        if not self._rack:
+            self._rack = j.servers.rack.get()
+        return self._rack
 
     @property
     def gedis_server(self):
@@ -35,31 +40,38 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
 
-            rack = j.servers.rack.get()
-
-            # TODO, needs to be possible to run ssl and not but still use the same gedis backend, should not have to run 2x
-            # gedis = j.servers.gedis.get("main_ssl", ssl=True, port=8901)
-            # rack.add("gedis_ssl", gedis)
-
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             # j.servers.openresty.build() # build from threebot builder or server from a seperate call
-            wikis_load_cmd = """
-            from Jumpscale import j
-            j.tools.markdowndocs.load_wikis()
-            """
-            wikis_loader = j.servers.startupcmd.get(
-                "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
-            )
-            if not wikis_loader.is_running():
-                wikis_loader.start()
+            # wikis_load_cmd = """
+            # from Jumpscale import j
+            # j.tools.markdowndocs.load_wikis()
+            # """
+            # wikis_loader = j.servers.startupcmd.get(
+            #     "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
+            # )
+            # if not wikis_loader.is_running():
+            #     wikis_loader.start()
             openresty.install()
             openresty.start()
-            self._gedis_server = j.servers.gedis.get("main", port=8900)
 
-            self._gedis_server.actors_add("%s/base_actors" % self._dirpath)
-            self._gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
-            self.package_add(os.path.join(os.path.dirname(__file__)))
-            rack.start()
+            j.servers.sonic.default.start()
+
+            gedis_server = j.servers.gedis.get_gevent_server("main", port=8900)
+
+            gedis_server.actors_add("%s/base_actors" % self._dirpath)
+            gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
+
+            app = j.servers.gedis_websocket.default.app
+            self.rack.websocket_server_add("websocket", 4444, app)
+
+            dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
+            self.rack.add("dns", dns)
+
+            self.rack.add("gedis", gedis_server)
+
+            self.rack.bottle_server_add()
+
+            self.rack.start()
 
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
@@ -85,34 +97,3 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         while True:
             self._log_info("Reload for docsites done")
             gevent.sleep(300)
-
-    def package_add(self, package_url):
-        path = j.clients.git.getContentPathFromURLorPath(package_url)
-
-        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
-            self.content = f.read()
-        exec(self.content)
-        eval("install")()
-
-    def package_prepare(self, package_url):
-        path = j.clients.git.getContentPathFromURLorPath(package_url)
-        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
-            self.content = f.read()
-        exec(self.content)
-        # TODO: check if already installed or not
-        eval("prepare")()
-
-    def package_uninstall(self, package_url):
-        path = j.clients.git.getContentPathFromURLorPath(package_url)
-        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
-            self.content = f.read()
-        exec(self.content)
-        eval("uninstall")()
-
-    def package_update(self, package_url):
-        path = j.clients.git.getContentPathFromURLorPath(package_url)
-        with open(j.sal.fs.joinPaths(path, "package.py")) as f:
-            self.content = f.read()
-        exec(self.content)
-        # TODO: check if already installed or not
-        eval("update")()
