@@ -1,13 +1,12 @@
 import gevent
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
 
-
-class open_publish(JSBASE):
+class open_publish(j.application.ThreeBotActorBase):
     def _init(self, **kwargs):
-        self.open_publish_tool = j.servers.threebot.default
-        gevent.spawn(self.open_publish_tool.auto_update)
+        # self.open_publish_tool = j.servers.threebot.default
+        # gevent.spawn(self.open_publish_tool.auto_update)
+        pass
 
     def publish_wiki(self, name, repo_url, domain, ip):
         """

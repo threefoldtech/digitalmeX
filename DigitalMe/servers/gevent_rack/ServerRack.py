@@ -69,7 +69,7 @@ class ServerRack(JSBASE):
     #     else:
     #         monitor_changes_subprocess(gedis_instance_name=gedis_instance_name)
 
-    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False, ssl=True):
+    def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False, ssl=False):
 
         from gevent.pywsgi import WSGIServer
         from geventwebsocket.handler import WebSocketHandler
@@ -195,6 +195,8 @@ class ServerRack(JSBASE):
         # server = wsgi.Server(**server_args)
         # server.start()
 
+        ssl = False
+
         if ssl:
             if not j.sal.fs.exists(ssl_keyfile):
                 raise RuntimeError("SSL: keyfile not exists")
@@ -207,10 +209,12 @@ class ServerRack(JSBASE):
 
         self.add(name=name, server=server)
 
-    def websocket_server_add(self, name="websocket", port=4444, appclass=None, ssl=True):
+    def websocket_server_add(self, name="websocket", port=4444, appclass=None, ssl=False):
 
         from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
         from collections import OrderedDict
+
+        assert ssl == False  #
 
         if not appclass:
 

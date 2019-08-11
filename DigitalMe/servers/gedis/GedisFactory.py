@@ -24,7 +24,7 @@ class GedisFactory(JSConfigFactory):
         self.new(name=name, **kwargs)
         server = self.get(name=name)
 
-        return server.gedis_server
+        return server.gevent_server
 
     def _cmds_get(self, key, data):
         """

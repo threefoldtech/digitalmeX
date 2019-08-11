@@ -3,7 +3,7 @@ from Jumpscale import j
 STATIC_DIR = "/sandbox/var/gdrive/static"
 
 
-class gdrive(j.application.JSBaseClass):
+class gdrive(j.application.ThreeBotActorBase):
     def file_get(self, doctype, guid1, guid2, schema_out):
         """
         ```in

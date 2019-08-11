@@ -74,7 +74,7 @@ class GedisServer(JSBaseConfig):
         self.handler = Handler(self)  # registers the current gedis server on the handler
 
     @property
-    def gedis_server(self):
+    def gevent_server(self):
         if self.ssl:
             if not self.ssl_keyfile and not self.ssl_certfile:
                 ssl_keyfile = "/etc/ssl/resty-auto-ssl-fallback.key"

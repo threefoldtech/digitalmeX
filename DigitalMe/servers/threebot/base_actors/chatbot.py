@@ -2,17 +2,11 @@ import json
 from Jumpscale import j
 
 
-JSBASE = j.application.JSBaseClass
-
-
-class chatbot(JSBASE):
+class chatbot(j.application.ThreeBotActorBase):
     """
     """
 
-    def _init(self, gedis_server=None):
-        raise RuntimeError("is this used?")
-        assert gedis_server
-        self._gedis_server = gedis_server
+    def _init(self, **kwargs):
         self.chatbot = self._gedis_server.chatbot
 
         # check self.chatbot.chatflows for the existing chatflows

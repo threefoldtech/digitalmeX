@@ -35,6 +35,13 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         return self._gedis_server
 
     def start(self, background=False):
+        """
+
+        kosmos 'j.servers.threebot.default.start()'
+
+        :param background:
+        :return:
+        """
 
         if not background:
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
@@ -56,7 +63,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             j.servers.sonic.default.start()
 
-            gedis_server = j.servers.gedis.get_gevent_server("main", port=8900)
+            gedis_server = j.servers.gedis.get(name="main", port=8900)
 
             gedis_server.actors_add("%s/base_actors" % self._dirpath)
             gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
@@ -67,7 +74,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             self.rack.add("dns", dns)
 
-            self.rack.add("gedis", gedis_server)
+            self.rack.add("gedis", gedis_server.gevent_server)
 
             self.rack.bottle_server_add()
 

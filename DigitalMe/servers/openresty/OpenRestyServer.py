@@ -42,6 +42,8 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
         self._web_path = "/sandbox/var/web/%s" % self.name
         j.sal.fs.createDir(self._web_path)
 
+        self.executor = "tmux"
+
         if self.status == "INIT":
             self.install()
 
@@ -90,6 +92,9 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
         """
         # compile all 1 time to lua, can do this at each start
         j.sal.process.execute("cd %s;moonc ." % self._web_path)
+        from pudb import set_trace
+
+        set_trace()
         if reset:
             self.startup_cmd.stop()
         if self.startup_cmd.is_running():
