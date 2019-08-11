@@ -120,7 +120,7 @@ DEFAULT_CONFIG_SCHEMA = OrderedDict(
                     (
                         "certificate",
                         {
-                            "value": "/etc/ssl/radicale.cert.pem",
+                            "value": "/sandbox/cfg/ssl/radicale.cert.pem",
                             "help": "set certificate file",
                             "aliases": ["-c", "--certificate"],
                             "type": filepath,
@@ -129,7 +129,7 @@ DEFAULT_CONFIG_SCHEMA = OrderedDict(
                     (
                         "key",
                         {
-                            "value": "/etc/ssl/radicale.key.pem",
+                            "value": "/sandbox/cfg/ssl/radicale.key.pem",
                             "help": "set private key file",
                             "aliases": ["-k", "--key"],
                             "type": filepath,

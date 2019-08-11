@@ -28,38 +28,25 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             self._default = self.get(name="default")
         return self._default
 
-    def build(self):
+    def install(self, reset=False):
         """
-        will make sure to build lua and install lua-resty-auto-ssl (to automatically issue ssl certificates)
+        kosmos 'j.servers.openresty.install(reset=True)'
+        :param reset:
         :return:
         """
-        j.builders.runtimes.lua.install()  # also gets the openresty
-        j.builders.runtimes.lua.lua_rock_install("lua-resty-auto-ssl")
+        if reset:
+            j.sal.fs.remove("/sandbox/var/web")
+        j.builders.web.openresty.install()
+        j.builders.runtimes.lua.install()
         j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/jumpscale_weblibs")
-        # This is a hack shouldn't be done if the paths are correct see
-        # https://github.com/threefoldtech/jumpscaleX/pull/692
-        if j.sal.fs.exists("/sandbox/openresty/luarocks/bin/resty-auto-ssl/"):
-            j.sal.fs.copyDirTree("/sandbox/openresty/luarocks/bin/resty-auto-ssl/", "/bin", rsyncdelete=False)
-        j.sal.unix.addSystemGroup("www")
-        j.sal.unix.addSystemUser("www", "www")
-        j.sal.fs.createDir("/etc/resty-auto-ssl")
-        j.sal.fs.chown("/etc/resty-auto-ssl", "www", "www")
-        j.sal.fs.chmod("/etc/resty-auto-ssl", 0o755)
-        # Generate a self signed fallback certificate
-        cmd = """
-        openssl req -new -newkey rsa:2048 -days 3650 -nodes -x509 \
-            -subj '/CN=sni-support-required-for-valid-ssl' \
-            -keyout /etc/ssl/resty-auto-ssl-fallback.key \
-            -out /etc/ssl/resty-auto-ssl-fallback.crt
-        """
-        j.tools.executor.local.execute(cmd)
 
-    def test(self):
+    def test(self, install=True):
         """
-        kosmos 'j.servers.openresty.test()'
+        kosmos 'j.servers.openresty.test(install=False)'
         :return:
         """
-        self.build()
+        if install:
+            self.install()
 
         def corex():
             self._log_info("Now trying coreX")
@@ -98,7 +85,6 @@ class OpenRestyFactory(j.application.JSBaseConfigsClass):
             openresty.stop()
 
         def tmux():
-            self.build()
 
             openresty = self.default
             openresty.install()
