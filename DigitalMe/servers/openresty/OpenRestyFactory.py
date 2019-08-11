@@ -1,4 +1,5 @@
 from Jumpscale import j
+import os
 
 JSBASE = j.application.JSBaseClass
 
