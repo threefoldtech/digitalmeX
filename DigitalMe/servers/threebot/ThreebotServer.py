@@ -21,6 +21,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     def _init(self, **kwargs):
         self.content = ""
         self._rack = None
+        self._gedis_server = None
 
     @property
     def rack(self):
@@ -63,10 +64,9 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             j.servers.sonic.default.start()
 
-            gedis_server = j.servers.gedis.get(name="main", port=8900)
-
-            gedis_server.actors_add("%s/base_actors" % self._dirpath)
-            gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
+            # add system actors
+            self.gedis_server.actors_add("%s/base_actors" % self._dirpath)
+            self.gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
 
             app = j.servers.gedis_websocket.default.app
             self.rack.websocket_server_add("websocket", 4444, app)
@@ -74,9 +74,13 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             self.rack.add("dns", dns)
 
-            self.rack.add("gedis", gedis_server.gevent_server)
-
+            self.rack.add("gedis", self.gedis_server.gevent_server)
             self.rack.bottle_server_add()
+
+            # add user added packages
+            for package in j.tools.threebotpackage.find():
+                package.prepare(gedis_server=self.gedis_server, package_root=package.path)
+                package.start()
 
             self.rack.start()
 

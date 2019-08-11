@@ -13,18 +13,19 @@ class ThreeBotPackage(JSConfigBase):
 
     def _init(self, **kwargs):
         if self.giturl:
-            self._path = j.clients.git.getContentPathFromURLorPath(self.giturl)
-        else:
-            self._path = self.path
+            self.path = j.clients.git.getContentPathFromURLorPath(self.giturl)
 
-        self._path_package = "%s/package.py" % (self._path)
+        self._path_package = "%s/package.py" % (self.path)
 
         if not j.sal.fs.exists(self._path_package):
-            raise j.exceptions.Input("cannot find package.py in the package directory", data=package_url)
+            raise j.exceptions.Input(
+                "cannot find package.py in the package directory", data={"path": self._path_package}
+            )
 
-        self._package = j.tools.codeloader.load(obj_key="Package", path=self._path_package, reload=False)
+        klass = j.tools.codeloader.load(obj_key="Package", path=self._path_package, reload=False)
+        self._package = klass()
 
         self.prepare = self._package.prepare
         self.start = self._package.start
         self.stop = self._package.stop
-        self.delete = self._package.delete
+        self.uninstall = self._package.uninstall
