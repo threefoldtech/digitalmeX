@@ -31,17 +31,26 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
     def bcdb_get(self, name, secret="", use_zdb=False):
         return self.default.bcdb_get(name, secret, use_zdb)
 
-    def test(self):
+    def test(self, start=True):
         """
 
+        kosmos 'j.servers.threebot.test(start=False)'
         kosmos 'j.servers.threebot.test()'
-
         :return:
         """
-        self.install()
+        if start:
+            self.default.stop()
+            self.default.start(background=True)
 
-        s = self.default
+        # add an actor
 
-        s.start()
+        cl = self.default.gedis_server.client_get()
+
+        assert cl.ping()
+
+        cl.actors.package_manager.package_add(
+            "tf_directory",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
+        )
 
         j.shell()

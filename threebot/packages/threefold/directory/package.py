@@ -8,14 +8,25 @@ class Package:
         is called at install time
         :return:
         """
+
         zdb_admin = j.clients.zdb.client_admin_get()
-        zdb_admin.namespace_new("directory")
+
+        zdb_admin.reset()
+
+        zdb_admin.namespace_new("directory", secret="123456")
 
         schema_path = j.sal.fs.joinPaths(package_root, "schemas.toml")
         schema_content = j.sal.fs.readFile(schema_path)
         j.data.schema.add_from_text(schema_content)
 
-        zdb = j.clients.zdb.get("threebot", port=9900, nsname="directory")
+        zdb = j.clients.zdb.get("threebot", port=9900, nsname="directory", secret_="123456")
+        #
+        # zdb.set("a")
+        # assert zdb.get(0) == b"a"
+        # zdb.set("b", 0)
+        # assert zdb.get(0) == b"b"
+        # zdb.delete(0)
+
         bcdb = j.data.bcdb.get("directory", storclient=zdb)
         bcdb.model_get_from_schema(schema_content)
 

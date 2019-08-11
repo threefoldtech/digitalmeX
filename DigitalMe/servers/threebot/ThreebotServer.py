@@ -22,6 +22,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         self.content = ""
         self._rack = None
         self._gedis_server = None
+        self._startup_cmd = None
 
     @property
     def rack(self):
@@ -59,6 +60,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             # )
             # if not wikis_loader.is_running():
             #     wikis_loader.start()
+
             openresty.install()
             openresty.start()
 
@@ -86,23 +88,36 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
         else:
             # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
+            if self.startup_cmd.is_running():
+                self.startup_cmd.stop()
+            self.startup_cmd.start()
+
+    def stop(self):
+        """
+        :return:
+        """
+        self.startup_cmd.stop(waitstop=False, force=True)
+
+    @property
+    def startup_cmd(self):
+        if not self._startup_cmd:
             cmd_start = """
             from gevent import monkey
             monkey.patch_all(subprocess=False)
             from Jumpscale import j
-            j.servers.threebot.get("{name}", executor='{executor}').start(background=False)
+            server = j.servers.threebot.get("{name}", executor='{executor}')
+            server.start(background=False)
             """.format(
                 name=self.name, executor=self.executor
             )
-            startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name))
-            startup.cmd_start = cmd_start
+            cmd_start = j.core.tools.text_strip(cmd_start)
+            startup = j.servers.startupcmd.get(name="threebot_{}".format(self.name), cmd_start=cmd_start)
             startup.executor = self.executor
             startup.interpreter = "python"
-            startup.timeout = 5 * 60
+            startup.timeout = 60
             startup.ports = [8900, 4444, 8090]
-            if startup.is_running():
-                startup.stop()
-            startup.start()
+            self._startup_cmd = startup
+        return self._startup_cmd
 
     # def auto_update(self):
     #     while True:

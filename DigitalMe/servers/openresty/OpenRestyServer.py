@@ -132,7 +132,7 @@ class OpenRestyServer(j.application.JSBaseConfigsConfigFactoryClass):
         kosmos 'j.servers.openresty.stop()'
         :return:
         """
-        self.startup_cmd.stop()
+        self.startup_cmd.stop(waitstop=False, force=True)
 
     def is_running(self):
         """
