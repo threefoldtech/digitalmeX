@@ -23,6 +23,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         self._rack = None
         self._gedis_server = None
         self._startup_cmd = None
+        j.servers.threebot.current = self
 
     @property
     def rack(self):
@@ -33,7 +34,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     @property
     def gedis_server(self):
         if not self._gedis_server:
-            self._gedis_server = j.servers.gedis.get("main", port=8900)
+            self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8900)
         return self._gedis_server
 
     def start(self, background=False):
@@ -46,6 +47,9 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         """
 
         if not background:
+
+            j.application.debug = False  # otherwise we get a pudb session
+
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
 
@@ -81,13 +85,11 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             # add user added packages
             for package in j.tools.threebotpackage.find():
-                package.prepare(gedis_server=self.gedis_server, package_root=package.path)
                 package.start()
 
             self.rack.start()
 
         else:
-            # the MONKEY PATCH STATEMENT IS NOT THE BEST, but prob required for now
             if self.startup_cmd.is_running():
                 self.startup_cmd.stop()
             self.startup_cmd.start()

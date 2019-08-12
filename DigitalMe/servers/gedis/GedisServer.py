@@ -210,7 +210,11 @@ class GedisServer(JSBaseConfig):
         """
 
         data = {}
-        data["host"] = self.host
+        if self.host == "0.0.0.0":
+            host = "localhost"
+        else:
+            host = self.host
+        data["host"] = host
         data["port"] = self.port
         data["password_"] = self.secret_
         data["ssl"] = self.ssl

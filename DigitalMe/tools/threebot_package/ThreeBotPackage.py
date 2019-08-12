@@ -9,7 +9,16 @@ class ThreeBotPackage(JSConfigBase):
         name* = "main"        
         giturl = "" (S)  #if empty then local
         path = ""
+        threebotserver_name = ""
         """
+
+    @property
+    def threebot_server(self):
+        return j.servers.threebot.get(name=self.threebotserver_name)
+
+    @property
+    def gedis_server(self):
+        return self.threebot_server.gedis_server
 
     def _init(self, **kwargs):
         if self.giturl:
@@ -23,7 +32,7 @@ class ThreeBotPackage(JSConfigBase):
             )
 
         klass = j.tools.codeloader.load(obj_key="Package", path=self._path_package, reload=False)
-        self._package = klass()
+        self._package = klass(package=self)
 
         self.prepare = self._package.prepare
         self.start = self._package.start

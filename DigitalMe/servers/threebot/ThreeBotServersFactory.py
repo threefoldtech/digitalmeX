@@ -15,6 +15,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
     def _init(self):
         self._default = None
+        self.current = None
 
     @property
     def default(self):
@@ -44,7 +45,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         # add an actor
 
-        cl = self.default.gedis_server.client_get()
+        cl = j.clients.gedis.get(name="threebot")
 
         assert cl.ping()
 

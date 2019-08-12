@@ -147,6 +147,8 @@ class ResponseWriter:
         self._writer.encode(value)
 
     def error(self, value):
+        if isinstance(value, dict):
+            value = j.data.serializers.json.dumps(value)
         self._writer.error(value)
 
 
@@ -228,35 +230,41 @@ class Handler(JSBASE):
         while True:
             try:
                 request = gedis_socket.read()
-                self._log_info("request received: %s" % request.command)
-                result = self._handle_request(request, address)
+            except ConnectionError as err:
+                self._log_info("connection read error: %s" % str(err), context="%s:%s" % address)
+                # close the connection
+                return
+
+            logdict, result = self._handle_request(request, address)
+
+            if logdict:
+                gedis_socket.writer.error(logdict)
+            try:
                 gedis_socket.writer.write(result)
+
             except ConnectionError as err:
                 self._log_info("connection error: %s" % str(err), context="%s:%s" % address)
+                # close the connection
                 return
-            except Exception as e:
-                self._log_error(str(e), context="%s:%s" % address)
-                if not gedis_socket.closed:
-                    gedis_socket.writer.error(str(e))
 
     def _handle_request(self, request, address):
         """
         deal with 1 specific request
         :param request:
-        :return:
+        :return: logdict,result
         """
 
         # process the predefined commands
         if request.command.command == "command":
-            return "OK"
+            return None, "OK"
         elif request.command.command == "ping":
-            return "PONG"
+            return None, "PONG"
         elif request.command.command == "auth":
             dm_id, epoch, signed_message = request[1:]
             if self.dm_verify(dm_id, epoch, signed_message):
                 self.session.dmid = dm_id
                 self.session.admin = True
-                return True
+                return None, True
 
         self._log_debug(
             "command received %s %s %s" % (request.command.namespace, request.command.actor, request.command.command),
@@ -286,13 +294,20 @@ class Handler(JSBASE):
         result = None
 
         self._log_debug("params cmd %s %s" % (params_list, params_dict))
-        result = cmd.method(*params_list, **params_dict)
+        try:
+            result = cmd.method(*params_list, **params_dict)
+            logdict = None
+        except Exception as e:
+            logdict = j.core.myenv.exception_handle(e, die=False, stdout=True)
+
         if isinstance(result, list):
             result = [_result_encode(cmd, request.response_type, r) for r in result]
         else:
             result = _result_encode(cmd, request.response_type, result)
 
-        return result
+        logdict = _result_encode(cmd, request.response_type, logdict)
+
+        return (logdict, result)
 
     def _read_input_args_schema(self, request, command):
         """

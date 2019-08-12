@@ -85,7 +85,7 @@ class RedisResponseWriter(object):
 
     def error(self, msg):
         """Send an error."""
-        print("###:%s" % msg)
+        # print("###:%s" % msg)
         self._write_buffer("-ERR %s\r\n" % str(msg))
         self._send()
 

@@ -92,16 +92,16 @@ class GedisClient(JSConfigBase):
             # at this point the schema's are loaded only for the namespace identified (is all part of metadata)
             for actorname, actormeta in self._actorsmeta.items():
                 tpath = "%s/templates/GedisClientGenerated.py" % (j.clients.gedis._dirpath)
-
+                actorname_ = actormeta.namespace + "_" + actorname
+                dest = "/sandbox/var/codegen/gedis/%s/client/%s.py" % (self.name, actorname_)
                 cl = j.tools.jinja2.code_python_render(
                     obj_key="GedisClientGenerated",
                     path=tpath,
                     overwrite=True,
-                    name=actorname,
-                    objForHash=None,
+                    objForHash=actorname_,
                     obj=actormeta,
+                    dest=dest,
                 )
-
                 o = cl(client=self)
                 setattr(self._actors, actorname, o)
                 self._log_info("cmds for actor:%s" % actorname)
@@ -130,39 +130,14 @@ class GedisClient(JSConfigBase):
         :return: redis instance
         """
         if self._redis_ is None:
+            assert self.host != "0.0.0.0"
             addr = self.host
             port = self.port
             secret = self.password_
 
-            if self.ssl:
+            self._log_info("redisclient: %s:%s " % (addr, port))
 
-                if not self.ssl_keyfile and not self.ssl_certfile:
-                    ssl_keyfile = "/sandbox/cfg/ssl/resty-auto-ssl-fallback.key"
-                    ssl_certfile = "/sandbox/cfg/ssl/resty-auto-ssl-fallback.crt"
-
-                    if j.sal.fs.exists(ssl_keyfile):
-                        self.ssl_keyfile = ssl_keyfile
-                    if j.sal.fs.exists(ssl_certfile):
-                        self.ssl_certfile = ssl_certfile
-
-                if not self.ssl_keyfile:
-                    self.ssl_certfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.crt")
-                    self.ssl_keyfile = j.sal.fs.joinPaths(os.path.dirname(self._code_generated_dir), "ca.key")
-                self._log_info("redisclient: %s:%s (ssl:True  cert:%s)" % (addr, port, self.ssl_certfile))
-            else:
-                self._log_info("redisclient: %s:%s " % (addr, port))
-
-            self._redis_ = j.clients.redis.get(
-                ipaddr=addr,
-                port=port,
-                password=secret,
-                ssl=self.ssl,
-                ssl_ca_certs=self.ssl_ca_certs or self.ssl_certfile,
-                ssl_certfile=self.ssl_certfile,
-                ssl_keyfile=self.ssl_keyfile,
-                ping=True,
-                fromcache=False,
-            )
+            self._redis_ = j.clients.redis.get(ipaddr=addr, port=port, password=secret, ping=True, fromcache=False)
         return self._redis_
 
     # def __getattr__(self, name):

@@ -22,15 +22,20 @@ class package_manager(j.application.ThreeBotActorBase):
         if git_url and path:
             raise j.exceptions.Input("add can only be done by git_url or name but not both")
 
+        assert j.servers.threebot.current
+        threebotserver_name = j.servers.threebot.current.name
+
         if git_url:
-            package = j.tools.threebotpackage.get(name=name, giturl=git_url)
+
+            package = j.tools.threebotpackage.get(name=name, giturl=git_url, threebotserver_name=threebotserver_name)
         elif path:
-            package = j.tools.threebotpackage.get(name=name, path=path)
+            package = j.tools.threebotpackage.get(name=name, path=path, threebotserver_name=threebotserver_name)
         else:
             raise j.exceptions.Input("need to have git_url or path to package")
 
         package.save()
-        package.prepare(gedis_server=self._gedis_server, package_root=package.path)
+        package.prepare()
+        package.start()
 
     def package_delete(self, name):
         """

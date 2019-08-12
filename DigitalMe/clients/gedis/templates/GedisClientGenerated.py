@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+import sys
 # JSBASE = j.application.JSBaseClass
 
 class GedisClientGenerated():
@@ -18,6 +18,15 @@ class GedisClientGenerated():
 {{cmd.comment_indent2}}
         '''
         {% endif %}
+
+        def handle_error(e):
+            logdict = j.data.serializers.json.loads(str(e))
+            logdict["source"]="GEDIS SERVER %s:%s"%(self._redis.connection_pool.connection_kwargs["host"],self._redis.connection_pool.connection_kwargs["port"])
+            j.core.tools.log2stdout(logdict=logdict, data_show=True)
+            j.core.tools.process_logdict_for_handlers(logdict=logdict, iserror=True)
+            sys.exit(1)
+
+
         cmd_name = "{{obj.namespace.lower()}}.{{obj.name.lower()}}.{{name}}" #what to use when calling redis
         {% if cmd.schema_in != None %}
         #schema in exists
@@ -29,17 +38,27 @@ class GedisClientGenerated():
         {% endfor %}
 
         id2 = id if not callable(id) else None #if id specified will put in id2 otherwise will be None
-        res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id2, args._data]))
+        try:
+            res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id2, args._data]))
+        except Exception as e:
+            handle_error(e)
 
         {% else %}  #is for non schema based
 
         {% set args = cmd.cmdobj.args if cmd.cmdobj.args else [] %}
 
         {% if args|length == 0 %}
-        res =  self._redis.execute_command(cmd_name)
+        try:
+            res =  self._redis.execute_command(cmd_name)
+        except Exception as e:
+            handle_error(e)
+
         {% else %}
         # send multi args with no prior knowledge of schema
-        res = self._redis.execute_command(cmd_name, {{ cmd.args_client.lstrip(',')}})
+        try:
+            res = self._redis.execute_command(cmd_name, {{ cmd.args_client.lstrip(',')}})
+        except Exception as e:
+            handle_error(e)
         {% endif %} #args bigger than []
         {% endif %} #end of test if is schema_in based or not
 
