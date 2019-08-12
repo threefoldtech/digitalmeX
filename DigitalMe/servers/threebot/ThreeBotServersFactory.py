@@ -63,6 +63,11 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         r = cl.actors.farms.list()
 
-        u = cl.actors.phonebook.register(name="kristof.gouna", email=None, pubkey="aaaaa", signature="bbbbb")
+        u = cl.actors.phonebook.register(
+            name="kristof.gouna", email="kristof@test.com", pubkey="aaaaa", signature="bbbbb"
+        )
+
+        u2 = cl.actors.phonebook.get(user_id=None, name="kristof.gouna")
+        u3 = cl.actors.phonebook.get(user_id=None, email="kristof@test.com")
 
         j.shell()

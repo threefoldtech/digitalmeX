@@ -435,7 +435,7 @@ def _result_encode(cmd, response_type, item):
             if response_type == "json":
                 return item._json
             else:
-                return item._data
+                return item._data_remote
         return item
 
 

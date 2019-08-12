@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
+NONE = 2147483647
 
 
 class phonebook(JSBASE):
@@ -38,10 +39,10 @@ class phonebook(JSBASE):
         ```
 
         ```out
-        user = (O) !threebot.phonebook.user.1
+        !threebot.phonebook.user.1
         ```
         """
-        if user_id:
+        if user_id and not user_id == NONE:
             if not self.phonebook_model.exists(id=user_id):
                 users = []
             else:
