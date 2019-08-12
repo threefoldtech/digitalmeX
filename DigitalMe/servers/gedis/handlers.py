@@ -426,7 +426,7 @@ def _result_encode(cmd, response_type, item):
         if response_type == "msgpack":
             return item._msgpack
         elif response_type == "capnp" or response_type == "auto":
-            return item._data
+            return item._data_remote
         else:
             return item._json
     else:
