@@ -283,7 +283,7 @@ class GedisServer(JSBaseConfig):
         # WHEN USED OVER WEB, USE THE DIGITALME FRAMEWORK
         self._log_info("start Server on {0} - PORT: {1}".format(self.host, self.port))
         self._log_info("%s RUNNING", str(self))
-        self.gedis_server.serve_forever()
+        self.gevent_server.serve_forever()
 
     def stop(self):
         """
