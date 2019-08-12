@@ -305,8 +305,6 @@ class Handler(JSBASE):
         else:
             result = _result_encode(cmd, request.response_type, result)
 
-        logdict = _result_encode(cmd, request.response_type, logdict)
-
         return (logdict, result)
 
     def _read_input_args_schema(self, request, command):

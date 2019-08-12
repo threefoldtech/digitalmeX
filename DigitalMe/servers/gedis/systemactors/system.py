@@ -19,31 +19,29 @@ class system(JSBASE):
         return all core schemas as understood by the server, is as text, can be processed by j.data.schema
         """
         out = ""
-        # urls = [
-        #     "jumpscale.bcdb.user.2",
-        #     "jumpscale.bcdb.circle.2",
-        #     "jumpscale.bcdb.acl.2",
-        #     "jumpscale.bcdb.acl.circle.2",
-        #     "jumpscale.bcdb.acl.user.2",
-        #     "jumpscale.bcdb.meta.2",
-        #     "jumpscale.bcdb.meta.schema.2",
-        #     "jumpscale.bcdb.namespace.2",
-        #     "jumpscale.gedis.server",
-        #     "jumpscale.gedis.api",
-        #     "jumpscale.gedis.cmd",
-        #     "jumpscale.gedis.schema",
-        # ]
+        urls = [
+            "jumpscale.bcdb.user.2",
+            "jumpscale.bcdb.circle.2",
+            "jumpscale.bcdb.acl.2",
+            "jumpscale.bcdb.acl.circle.2",
+            "jumpscale.bcdb.acl.user.2",
+            "jumpscale.bcdb.meta.2",
+            "jumpscale.bcdb.meta.schema.2",
+            "jumpscale.bcdb.namespace.2",
+            "jumpscale.gedis.server",
+            "jumpscale.gedis.api",
+            "jumpscale.gedis.cmd",
+            "jumpscale.gedis.schema",
+        ]
 
-        # FIXME: this now sends all the of the know schema to the client
-        # we should find a way to only send the schema that the gedis server actually uses
-        # in order to minimize the amount of data we have to send to the client
-        # at each connections
-
-        for md5s in j.data.schema.url_to_md5.values():
-            for md5 in md5s:
-                s = j.data.schema.md5_to_schema[md5]
-                out += "%s\n\n" % s.text
-        return out
+        schemas = {}
+        for url in urls:
+            for md5 in j.data.schema.url_to_md5[url]:
+                assert j.data.schema.md5_to_schema[md5].url
+                self._log_debug(j.data.schema.md5_to_schema[md5].url, data=j.data.schema.md5_to_schema[md5].text)
+                schemas[md5] = (j.data.schema.md5_to_schema[md5].text, j.data.schema.md5_to_schema[md5].url)
+        schemas = j.data.serializers.msgpack.dumps(schemas)
+        return schemas
 
     def actors_add_path(self, namespace, path):
         self._gedis_server.actors_add(path, namespace)

@@ -95,7 +95,7 @@ class GedisCmds(JSBASE):
                         j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:
                 self._log_debug("\tpopulate: %s" % cmd.name)
-                self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
+                self._cmds[cmd.name] = GedisCmd(namespace=self.namespace, cmd=cmd)
 
         return self._cmds
 
@@ -189,6 +189,27 @@ class GedisCmds(JSBASE):
                 return s.url, s.content
         return None, None
 
+    def _schema_property_add_if_needed(self, schema):
+        """
+        recursive walks over schema properties (multiple levels)
+        if a sub property is a complex type by itself, then we need to make sure we remember the schema's also in BCDB
+        :param schema:
+        :return:
+        """
+
+        for prop in schema.properties:
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsxobject):
+                # now we know that there is a subtype, we need to store it in the bcdb as well
+                s = prop.jumpscaletype.SUBTYPE._schema
+                self._schema_url_add(s.url, s.text)
+                # now see if more subtypes
+                self._schema_property_add_if_needed(s)
+            elif prop.jumpscaletype.NAME == "jsxobject":
+                s = prop.jumpscaletype._schema
+                self._schema_url_add(s.url, s.text)
+                # now see if more subtypes
+                self._schema_property_add_if_needed(s)
+
     def _schema_url_add(self, url, content):
         """
         see if url is already in data object if yes then add it
@@ -224,6 +245,8 @@ class GedisCmds(JSBASE):
             schema = j.data.schema.get_from_url_latest(url=url)
 
         self._schema_url_add(schema.url, schema.text)  # make sure we remember if needed
+
+        self._schema_property_add_if_needed(schema)
 
         for line in txt.split("\n"):
             line_strip = line.strip()

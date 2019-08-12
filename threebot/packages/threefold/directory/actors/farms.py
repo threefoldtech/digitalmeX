@@ -46,7 +46,7 @@ class farms(JSBASE):
         ```
 
         ```out
-        farms = (LO) !tfgrid.node.1
+        farms = (LO) !tfgrid.farm.1
         ```
         """
         output = schema_out.new()

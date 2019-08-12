@@ -54,4 +54,8 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
             git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
         )
 
+        cl.reload()
+
+        r = cl.actors.farms.list()
+
         j.shell()

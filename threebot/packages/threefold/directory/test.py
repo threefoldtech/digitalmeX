@@ -9,6 +9,7 @@ zdb = j.servers.zdb.get("threebot")
 
 zdb_admin = j.clients.zdb.client_admin_get()
 
+
 # zdb_admin.reset()
 
 # zdb_admin.namespace_new("directory", secret="123456")

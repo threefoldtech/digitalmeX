@@ -29,8 +29,6 @@ class Package(j.application.ThreeBotPackageBase):
 
         self.gedis_server.actors_add(j.sal.fs.joinPaths(self.package_root, "actors"))
 
-        j.shell()
-
     def stop(self):
         """
         called when the 3bot stops
