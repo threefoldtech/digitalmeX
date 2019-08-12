@@ -9,9 +9,9 @@ class Package(j.application.ThreeBotPackageBase):
         """
         zdb_admin = j.clients.zdb.client_admin_get()
         # zdb_admin.reset()
-        zdb_admin.namespace_new("tf_directory", secret="123456")
-        zdb = j.clients.zdb.get(name="tf_directory", port=9900, secret_="123456")
-        bcdb = j.data.bcdb.get(name="tf_directory", storclient=zdb)
+        zdb_admin.namespace_new("threebot_phonebook", secret="123456")
+        zdb = j.clients.zdb.get(name="threebot_phonebook", port=9900, secret_="123456")
+        bcdb = j.data.bcdb.get(name="threebot_phonebook", storclient=zdb)
 
     def start(self):
         """
@@ -19,7 +19,7 @@ class Package(j.application.ThreeBotPackageBase):
         :return:
         """
 
-        bcdb = j.data.bcdb.get(name="tf_directory")
+        bcdb = j.data.bcdb.get("threebot_phonebook")
 
         bcdb.models_add(path=self.package_root + "/models")
 

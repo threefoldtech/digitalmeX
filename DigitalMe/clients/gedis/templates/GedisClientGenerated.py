@@ -19,14 +19,6 @@ class GedisClientGenerated():
         '''
         {% endif %}
 
-        def handle_error(e):
-            logdict = j.data.serializers.json.loads(str(e))
-            logdict["source"]="GEDIS SERVER %s:%s"%(self._redis.connection_pool.connection_kwargs["host"],self._redis.connection_pool.connection_kwargs["port"])
-            j.core.tools.log2stdout(logdict=logdict, data_show=True)
-            j.core.tools.process_logdict_for_handlers(logdict=logdict, iserror=True)
-            sys.exit(1)
-
-
         cmd_name = "{{obj.namespace.lower()}}.{{obj.name.lower()}}.{{name}}" #what to use when calling redis
         {% if cmd.schema_in != None %}
         #schema in exists
@@ -41,7 +33,7 @@ class GedisClientGenerated():
         try:
             res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id2, args._data]))
         except Exception as e:
-            handle_error(e)
+            self.handle_error(e)
 
         {% else %}  #is for non schema based
 
@@ -51,14 +43,14 @@ class GedisClientGenerated():
         try:
             res =  self._redis.execute_command(cmd_name)
         except Exception as e:
-            handle_error(e)
+            self.handle_error(e)
 
         {% else %}
         # send multi args with no prior knowledge of schema
         try:
             res = self._redis.execute_command(cmd_name, {{ cmd.args_client.lstrip(',')}})
         except Exception as e:
-            handle_error(e)
+            self.handle_error(e)
         {% endif %} #args bigger than []
         {% endif %} #end of test if is schema_in based or not
 
@@ -79,4 +71,21 @@ class GedisClientGenerated():
     {% endfor %}
 
 
-
+    def handle_error(self,e):
+        try:
+            logdict = j.data.serializers.json.loads(str(e))
+        except Exception as e2:
+            j.core.myenv.exception_handle(exception_obj=e,die=True)
+            print(1)
+            j.shell()
+        addr = self._redis.connection_pool.connection_kwargs["host"]
+        port = self._redis.connection_pool.connection_kwargs["port"]
+        msg = "GEDIS SERVER %s:%s"%(addr,port)
+        try:
+            logdict["source"]=msg
+        except:
+            print(2)
+            j.shell()
+        j.core.tools.log2stdout(logdict=logdict, data_show=True)
+        j.core.tools.process_logdict_for_handlers(logdict=logdict, iserror=True)
+        sys.exit(1)

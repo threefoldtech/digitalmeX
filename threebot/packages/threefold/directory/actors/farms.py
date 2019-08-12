@@ -1,11 +1,9 @@
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
 
-
-class farms(JSBASE):
-    def __init__(self, *args, **kwargs):
-        bcdb = j.data.bcdb.get("directory")
+class farms(j.application.ThreeBotActorBase):
+    def _init(self, **kwargs):
+        bcdb = j.data.bcdb.get("tf_directory")
         self.farm_model = bcdb.model_get_from_url("tfgrid.farm.1")
 
     def register(self, farm):

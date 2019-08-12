@@ -54,8 +54,15 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
             git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
         )
 
+        cl.actors.package_manager.package_add(
+            "threebot_phonebook",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
+        )
+
         cl.reload()
 
         r = cl.actors.farms.list()
+
+        u = cl.actors.phonebook.register(name="kristof.gouna", email=None, pubkey="aaaaa", signature="bbbbb")
 
         j.shell()

@@ -419,6 +419,8 @@ class Handler(JSBASE):
 
 
 def _result_encode(cmd, response_type, item):
+    if not item:
+        return item
 
     if cmd.schema_out is not None:
         if response_type == "msgpack":
