@@ -30,10 +30,11 @@ class GedisClientGenerated():
         {% endfor %}
 
         id2 = id if not callable(id) else None #if id specified will put in id2 otherwise will be None
+        data = j.data.serializers.msgpack.dumps([id2, args._data])
         try:
-            res = self._redis.execute_command(cmd_name,j.data.serializers.msgpack.dumps([id2, args._data]))
+            res = self._redis.execute_command(cmd_name,data)
         except Exception as e:
-            self.handle_error(e)
+            self.handle_error(e,1)
 
         {% else %}  #is for non schema based
 
@@ -43,14 +44,14 @@ class GedisClientGenerated():
         try:
             res =  self._redis.execute_command(cmd_name)
         except Exception as e:
-            self.handle_error(e)
+            self.handle_error(e,2)
 
         {% else %}
         # send multi args with no prior knowledge of schema
         try:
             res = self._redis.execute_command(cmd_name, {{ cmd.args_client.lstrip(',')}})
         except Exception as e:
-            self.handle_error(e)
+            self.handle_error(e,3)
         {% endif %} #args bigger than []
         {% endif %} #end of test if is schema_in based or not
 
@@ -71,10 +72,11 @@ class GedisClientGenerated():
     {% endfor %}
 
 
-    def handle_error(self,e):
+    def handle_error(self,e,source=None):
         try:
             logdict = j.data.serializers.json.loads(str(e))
         except Exception as e2:
+            j.shell()
             j.core.myenv.exception_handle(exception_obj=e,die=True)
             print(1)
             j.shell()

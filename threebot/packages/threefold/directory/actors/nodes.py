@@ -4,22 +4,25 @@ from Jumpscale import j
 class nodes(j.application.ThreeBotActorBase):
     def _init(self, **kwargs):
         bcdb = j.data.bcdb.get("tf_directory")
-        self.node_model = bcdb.model_get_from_url("tfgrid.node.1")
+        self.node_model = bcdb.model_get_from_url("tfgrid.node.2")
 
-    def add(self, node):
+    def add(self, node, schema_out=None):
         """
         ```in
-        !tfgrid.node.1
+        node = (O) !tfgrid.node.2
         ```
+
+        ```out
+        node = (O) !tfgrid.node.2
+        ```
+
         """
         # TODO check the sender is actually the node itself
         # TODO: first check of the node already exist and if so do an update ?
 
         # FIXME: we should not have to use _ddict since node is already a JSX object
-        node = self.node_model.new(node._ddict)
-        node.save()
 
-        return node._key  # not sure about this _key ?
+        return self.node_model.new(data=node).save()
 
     def list(self, farm, country, city, cru, sru, mru, hru, schema_out):
         """
@@ -34,11 +37,10 @@ class nodes(j.application.ThreeBotActorBase):
         ```
 
         ```out
-        nodes = (LO) !tfgrid.node.1
+        nodes = (LO) !tfgrid.node.2
         ```
         """
         output = schema_out.new()
-
         for node in self.node_model.iterate():
             if country != "" and node.country != country:
                 continue
@@ -63,7 +65,7 @@ class nodes(j.application.ThreeBotActorBase):
         ```
 
         ```out
-        node = (O) !tfgrid.node.1
+        node = (O) !tfgrid.node.2
         ```
         """
         nodes = self.node_model.find(node_id=node_id)
