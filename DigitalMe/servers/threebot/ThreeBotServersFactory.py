@@ -47,26 +47,26 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         cl = j.clients.gedis.get(name="threebot")
 
-        # assert cl.ping()
-        #
-        # cl.actors.package_manager.package_add(
-        #     "tf_directory",
-        #     git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
-        # )
-        #
-        # cl.actors.package_manager.package_add(
-        #     "threebot_phonebook",
-        #     git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
-        # )
-        #
-        # cl.reload()
-        #
-        # s = j.data.schema.get_from_url_latest("tfgrid.node.2")
-        # node = s.new()
-        # node.node_id = "111"
-        # node2 = cl.actors.nodes.add(node)
-        #
-        # node3 = cl.actors.nodes.add(node)
+        assert cl.ping()
+
+        cl.actors.package_manager.package_add(
+            "tf_directory",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
+        )
+
+        cl.actors.package_manager.package_add(
+            "threebot_phonebook",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
+        )
+
+        cl.reload()
+
+        s = j.data.schema.get_from_url_latest("tfgrid.node.2")
+        node = s.new()
+        node.node_id = "111"
+        node2 = cl.actors.nodes.add(node)
+
+        node3 = cl.actors.nodes.add(node)
 
         ns = cl.actors.nodes.list()
 
@@ -74,13 +74,9 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         r = cl.actors.farms.list()
 
-        j.shell()
-
         u = cl.actors.phonebook.register(
             name="kristof.gouna", email="kristof@test.com", pubkey="aaaaa", signature="bbbbb"
         )
 
         u2 = cl.actors.phonebook.get(user_id=None, name="kristof.gouna")
         u3 = cl.actors.phonebook.get(user_id=None, email="kristof@test.com")
-
-        j.shell()
