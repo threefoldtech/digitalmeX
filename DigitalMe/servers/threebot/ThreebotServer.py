@@ -66,7 +66,6 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             #     wikis_loader.start()
 
             openresty.install()
-            openresty.start()
 
             j.servers.sonic.default.start()
 
@@ -75,7 +74,14 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             self.gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
 
             app = j.servers.gedis_websocket.default.app
-            self.rack.websocket_server_add("websocket", 4444, app)
+            self.rack.websocket_server_add("websocket", 9999, app)
+
+            websocket_reverse_proxy = openresty.reverseproxies.new(
+                name="websocket", port_source=4444, proxy_type='websocket',
+                port_dest=9999, ipaddr_dest='0.0.0.0'
+            )
+
+            websocket_reverse_proxy.configure()
 
             dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             self.rack.add("dns", dns)
@@ -87,7 +93,9 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             for package in j.tools.threebotpackage.find():
                 package.start()
 
+            openresty.start()
             self.rack.start()
+
 
         else:
             if self.startup_cmd.is_running():
