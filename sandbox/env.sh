@@ -24,6 +24,7 @@ else
     export PS1="3BOTDEVEL:$HOST:\W: "
 fi
 
+export VIEWER=view
 
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
