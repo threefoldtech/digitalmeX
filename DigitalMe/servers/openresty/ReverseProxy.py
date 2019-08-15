@@ -57,8 +57,8 @@ class ReverseProxy(j.application.JSBaseConfigClass):
     TCP_CONFIG = """
         stream {
             server {
-                listen {{obj.port_source}} ssl;
-                listen [::]:{{obj.port_source}} ssl;
+                listen {{obj.port_source}};
+                listen [::]:{{obj.port_source}};
                 proxy_pass backend;
             }
             upstream backend {

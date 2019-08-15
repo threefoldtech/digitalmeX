@@ -34,7 +34,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     @property
     def gedis_server(self):
         if not self._gedis_server:
-            self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8900)
+            self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8901)
         return self._gedis_server
 
     def start(self, background=False):
@@ -87,7 +87,22 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             self.rack.add("dns", dns)
 
             self.rack.add("gedis", self.gedis_server.gevent_server)
-            self.rack.bottle_server_add()
+
+            gedis_reverse_proxy = openresty.reverseproxies.new(
+                name="gedis", port_source=8900, proxy_type='tcp',
+                port_dest=8901, ipaddr_dest='0.0.0.0'
+            )
+
+            gedis_reverse_proxy.configure()
+
+            self.rack.bottle_server_add(port=4443)
+
+            bottle_reverse_proxy = openresty.reverseproxies.new(
+                name="bottle", port_source=4442, proxy_type='http',
+                port_dest=4443, ipaddr_dest='0.0.0.0'
+            )
+
+            bottle_reverse_proxy.configure()
 
             # add user added packages
             for package in j.tools.threebotpackage.find():
