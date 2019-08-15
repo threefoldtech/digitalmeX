@@ -54,16 +54,15 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             zdb.start()
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
-            # j.servers.openresty.build() # build from threebot builder or server from a seperate call
-            # wikis_load_cmd = """
-            # from Jumpscale import j
-            # j.tools.markdowndocs.load_wikis()
-            # """
-            # wikis_loader = j.servers.startupcmd.get(
-            #     "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
-            # )
-            # if not wikis_loader.is_running():
-            #     wikis_loader.start()
+            wikis_load_cmd = """
+from Jumpscale import j
+j.tools.markdowndocs.load_wikis()
+            """
+            wikis_loader = j.servers.startupcmd.get(
+                "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
+            )
+            if not wikis_loader.is_running():
+                wikis_loader.start()
 
             openresty.install()
 
@@ -77,8 +76,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             self.rack.websocket_server_add("websocket", 9999, app)
 
             websocket_reverse_proxy = openresty.reverseproxies.new(
-                name="websocket", port_source=4444, proxy_type='websocket',
-                port_dest=9999, ipaddr_dest='0.0.0.0'
+                name="websocket", port_source=4444, proxy_type="websocket", port_dest=9999, ipaddr_dest="0.0.0.0"
             )
 
             websocket_reverse_proxy.configure()
@@ -110,7 +108,6 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             openresty.start()
             self.rack.start()
-
 
         else:
             if self.startup_cmd.is_running():
