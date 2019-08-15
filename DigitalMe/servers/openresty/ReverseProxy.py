@@ -40,7 +40,7 @@ class ReverseProxy(j.application.JSBaseConfigClass):
             {% endif %}
             
             location /{{obj.location}} {
-              {% if obj.proxy_type == 'http '%}
+              {% if obj.proxy_type == 'http'%}
               proxy_pass http://{{obj.ipaddr_dest}}:{{obj.port_dest}}/;
                 
               {% elif obj.proxy_type == 'websocket' %}
