@@ -39,6 +39,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
         kosmos 'j.servers.threebot.test()'
         :return:
         """
+        self.install()
         if start:
             self.default.stop()
             self.default.start(background=True)
@@ -70,8 +71,6 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         ns = cl.actors.nodes.list()
 
-        j.shell()
-
         r = cl.actors.farms.list()
 
         u = cl.actors.phonebook.register(
@@ -80,3 +79,5 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         u2 = cl.actors.phonebook.get(user_id=None, name="kristof.gouna")
         u3 = cl.actors.phonebook.get(user_id=None, email="kristof@test.com")
+
+        self._log_info("ThreeBot worked")
