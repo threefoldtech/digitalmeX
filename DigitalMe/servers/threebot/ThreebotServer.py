@@ -34,7 +34,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
     @property
     def gedis_server(self):
         if not self._gedis_server:
-            self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8900)
+            self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8901)
         return self._gedis_server
 
     def start(self, background=False):
@@ -54,19 +54,17 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             zdb.start()
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
-            # j.servers.openresty.build() # build from threebot builder or server from a seperate call
-            # wikis_load_cmd = """
-            # from Jumpscale import j
-            # j.tools.markdowndocs.load_wikis()
-            # """
-            # wikis_loader = j.servers.startupcmd.get(
-            #     "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
-            # )
-            # if not wikis_loader.is_running():
-            #     wikis_loader.start()
+            wikis_load_cmd = """
+from Jumpscale import j
+j.tools.markdowndocs.load_wikis()
+            """
+            wikis_loader = j.servers.startupcmd.get(
+                "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
+            )
+            if not wikis_loader.is_running():
+                wikis_loader.start()
 
             openresty.install()
-            openresty.start()
 
             j.servers.sonic.default.start()
 
@@ -75,18 +73,40 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             self.gedis_server.chatbot.chatflows_load("%s/base_chatflows" % self._dirpath)
 
             app = j.servers.gedis_websocket.default.app
-            self.rack.websocket_server_add("websocket", 4444, app)
+            self.rack.websocket_server_add("websocket", 9999, app)
+
+            websocket_reverse_proxy = openresty.reverseproxies.new(
+                name="websocket", port_source=4444, proxy_type="websocket", port_dest=9999, ipaddr_dest="0.0.0.0"
+            )
+
+            websocket_reverse_proxy.configure()
 
             dns = j.servers.dns.get_gevent_server("main", port=5354)  # for now high port
             self.rack.add("dns", dns)
 
             self.rack.add("gedis", self.gedis_server.gevent_server)
-            self.rack.bottle_server_add()
+
+            gedis_reverse_proxy = openresty.reverseproxies.new(
+                name="gedis", port_source=8900, proxy_type='tcp',
+                port_dest=8901, ipaddr_dest='0.0.0.0'
+            )
+
+            gedis_reverse_proxy.configure()
+
+            self.rack.bottle_server_add(port=4443)
+
+            bottle_reverse_proxy = openresty.reverseproxies.new(
+                name="bottle", port_source=4442, proxy_type='http',
+                port_dest=4443, ipaddr_dest='0.0.0.0'
+            )
+
+            bottle_reverse_proxy.configure()
 
             # add user added packages
             for package in j.tools.threebotpackage.find():
                 package.start()
 
+            openresty.start()
             self.rack.start()
 
         else:
