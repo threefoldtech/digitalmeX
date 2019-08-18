@@ -39,7 +39,7 @@ def _command_split(cmd, namespace="system"):
         actor = "system"
         cmd = cmd_parts[0]
     else:
-        raise RuntimeError("cmd not properly formatted")
+        raise j.exceptions.Base("cmd not properly formatted")
 
     return namespace, actor, cmd
 
@@ -147,6 +147,8 @@ class ResponseWriter:
         self._writer.encode(value)
 
     def error(self, value):
+        if isinstance(value, dict):
+            value = j.data.serializers.json.dumps(value)
         self._writer.error(value)
 
 
@@ -173,7 +175,7 @@ class GedisSocket:
         """
         raw_request = self._parser.read_request()
         if not raw_request:
-            raise ValueError("malformatted request")
+            raise j.exceptions.Value("malformatted request")
         return Request(raw_request)
 
     @property
@@ -201,20 +203,20 @@ class Handler(JSBASE):
         self.cmds_meta = self.gedis_server.cmds_meta
         self.session = Session()
 
-    def handle_redis(self, socket, address):
+    def handle_gedis(self, socket, address):
 
         # BUG: if we start a server with kosmos --debug it should get in the debugger but it does not if errors trigger, maybe something in redis?
         # w=self.t
-        # raise RuntimeError("d")
+        # raise j.exceptions.Base("d")
         gedis_socket = GedisSocket(socket)
 
         try:
-            self._handle_redis_session(gedis_socket, address)
+            self._handle_gedis_session(gedis_socket, address)
         finally:
             gedis_socket.on_disconnect()
             self._log_info("connection closed", context="%s:%s" % address)
 
-    def _handle_redis_session(self, gedis_socket, address):
+    def _handle_gedis_session(self, gedis_socket, address):
         """
         deal with 1 specific session
         :param socket:
@@ -228,34 +230,41 @@ class Handler(JSBASE):
         while True:
             try:
                 request = gedis_socket.read()
-                self._log_info("request received: %s" % request.command)
-                result = self._handle_request(request, address)
+            except ConnectionError as err:
+                self._log_info("connection read error: %s" % str(err), context="%s:%s" % address)
+                # close the connection
+                return
+
+            logdict, result = self._handle_request(request, address)
+
+            if logdict:
+                gedis_socket.writer.error(logdict)
+            try:
                 gedis_socket.writer.write(result)
+
             except ConnectionError as err:
                 self._log_info("connection error: %s" % str(err), context="%s:%s" % address)
+                # close the connection
                 return
-            except Exception as e:
-                self._log_error(str(e), context="%s:%s" % address)
-                if not gedis_socket.closed:
-                    gedis_socket.writer.error(str(e))
 
     def _handle_request(self, request, address):
         """
         deal with 1 specific request
         :param request:
-        :return:
+        :return: logdict,result
         """
+
         # process the predefined commands
-        if request.command == "command":
-            return "OK"
-        elif request.command == "ping":
-            return "PONG"
-        elif request.command == "auth":
+        if request.command.command == "command":
+            return None, "OK"
+        elif request.command.command == "ping":
+            return None, "PONG"
+        elif request.command.command == "auth":
             dm_id, epoch, signed_message = request[1:]
             if self.dm_verify(dm_id, epoch, signed_message):
                 self.session.dmid = dm_id
                 self.session.admin = True
-                return True
+                return None, True
 
         self._log_debug(
             "command received %s %s %s" % (request.command.namespace, request.command.actor, request.command.command),
@@ -285,13 +294,18 @@ class Handler(JSBASE):
         result = None
 
         self._log_debug("params cmd %s %s" % (params_list, params_dict))
-        result = cmd.method(*params_list, **params_dict)
+        try:
+            result = cmd.method(*params_list, **params_dict)
+            logdict = None
+        except Exception as e:
+            logdict = j.core.myenv.exception_handle(e, die=False, stdout=True)
+
         if isinstance(result, list):
             result = [_result_encode(cmd, request.response_type, r) for r in result]
         else:
             result = _result_encode(cmd, request.response_type, result)
 
-        return result
+        return (logdict, result)
 
     def _read_input_args_schema(self, request, command):
         """
@@ -306,13 +320,13 @@ class Handler(JSBASE):
             try:
                 # Try capnp which is combination of msgpack of a list of id/capnpdata
                 id, data = j.data.serializers.msgpack.loads(request.arguments[0])
-                args = command.schema_in.get(data=data)
+                args = command.schema_in.new(serializeddata=data)
                 if id:
                     args.id = id
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "the content is not valid capnp while you provided content_type=capnp\n%s\n%s"
                         % (e, request.arguments[0])
                     )
@@ -320,11 +334,11 @@ class Handler(JSBASE):
 
         def json_decode(request, command, die=True):
             try:
-                args = command.schema_in.get(data=j.data.serializers.json.loads(request.arguments[0]))
+                args = command.schema_in.new(datadict=j.data.serializers.json.loads(request.arguments[0]))
                 return args
             except Exception as e:
                 if die:
-                    raise ValueError(
+                    raise j.exceptions.Value(
                         "the content is not valid json while you provided content_type=json\n%s\n%s"
                         % (str, request.arguments[0])
                     )
@@ -339,11 +353,11 @@ class Handler(JSBASE):
         elif request.content_type == "capnp":
             args = capnp_decode(request=request, command=command)
         else:
-            raise ValueError("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
+            raise j.exceptions.Value("invalid content type was provided the valid types are ['json', 'capnp', 'auto']")
 
         method_arguments = command.cmdobj.args
         if "schema_out" in method_arguments:
-            raise RuntimeError("schema_out should not be in arguments of method")
+            raise j.exceptions.Base("schema_out should not be in arguments of method")
 
         params = {}
 
@@ -405,21 +419,23 @@ class Handler(JSBASE):
 
 
 def _result_encode(cmd, response_type, item):
+    if not item:
+        return item
 
     if cmd.schema_out is not None:
         if response_type == "msgpack":
             return item._msgpack
         elif response_type == "capnp" or response_type == "auto":
-            return item._data
+            return item._data_remote
         else:
             return item._json
     else:
 
-        if isinstance(item, j.data.schema.DataObjBase):
+        if isinstance(item, j.data.schema._JSXObjectClass):
             if response_type == "json":
                 return item._json
             else:
-                return item._data
+                return item._data_remote
         return item
 
 
@@ -443,6 +459,6 @@ def dm_verify(dm_id, epoch, signed_message):
     record = tfchain.threebot.record_get(dm_id)
     verify_key = nacl.signing.VerifyKey(str(record.public_key.hash), encoder=nacl.encoding.HexEncoder)
     if verify_key.verify(signed_message) != epoch:
-        raise PermissionError("You couldn't authenticate your 3bot: {}".format(dm_id))
+        raise j.exceptions.Permission("You couldn't authenticate your 3bot: {}".format(dm_id))
 
     return True

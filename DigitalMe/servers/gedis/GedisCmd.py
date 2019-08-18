@@ -4,12 +4,13 @@ JSBASE = j.application.JSBaseClass
 
 
 class GedisCmd(JSBASE):
-    def __init__(self, namespace, cmd):
+    def _init(self, namespace=None, cmd=None):
         """
         these are the cmds which get executed by the gevent server handler for gedis
         (cmds coming from websockets or redis interface)
         """
-        JSBASE.__init__(self)
+        assert namespace
+        assert cmd
 
         ## is resulting obj from
         # @url = jumpscale.gedis.cmd
@@ -25,18 +26,12 @@ class GedisCmd(JSBASE):
         self.name = cmd.name
 
         if cmd.schema_in_url != "":
-            if cmd.schema_in_url not in j.data.schema.url_to_md5:
-                j.shell()
-                w
-            self.schema_in = j.data.schema.get_from_url_latest(url=cmd.schema_in_url)
+            self.schema_in = j.data.schema.get_from_url(url=cmd.schema_in_url)
         else:
             self.schema_in = None
 
         if cmd.schema_out_url != "":
-            if cmd.schema_out_url not in j.data.schema.url_to_md5:
-                j.shell()
-                w
-            self.schema_out = j.data.schema.get_from_url_latest(url=cmd.schema_out_url)
+            self.schema_out = j.data.schema.get_from_url(url=cmd.schema_out_url)
         else:
             self.schema_out = None
 

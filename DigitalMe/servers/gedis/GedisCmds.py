@@ -36,23 +36,23 @@ class GedisCmds(JSBASE):
         JSBASE.__init__(self)
 
         if path is "" and data is None:
-            raise RuntimeError("path cannot be None")
+            raise j.exceptions.Base("path cannot be None")
 
         self.path = path
         self.server = server
 
         j.data.schema.get_from_text(SCHEMA)
-        self.schema = j.data.schema.get_from_url_latest(url="jumpscale.gedis.api")
+        self.schema = j.data.schema.get_from_url(url="jumpscale.gedis.api")
 
         self._cmds = {}
 
         if data:
-            self.data = self.schema.get(serializeddata=data)
+            self.data = self.schema.new(serializeddata=data)
             self.cmds
         else:
             cname = j.sal.fs.getBaseName(path)[:-3]
             klass = j.tools.codeloader.load(obj_key=cname, path=path, reload=False)
-            kobj = klass()  # this is the actor obj
+            kobj = klass(gedis_server=self.server)  # this is the actor obj
 
             key = "%s__%s" % (namespace, cname.replace(".", "_"))
 
@@ -90,12 +90,12 @@ class GedisCmds(JSBASE):
             for s in self.data.schemas:
                 if s.content.strip().startswith("!"):
                     j.shell()
-                if not s.url in j.data.schema.url_to_md5:
+                if not j.data.schema.exists(url=s.url):
                     if not s.content.strip().startswith("!"):
                         j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:
                 self._log_debug("\tpopulate: %s" % cmd.name)
-                self._cmds[cmd.name] = GedisCmd(self.namespace, cmd)
+                self._cmds[cmd.name] = GedisCmd(namespace=self.namespace, cmd=cmd)
 
         return self._cmds
 
@@ -142,7 +142,7 @@ class GedisCmds(JSBASE):
                 if state == "COMMENT":
                     state = "CODE"
                     continue
-                raise RuntimeError()
+                raise j.exceptions.Base()
             if lstrip.startswith("```") or lstrip.startswith("'''"):
                 if state.startswith("SCHEMA"):  # are already in schema go back to comment
                     state = "COMMENT"
@@ -153,7 +153,7 @@ class GedisCmds(JSBASE):
                     else:
                         state = "SCHEMAI"
                     continue
-                raise RuntimeError()
+                raise j.exceptions.Base()
             if state == "SCHEMAI":
                 schema_in += "%s\n" % line
                 continue
@@ -166,7 +166,7 @@ class GedisCmds(JSBASE):
             if state == "CODE" or state == "DEF":
                 code += "%s\n" % line
                 continue
-            raise RuntimeError()
+            raise j.exceptions.Base()
 
         # cmd.code = j.core.text.strip(code)
         cmd.comment = j.core.text.strip(comment)
@@ -189,6 +189,27 @@ class GedisCmds(JSBASE):
                 return s.url, s.content
         return None, None
 
+    def _schema_property_add_if_needed(self, schema):
+        """
+        recursive walks over schema properties (multiple levels)
+        if a sub property is a complex type by itself, then we need to make sure we remember the schema's also in BCDB
+        :param schema:
+        :return:
+        """
+
+        for prop in schema.properties:
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsxobject):
+                # now we know that there is a subtype, we need to store it in the bcdb as well
+                s = prop.jumpscaletype.SUBTYPE._schema
+                self._schema_url_add(s.url, s.text)
+                # now see if more subtypes
+                self._schema_property_add_if_needed(s)
+            elif prop.jumpscaletype.NAME == "jsxobject":
+                s = prop.jumpscaletype._schema
+                self._schema_url_add(s.url, s.text)
+                # now see if more subtypes
+                self._schema_property_add_if_needed(s)
+
     def _schema_url_add(self, url, content):
         """
         see if url is already in data object if yes then add it
@@ -200,7 +221,7 @@ class GedisCmds(JSBASE):
         if "#" in url:
             url = url.split("#", 1)[0].strip()
         if "!" in url:
-            raise RuntimeError("cannot have ! in url")
+            raise j.exceptions.Base("cannot have ! in url")
         url2, content2 = self._schema_get(url)
         if not url2:
             # means we did not find it yet
@@ -221,15 +242,17 @@ class GedisCmds(JSBASE):
                 schema = j.data.schema.get_from_text(schema_text=txt)
         else:
             url = txt.strip().lstrip("!")
-            schema = j.data.schema.get_from_url_latest(url=url)
+            schema = j.data.schema.get_from_url(url=url)
 
         self._schema_url_add(schema.url, schema.text)  # make sure we remember if needed
+
+        self._schema_property_add_if_needed(schema)
 
         for line in txt.split("\n"):
             line_strip = line.strip()
             if line_strip.find("!") != -1:
                 url2 = line_strip.split("!", 1)[1]
-                s2 = j.data.schema.get_from_url_latest(url=url2)
+                s2 = j.data.schema.get_from_url(url=url2)
                 self._schema_url_add(s2.url, s2.text)
 
         return schema

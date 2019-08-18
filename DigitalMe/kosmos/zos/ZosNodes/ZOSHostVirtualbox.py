@@ -18,5 +18,5 @@ class ZOSHostVirtualbox(ZOSInstance):
     def _SCHEMATEXT(self):
         j.shell()
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass

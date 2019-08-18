@@ -15,7 +15,12 @@ class RedisCommandParser(PythonParser):
 
         self._sock = socket
 
-        self._buffer = SocketBuffer(self._sock, self.socket_read_size)
+        # @TODO -- new redis exoects timeout param
+        # remove this if condition when everyone updates to new redis package
+        try:
+            self._buffer = SocketBuffer(self._sock, self.socket_read_size)
+        except TypeError:  # init needs extra parameter in new redis
+            self._buffer = SocketBuffer(self._sock, self.socket_read_size, socket_timeout=60)
 
         self.encoder = Encoder(encoding="utf-8", encoding_errors="strict", decode_responses=False)
 
@@ -80,7 +85,7 @@ class RedisResponseWriter(object):
 
     def error(self, msg):
         """Send an error."""
-        print("###:%s" % msg)
+        # print("###:%s" % msg)
         self._write_buffer("-ERR %s\r\n" % str(msg))
         self._send()
 

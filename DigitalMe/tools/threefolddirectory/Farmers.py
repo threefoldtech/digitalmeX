@@ -17,7 +17,7 @@ class Farmer(j.application.JSBaseConfigClass):
         mobile = (LS)
         """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass
 
 

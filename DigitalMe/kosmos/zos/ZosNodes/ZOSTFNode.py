@@ -12,5 +12,5 @@ class ZOSTFNode(ZOSInstance):
 
     """
 
-    def _init(self):
+    def _init(self, **kwargs):
         pass

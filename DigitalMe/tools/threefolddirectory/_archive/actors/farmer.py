@@ -35,31 +35,31 @@ class Farmer(JSBASE):
     @property
     def zdb(self):
         if not self._zdb:
-            self._zdb = j.clients.zdb.testdb_server_start_client_get(reset=False)
+            self._zdb = j.servers.zdb.test_instance_start(reset=False)
         return self._zdb
 
     @property
     def farmer_model(self):
         if not self._farmer_model:
-            self._farmer_model = self.bcdb.model_get_from_url("threefold.grid.farmer")
+            self._farmer_model = self.bcdb.model_get(url="threefold.grid.farmer")
         return self._farmer_model
 
     @property
     def node_model(self):
         if not self._node_model:
-            self._node_model = self.bcdb.model_get_from_url("threefold.grid.node")
+            self._node_model = self.bcdb.model_get(url="threefold.grid.node")
         return self._node_model
 
     @property
     def wgw_rule_model(self):
         if not self._wgw_rule_model:
-            self._wgw_rule_model = self.bcdb.model_get_from_url("threefold.grid.webgateway_rule")
+            self._wgw_rule_model = self.bcdb.model_get(url="threefold.grid.webgateway_rule")
         return self._wgw_rule_model
 
     @property
     def wgw_model(self):
         if not self._wgw_model:
-            self._wgw_model = self.bcdb.model_get_from_url("threefold.grid.webgateway")
+            self._wgw_model = self.bcdb.model_get(url="threefold.grid.webgateway")
         return self._wgw_model
 
     def farmers_get(self, dummy, schema_out):
@@ -73,7 +73,7 @@ class Farmer(JSBASE):
         :return: [farmer_obj]
         """
         out = schema_out.new()
-        out.res = self.farmer_model.get_all()
+        out.res = self.farmer_model.find()
         return out
 
     def country_list(self, dummy, schema_out):
@@ -86,7 +86,7 @@ class Farmer(JSBASE):
         ```
         :return: list of countries
         """
-        nodes = self.node_model.get_all()
+        nodes = self.node_model.find()
         out = schema_out.new()
         out.res = list({n.location.country for n in nodes if n.location.country})
         return out
@@ -124,10 +124,10 @@ class Farmer(JSBASE):
         :return: [node_objects]
 
         """
-        total_nodes = self.node_model.get_all()
+        total_nodes = self.node_model.find()
         selected_farmer = None
         if farmer_name:
-            farmers = self.farmer_model.get_all()
+            farmers = self.farmer_model.find()
             for farmer in farmers:
                 if farmer_name.lower() == farmer.name.lower():
                     selected_farmer = farmer
@@ -304,11 +304,11 @@ class Farmer(JSBASE):
 
         :return:
         """
-        gws = self.wgw_model.get_all()
+        gws = self.wgw_model.find()
         if country:
             gws = list(filter(lambda x: x.location.country == country, gws))
         if farmer_name:
-            farmers = self.farmer_model.get_all()
+            farmers = self.farmer_model.find()
             farmer_id = [farmer.id for farmer in farmers if farmer.name == farmer_name]
             gws = list(filter(lambda x: x.farmer_id == farmer_id, gws))
         out = schema_out.new()

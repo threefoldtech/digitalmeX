@@ -1,157 +1,208 @@
-def myworker(id=999999, onetime=False, showout=False):
-    """
-    :return:
-    """
+from Jumpscale import j
 
-    from Jumpscale import j
+import pudb
+import sys
+import traceback
+import gevent
 
-    j.clients.redis._cache_clear()  # make sure we have redis connections empty, because comes from parent
 
-    redisdb = j.clients.redis.core_get()
+class MyWorker(j.application.JSBaseClass):
+    def _init(self, worker_id=None, onetime=False, showout=True, debug=False):
+        """
+        :return:
+        """
 
-    queue = j.clients.redis.getQueue(redisclient=redisdb, name="myjobs", fromcache=False)
-    queue_data = j.clients.redis.getQueue(redisclient=redisdb, name="myjobs_datachanges", fromcache=False)
+        self.onetime = onetime
+        self.showout = showout
+        self.debug = debug
 
-    def return_data(cat, obj):
-        data = j.data.serializers.msgpack.dumps([cat, obj.id, obj._json])
-        queue_data.put(data)
+        assert worker_id
 
-    def return_job_obj(obj):
-        print("######")
-        print(obj)
-        print("######")
-        return_data("J", obj)
-        for queue_name in obj.return_queues:
-            queue = j.clients.redis.getQueue(redisclient=redisdb, name="myjobs:%s" % queue_name)
-            data_out = j.data.serializers.msgpack.dumps([obj.id, obj._json])
-            queue.put(data_out)
+        if self.debug:
+            j.application.debug = self.debug
+            j.core.myenv.debug = self.debug
 
-    def return_worker_obj(obj):
-        return_data("W", obj)
+        # make sure all traces of existing clients are gone
+        j.application.subprocess_prepare()
+        j.data.bcdb._bcdb_instances = {}
 
-    bcdb = j.data.bcdb.bcdb_instances["myjobs"]
-    model_job = bcdb.models["jumpscale.myjobs.job"]
-    model_action = bcdb.models["jumpscale.myjobs.action"]
-    model_worker = bcdb.models["jumpscale.myjobs.worker"]
+        j.clients.redis._cache_clear()  # make sure we have redis connections empty, because comes from parent
 
-    w = model_worker.get(id)
-    while w == None:
-        time.sleep(0.1)
-        print(3)
-        w = model_worker.get(id)
+        # MAKE SURE YOU DON'T REUSE SOCKETS FROM MOTHER PROCESSS
+        j.core.db.source = "worker"  # this allows us to test
+        redisclient = j.core.db
 
-    w.current_job = 2147483647  # means nil
-    w.halt = False
-    w.running = True
-    return_worker_obj(w)
+        self.queue_jobs_start = j.clients.redis.queue_get(
+            redisclient=redisclient, key="queue:jobs:start", fromcache=False
+        )
+        self.queue_return = j.clients.redis.queue_get(redisclient=redisclient, key="queue:jobs:return", fromcache=False)
 
-    while True:
-        res = queue.get(timeout=10)
-        if res == None:
-            if showout:
-                print("queue request timeout, continue")
-            w = model_worker.get(id)
-            # have to fetch this again because was waiting on queue
-            if w == None:
-                # raise RuntimeError("worker should always be there")
-                return
-            w.current_job = 2147483647  # means nil
-            return_worker_obj(w)
-            if w.halt:
-                # model_worker.
-                print("WORKER REMOVE SELF:%s" % id)
-                return
-        else:
-            res.decode()
-            jobid = int(res)
-            # update worker has been active
-            w = model_worker.get(id)
-            if w == None:
-                # means worker no longer in db
-                print("WORKER REMOVE SELF:%s" % id)
-                return
-            if res == "halt":
-                return
-            w.last_update = j.data.time.epoch
-            w.current_job = jobid
-            return_worker_obj(w)
-            job = model_job.get(id=jobid)
+        # test we are using the right redis client
+        assert self.queue_jobs_start._db_.source == "worker"
+        assert self.queue_return._db_.source == "worker"
 
-            # if job.id == 11:
-            #     j.shell()
-            #     w
+        j.errorhandler.handlers.append(self.error_handler)
 
-            if job == None:
-                print("ERROR: job:%s not found" % jobid)
+        storclient = j.clients.rdb.client_get(redisclient=redisclient)
+        assert storclient._redis.source == "worker"
+
+        self.bcdb = j.data.bcdb.get("myjobs", storclient=storclient, fromcache=False)
+        self.model_job = self.bcdb.model_get(url="jumpscale.myjobs.job")
+        self.model_action = self.bcdb.model_get(url="jumpscale.myjobs.action")
+        self.model_worker = self.bcdb.model_get(url="jumpscale.myjobs.worker")
+
+        self.model_job.nosave = True
+        self.model_action.nosave = True
+        self.model_worker.nosave = True
+
+        self.model_worker.trigger_add(self._save_data)
+        self.model_job.trigger_add(self._save_job)
+
+        self.data = self.model_worker.get(worker_id)
+        self.data.state = "new"
+        self.data.current_job = 2147483647  # means nil
+        self.data.id = worker_id
+        self.data.save()  # save in bcdb will not happen because readonly is True, it will trigger the triggers
+
+        self.start()
+
+    def return_data(self, cat, obj):
+        data = [cat, obj.id, obj._json]
+        data = j.data.serializers.json.dumps(data)
+        self.queue_return.put(data)
+
+    def error_handler(self, logdict):
+        data = j.data.serializers.json.dumps(logdict)
+        data2 = ["E", None, data]
+        data3 = j.data.serializers.json.dumps(data2)
+        self.queue_return.put(data3)
+
+    def _save_data(self, obj, action, propertyname, **kwargs):
+        if action == "save":
+            self.return_data("W", obj)
+
+    def _save_job(self, obj, action, propertyname, **kwargs):
+        if action == "save":
+            self.return_data("J", obj)
+
+    def start(self):
+
+        while True:
+
+            if self.onetime:
+                res = None
+                while not res:
+                    res = self.queue_jobs_start.get(timeout=0)
+                    gevent.sleep(0.1)
+                    print("jobget")
             else:
-                # now have job
-                action = model_action.get(job.action_id)
-                if action == None:
-                    raise RuntimeError("ERROR: action:%s not found" % job.action_id)
-                kwargs = j.data.serializers.json.loads(job.kwargs)
-                args = j.data.serializers.json.loads(job.args)
+                res = self.queue_jobs_start.get(timeout=10)
+            if res == None:
+                if self.showout:
+                    self._log_info("queue request timeout, no data, continue")
+                # have to fetch this again because was waiting on queue
+                if self.data.halt:
+                    # model_worker.
+                    print("WORKER REMOVE SELF:%s" % self.data.id)
+                    return
+            else:
+                res.decode()
+                jobid = int(res)
 
-                w.last_update = j.data.time.epoch
-                w.current_job = jobid  # set current jobid
-                return_worker_obj(w)
+                # update worker has been active
+                self.data = self.model_worker.get(self.data.id)
 
-                if showout:
-                    print("EXECUTE")
-                    print(job)
+                if res == "halt":
+                    return
+                self.data.last_update = j.data.time.epoch
+                self.data.current_job = jobid
+                self.data.save()
 
-                try:
-                    exec(action.code)
-                    method = eval(action.methodname)
-                except Exception as e:
-                    job.error = str(e) + "\nCOULD NOT GET TO METHOD, IMPORT ERROR."
-                    job.state = "ERROR"
+                job = self.model_job.get(obj_id=jobid, die=False)
+
+                if job == None:
+                    self._log_error("ERROR: job:%s not found" % jobid)
+                else:
+                    # now have job
+                    action = self.model_action.get(job.action_id, die=False)
+                    if action == None:
+                        raise j.exceptions.Base("ERROR: action:%s not found" % job.action_id)
+                    kwargs = job.kwargs  # j.data.serializers.json.loads(job.kwargs)
+                    args = job.args
+
+                    self.data.last_update = j.data.time.epoch
+                    self.data.current_job = jobid  # set current jobid
+                    self.data.save()
+
+                    if self.showout:
+                        self._log_info("execute", data=job)
+
+                    try:
+                        exec(action.code)
+                        # better not to use eval but the JSX coderunner?
+                        method = eval(action.methodname)
+                    except Exception as e:
+                        tb = sys.exc_info()[-1]
+                        logdict = j.core.tools.log(
+                            tb=tb, exception=e, msg="cannot compile action", data=action.code, stdout=self.showout
+                        )
+
+                        job.error = logdict
+                        job.state = "ERROR"
+                        job.time_stop = j.data.time.epoch
+                        job.save()
+
+                        if self.debug:
+                            pudb.post_mortem(tb)
+
+                        if self.onetime:
+                            return
+                        continue
+
+                    try:
+                        res = method(*args, **kwargs)
+                    except Exception as e:
+                        tb = sys.exc_info()[-1]
+                        logdict = j.core.tools.log(
+                            tb=tb, exception=e, msg="cannot execute action", data=action.code, stdout=self.showout
+                        )
+                        job.error = logdict
+                        job.state = "ERROR"
+                        job.time_stop = j.data.time.epoch
+                        job.save()
+
+                        if self.debug:
+                            pudb.post_mortem(tb)
+
+                        if self.onetime:
+                            return
+                        continue
+
+                    try:
+                        job.result = j.data.serializers.json.dumps({"result": res})
+                    except Exception as e:
+                        job.error = (
+                            str(e) + "\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
+                        )
+                        job.state = "ERROR"
+                        job.time_stop = j.data.time.epoch
+                        job.save()
+                        if self.showout:
+                            self._log_error("ERROR:%s" % e, exception=e, data=job)
+                        if self.onetime:
+                            return
+                        continue
+
                     job.time_stop = j.data.time.epoch
-                    return_job_obj(job)
-                    if showout:
-                        print("ERROR:%s" % e)
-                    if onetime:
-                        return
-                    continue
+                    job.state = "OK"
 
-                try:
-                    res = method(*args, **kwargs)
-                except Exception as e:
-                    job.error = str(e)
-                    job.state = "ERROR"
-                    job.time_stop = j.data.time.epoch
-                    return_job_obj(job)
-                    if showout:
-                        print("ERROR:%s" % e)
-                    if onetime:
-                        return
-                    continue
+                    if self.showout:
+                        self._log("OK", data=job)
 
-                try:
-                    job.result = j.data.serializers.json.dumps(res)
-                except Exception as e:
-                    job.error = (
-                        str(e) + "\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
-                    )
-                    job.state = "ERROR"
-                    job.time_stop = j.data.time.epoch
-                    return_job_obj(job)
-                    if showout:
-                        print("ERROR:%s" % e)
-                    if onetime:
-                        return
-                    continue
+                    job.save()
 
-                job.time_stop = j.data.time.epoch
-                job.state = "OK"
+                    self.data.current_job = 2147483647
+                    self.data.save()
 
-                if showout:
-                    print("OK")
-                    print(job)
-
-                return_job_obj(job)
-
-                w.current_job = 2147483647
-                return_worker_obj(w)
-
-        if onetime:
-            return
+            if self.onetime:
+                return

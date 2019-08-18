@@ -44,7 +44,7 @@ class ServiceBase(j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
         if self.__class__._MODEL is None:
-            self.__class__._MODEL = j.world.system._bcdb.model_get_from_schema(self.__class__._SCHEMA_TXT)
+            self.__class__._MODEL = j.world.system._bcdb.model_get(schema=self.__class__._SCHEMA_TXT)
 
         self.actions = {}
         self._state = None
@@ -99,8 +99,8 @@ class ServiceBase(j.application.JSBaseClass):
         hkey, key = self._action_key(action_id)
         r = j.clients.credis_core.hget(hkey, key)
         if r is None:
-            raise RuntimeError("cannot find action with id:%s" % action_id)
-        res = j.world.system._schema_service_action.schema.get(data=r)
+            raise j.exceptions.Base("cannot find action with id:%s" % action_id)
+        res = j.world.system._schema_service_action.schema.new(data=r)
         return res
 
     @property
@@ -130,7 +130,7 @@ class ServiceBase(j.application.JSBaseClass):
                 self._data = self._MODEL.new()
                 self._data.key = self._key
             else:
-                self._data = self._MODEL.get(id=self.id)
+                self._data = self._MODEL.get(obj_id=self.id)
                 self._key = self._data.key
 
             if self._data is None:

@@ -1,0 +1,4 @@
+@url = tfgrid.reservation.1
+tenant = (S)
+type = "container,volume,network" (E)
+data = (dict)

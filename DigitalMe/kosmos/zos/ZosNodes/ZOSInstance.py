@@ -3,7 +3,7 @@ from Jumpscale import j
 from .ZOSContainer import ZOSContainers
 
 
-class ZOSInstance(j.application.JSFactoryBaseClass):
+class ZOSInstance(j.application.JSFactoryConfigsBaseClass):
     """
     is the host which runs a ZOS operating system
     TODO: maybe should call this ZOSHost?
@@ -23,7 +23,7 @@ class ZOSInstance(j.application.JSFactoryBaseClass):
 
     _CHILDCLASSES = [ZOSContainers]
 
-    def _init(self):
+    def _init(self, **kwargs):
         self._zos_client_ = None
 
     @property
@@ -48,7 +48,7 @@ class ZOSInstance(j.application.JSFactoryBaseClass):
     #     :return:
     #     """
     #     if self.type not in ["physical","ovh","packetnet"]:
-    #         raise RuntimeError("platform '%s' not supported"%self.type)
+    #         raise j.exceptions.Base("platform '%s' not supported"%self.type)
     #     if name not in self.zos_virtual:
     #         zc = ZOSVirtual(name=name)
     #         zc.zos_node = self

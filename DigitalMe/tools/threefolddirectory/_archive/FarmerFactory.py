@@ -55,7 +55,7 @@ class FarmerFactory(JSBASE):
     @property
     def bcdb(self):
         if self.zdb is None:
-            raise RuntimeError("you need to set self.zdb with a zerodb connection")
+            raise j.exceptions.Base("you need to set self.zdb with a zerodb connection")
         if self._bcdb is None:
             self._bcdb = j.data.bcdb.get(self.zdb)
         return self._bcdb
@@ -63,18 +63,18 @@ class FarmerFactory(JSBASE):
     @property
     def models(self):
         if self.zdb is None:
-            raise RuntimeError("you need to set self.zdb with a zerodb connection")
+            raise j.exceptions.Base("you need to set self.zdb with a zerodb connection")
         if self._models is None:
             models_path = j.clients.git.getContentPathFromURLorPath(
                 "https://github.com/threefoldtech/digital_me/tree/development_simple/packages/threefold/models"
             )
             self.bcdb.models_add(models_path, overwrite=True)
             self._models = Models()
-            self._models.nodes = self.bcdb.model_get_from_url("threefold.grid.node")
-            self._models.farmers = self.bcdb.model_get_from_url("threefold.grid.farmer")
-            self._models.reservations = self.bcdb.model_get_from_url("threefold.grid.reservation")
-            self._models.threebots = self.bcdb.model_get_from_url("threefold.grid.threebot")
-            self._models.webgateways = self.bcdb.model_get_from_url("threefold.grid.webgateway")
+            self._models.nodes = self.bcdb.model_get(url="threefold.grid.node")
+            self._models.farmers = self.bcdb.model_get(url="threefold.grid.farmer")
+            self._models.reservations = self.bcdb.model_get(url="threefold.grid.reservation")
+            self._models.threebots = self.bcdb.model_get(url="threefold.grid.threebot")
+            self._models.webgateways = self.bcdb.model_get(url="threefold.grid.webgateway")
             self.capacity_planner.models = self._models
         return self._models
 
@@ -206,7 +206,7 @@ class FarmerFactory(JSBASE):
 
     def _fail_save(self):
         if not self._bcdb:
-            self.zdb = j.clients.zdb.testdb_server_start_client_get(reset=False)
+            self.zdb = j.servers.zdb.test_instance_start(reset=False)
             self._bcdb = j.data.bcdb.get(self.zdb, reset=False)
 
     def load(self, reset=False):
@@ -218,7 +218,7 @@ class FarmerFactory(JSBASE):
         :param reset:
         :return:
         """
-        self.zdb = j.clients.zdb.testdb_server_start_client_get(reset=reset)
+        self.zdb = j.servers.zdb.test_instance_start(reset=reset)
         self._bcdb = j.data.bcdb.get(self.zdb, reset=reset)  # to make sure we reset the index
         self.farmers_load()
         self.zerotier_scan(reset=reset)

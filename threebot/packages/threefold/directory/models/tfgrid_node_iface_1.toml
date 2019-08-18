@@ -1,0 +1,57 @@
+@url = tfgrid.node.iface.1
+name = (S)
+addrs = (Liprange)
+gateway = (Lipaddr)
+
+@url = tfgrid.node.public_iface.1
+master = (S)
+type = "macvlan" (E)
+ipv4 = (ipaddr)
+ipv6 = (ipaddr)
+gw4 = (ipaddr)
+gw6 = (ipaddr)
+version = (I)
+
+@url = tfgrid.node.resource.1
+cru = (i)
+mru = (i)
+hru = (i)
+sru = (i)
+
+
+@url = tfgrid.location.1
+city = (S)
+country = (S)
+continent = (S)
+latitude = (F)
+longitude = (F)
+
+@url = tfgrid.node.2
+node_id* = (S)
+farmer_id* = (S)
+os_version* = (S)
+parameters = (dict)
+created = (T)
+updated = (T)
+uptime = (I)
+address = (S)
+location = (O) !tfgrid.location.1
+total_resource = (O) !tfgrid.node.resource.1
+used_resource = (O) !tfgrid.node.resource.1
+reserved_resource = (O) !tfgrid.node.resource.1
+ifaces = (LO) !tfgrid.node.iface.1
+public_config = (O)!tfgrid.node.public_iface.1
+exit_node = (B)
+approved = false (B)
+
+
+@url = tfgrid.farm.1
+threebot_id* = (S) 
+iyo_organization* = (S) # for backward compatibility
+name* = (S)
+wallet_addresses = (LS)
+location = (O) !tfgrid.location.1
+email = (email)
+vta = (S)
+resource_price = (O) !tfgrid.node.resource.1
+

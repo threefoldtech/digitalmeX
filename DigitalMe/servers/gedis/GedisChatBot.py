@@ -29,7 +29,7 @@ class GedisChatBotFactory(JSBASE):
         topic_method = self.chat_flows[topic]
         session = GedisChatBotSession(session_id, topic_method, **kwargs)
         self.sessions[session_id] = session
-        return session_id
+        return {"sessionid": session_id}
 
     def session_work_get(self, session_id):
         """
@@ -41,16 +41,16 @@ class GedisChatBotFactory(JSBASE):
         bot = self.sessions[session_id]
         return bot.q_out.get(block=True)
 
-    def session_work_set(self, session_id, val):
+    def session_work_set(self, session_id, result):
         """
         receives user's answer and set it into `q_in` queue to be consumed afterwards by helper methods
         (ask_string, ask_int, ....) to be able to continue execution
         :param session_id: user session id
-        :param val: answer sent by the user
+        :param result: answer sent by the user
         :return:
         """
         bot = self.sessions[session_id]
-        bot.q_in.put(val)
+        bot.q_in.put(result)
         return
 
     def chatflows_load(self, chatflows_dir):
@@ -106,7 +106,7 @@ class GedisChatBotSession(JSBASE):
         self.q_out.put({"cat": "string_ask", "msg": msg, "kwargs": kwargs})
         return self.q_in.get()
 
-    def password_ask(self, msg, **kwargs):
+    def secret_ask(self, msg, **kwargs):
         """
         helper method to generate a question that expects a password answer.
         html generated in the client side will use `<input type="password"/>`
@@ -114,7 +114,7 @@ class GedisChatBotSession(JSBASE):
         :param kwargs: dict of possible extra options like (validate, reset, ...etc)
         :return: the user answer for the question
         """
-        self.q_out.put({"cat": "password_ask", "msg": msg, "kwargs": kwargs})
+        self.q_out.put({"cat": "secret_ask", "msg": msg, "kwargs": kwargs})
         return self.q_in.get()
 
     def text_ask(self, msg, **kwargs):

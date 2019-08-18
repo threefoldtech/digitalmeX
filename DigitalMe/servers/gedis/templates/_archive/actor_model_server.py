@@ -1,5 +1,3 @@
-
-
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
@@ -20,29 +18,29 @@ class model_{{schema.key}}(JSBASE):
         self.schema = self.model.schema
 
     def set(self, data_in):
-        if j.servers.gedis.latest.serializer:
+        if self.server_gedis.serializer:
             # e.g. for json
-            ddict = j.servers.gedis.latest.return_serializer.loads(data_in)
-            obj = self.schema.get(data=ddict)
+            ddict = self.server_gedis.return_serializer.loads(data_in)
+            obj = self.schema.new(datadict=ddict)
             data = self.schema.data
         else:
             id, data = j.data.serializers.msgpack.loads(data_in)
 
         res = self.model.set(data=data, key=id)
         if res.id is None:
-            raise RuntimeError("cannot be None")
+            raise j.exceptions.Base("cannot be None")
 
-        if j.servers.gedis.latest.serializer:
-            return j.servers.gedis.latest.return_serializer.dumps(res.ddict)
+        if self.server_gedis.serializer:
+            return self.server_gedis.return_serializer.dumps(res.ddict)
         else:
             return j.data.serializers.msgpack.dumps([res.id, res.data])
 
     def get(self, id):
         id = int(id.decode())
-        obj = self.model.get(id=id)
+        obj = self.model.get(obj_id=id)
         print("get")
-        if j.servers.gedis.latest.serializer:
-            return j.servers.gedis.latest.return_serializer.dumps(obj.ddict)
+        if self.server_gedis.serializer:
+            return self.server_gedis.return_serializer.dumps(obj.ddict)
         else:
             return j.data.serializers.msgpack.dumps([obj.id, obj.data])
 
@@ -56,3 +54,5 @@ class model_{{schema.key}}(JSBASE):
 
     def new(self):
         return self.model.new()
+
+

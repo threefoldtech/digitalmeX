@@ -13,3 +13,5 @@ def {{cmd.name}}(request, **kwargs):
     {{cmd.code}}
 
 {% endfor %}
+
+
