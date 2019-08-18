@@ -506,6 +506,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                         self.scheduled_ids = []
                         raise RuntimeError("job:%s in error" % job.id)
                     else:
+                        # we collect all errors so we need to make sure we get all other errors or non other errorobj
                         res[current_id] = job
                         if len(ids) > 0:
                             ids.pop(0)
@@ -514,6 +515,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                             else:
                                 current_id = None
                 elif job.state == "HALTED":
+                    # dont think we use at this point
                     j.shell()
 
             if len(ids) == 0:
@@ -525,7 +527,9 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                 self.scheduled_ids = []
                 raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
 
-            self._data_process_untill_empty(die=False)
+            if not self.dataloop:
+                # means we have to manually fetch the objects there is no dataloop doing it for us
+                self._data_process_untill_empty(die=False)
 
         self.scheduled_ids = []
         return res
