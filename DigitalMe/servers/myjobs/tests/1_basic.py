@@ -16,11 +16,25 @@ def main(self):
     jobid = self.schedule(add, 1, 2)
     assert isinstance(jobid, int)
 
+    # means work scheduled
+    assert self.scheduled_ids == [jobid]
+
+    self.worker_start(onetime=True)
+    assert self.scheduled_ids == [jobid]
+
+    res = self.results()
+
+    v = [i for i in res.values()]
+    assert len(res.values()) == 1
+    assert v[0] == str(3)
+
+    jobid = self.schedule(add, 3, 4)
+
     self.worker_start(onetime=True)
 
     res = self.results([jobid])
-
-    j.shell()
+    v = [i for i in res.values()]
+    assert v[0] == str(7)
 
     print(res)
 

@@ -17,7 +17,7 @@ timeout = 0
 action_id* = 0
 args = (json)
 kwargs = (dict)
-result = (dict)
+result = (S)
 error = (dict)
 return_queues = (LS)
 
@@ -69,6 +69,9 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
         self._init_ = False
         self.scheduled_ids = []
+
+    def job_get(self, job_id):
+        return self.model_job.get(job_id)
 
     def init(self):
         """
@@ -147,7 +150,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         else:
             MyWorker(worker_id=w.id, onetime=onetime, debug=debug)
             # will make sure the data comes back
-            self._data_process_untill_empty(timeout=5)
+            self._data_process_untill_empty(timeout=5, die=False)
 
     def dataloop_start(self):
         if not self.dataloop:
@@ -190,7 +193,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             self._log_debug("data_process run")
             self._data_process_1time(timeout=1)
 
-    def _data_process_1time(self, timeout=0, die=True):
+    def _data_process_1time(self, timeout=0, die=False):
         r = self.queue_return.get(timeout=timeout)
         if r == None:
             return
@@ -203,7 +206,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             worker = self.model_worker.new(data=data)
             worker.id = objid
             worker.save()
-            return worker
+            return True
         elif cat == "J":
             job = self.model_job.new(data=data)
             job.id = objid
@@ -211,30 +214,27 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             for queue_name in job.return_queues:
                 queue = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs:%s" % queue_name)
                 queue.put(job.id)
-            return job
+            return True
         elif cat == "E":
             datae = j.data.serializers.json.loads(data)
             j.core.tools.log2stdout(datae)
             if die:
-                sys.exit(1)
+                raise j.exceptions.Base(data=datae)
+            return True
         else:
             raise j.exceptions.Base("return queue does not have right obj")
 
-    def _data_process_untill_empty(self, timeout=0, die=True):
+    def _data_process_untill_empty(self, timeout=1, die=True):
         self.init()
-        res = []
-
         # need to wait till first one comes
         r = self._data_process_1time(timeout=timeout, die=die)
         if not r:
-            return [r]
-        res.append(r)
+            return
 
-        while r:
+        while r is not None:
+            if self.queue_return.empty:
+                return
             r = self._data_process_1time(timeout=timeout, die=die)
-            if not r:
-                return res
-            res.append(r)
 
     def _main_loop_fixed(self, nr=10, debug=False):
         """
@@ -467,33 +467,67 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
     def results(self, ids=None, timeout=100, die=True):
         """
 
-        :param ids: if not specified then will use self.scheduled_ids
+        :param ids: if not specified then will be the last launched jobs
         :param timeout:
-        :param processdata:
+        :param die:  id die False then result will be the full objects
         :return:
         """
+
         if not ids:
             ids = self.scheduled_ids
         res = {}
         counter = 0
 
-        def check(res, ids):
-            for i in ids:
-                if i not in res:
-                    return False
+        if len(ids) > 0:
+            current_id = ids[0]
+        else:
+            current_id = None
 
-        while len(ids) > 0:
-            res_ = self._data_process_untill_empty(die=die)
-            for job in res_:
-                if job.state not in ["RUNNING", "NEW"]:
-                    res[job.id] = job
-            if check(res, ids):
+        while current_id:
+            job = self.model_job.get(current_id)
+            if job == None:
+                raise j.exceptions.Base("job:%s not found" % current_id)
+            if job.time_stop != 0:
+                if job.state == "OK":
+                    if die:
+                        res[current_id] = job.result
+                    else:
+                        res[current_id] = job
+                    if len(ids) > 0:
+                        ids.pop(0)
+                        if len(ids) > 0:
+                            current_id = ids[0]
+                        else:
+                            current_id = None
+                elif job.state == "ERROR":
+                    logdict = job.error
+                    j.core.tools.log2stdout(logdict)
+                    if die:
+                        self.scheduled_ids = []
+                        raise RuntimeError("job:%s in error" % job.id)
+                    else:
+                        res[current_id] = job
+                        if len(ids) > 0:
+                            ids.pop(0)
+                            if len(ids) > 0:
+                                current_id = ids[0]
+                            else:
+                                current_id = None
+                elif job.state == "HALTED":
+                    j.shell()
+
+            if len(ids) == 0:
+                self.scheduled_ids = []
                 return res
-            gevent.sleep(0.1)
+
             counter += 1
             if counter > timeout * 10:
+                self.scheduled_ids = []
                 raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
 
+            self._data_process_untill_empty(die=False)
+
+        self.scheduled_ids = []
         return res
 
     workers_start = workers_start_corex
