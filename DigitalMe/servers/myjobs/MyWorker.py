@@ -2,8 +2,28 @@ from Jumpscale import j
 
 import pudb
 import sys
-import traceback
 import gevent
+import signal
+
+
+class TimedOutExc(Exception):
+    pass
+
+
+def deadline(timeout, *args):
+    def decorate(f):
+        def handler(signum, frame):
+            raise TimedOutExc()
+
+        def new_f(*args, **kwargs):
+            signal.signal(signal.SIGALRM, handler)
+            signal.alarm(timeout)
+            return f(*args, **kwargs)
+            signal.alarm(0)
+
+        new_f.__name__ = f.__name__
+        return new_f
+    return decorate
 
 
 class MyWorker(j.application.JSBaseClass):
@@ -17,6 +37,7 @@ class MyWorker(j.application.JSBaseClass):
         self.debug = debug
 
         assert worker_id
+
 
         if self.debug:
             j.application.debug = self.debug
@@ -160,15 +181,20 @@ class MyWorker(j.application.JSBaseClass):
                         continue
 
                     try:
-                        res = method(*args, **kwargs)
+                        res = deadline(job.timeout)(method)(*args, **kwargs)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
+                        if isinstance(e, TimedOutExc):
+                            msg = 'time out'
+                        else:
+                            msg = "cannot execute action"
+                            job.time_stop = j.data.time.epoch
                         logdict = j.core.tools.log(
-                            tb=tb, exception=e, msg="cannot execute action", data=action.code, stdout=self.showout
+                            tb=tb, exception=e, msg=msg, data=action.code, stdout=self.showout
                         )
                         job.error = logdict
                         job.state = "ERROR"
-                        job.time_stop = j.data.time.epoch
+
                         job.save()
 
                         if self.debug:
