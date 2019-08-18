@@ -34,7 +34,7 @@ class CreateAuthor(graphene.Mutation):
                        @url = graphql.authors.schema
                        name = (S)
                        """
-        model = j.application.bcdb_system.model_get_from_schema(_SCHEMA_TEXT)
+        model = j.application.bcdb_system.model_get(schema=_SCHEMA_TEXT)
         model_objects = model.new()
         model_objects.name = kwargs["name"]
         model_objects.save()
@@ -63,7 +63,7 @@ class Query(graphene.ObjectType):
                 @url = graphql.authors.schema
                 name = (S)
                 """
-        model = j.application.bcdb_system.model_get_from_schema(_SCHEMA_TEXT)
+        model = j.application.bcdb_system.model_get(schema=_SCHEMA_TEXT)
 
         results = []
         for item in model.iterate():
@@ -82,7 +82,7 @@ class Query(graphene.ObjectType):
         author = (S)
         name = (S)
         """
-        model = j.application.bcdb_system.model_get_from_schema(_SCHEMA_TEXT)
+        model = j.application.bcdb_system.model_get(schema=_SCHEMA_TEXT)
 
         results = []
         for item in model.iterate():

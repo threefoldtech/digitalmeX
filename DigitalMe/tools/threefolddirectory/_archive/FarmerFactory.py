@@ -70,11 +70,11 @@ class FarmerFactory(JSBASE):
             )
             self.bcdb.models_add(models_path, overwrite=True)
             self._models = Models()
-            self._models.nodes = self.bcdb.model_get_from_url("threefold.grid.node")
-            self._models.farmers = self.bcdb.model_get_from_url("threefold.grid.farmer")
-            self._models.reservations = self.bcdb.model_get_from_url("threefold.grid.reservation")
-            self._models.threebots = self.bcdb.model_get_from_url("threefold.grid.threebot")
-            self._models.webgateways = self.bcdb.model_get_from_url("threefold.grid.webgateway")
+            self._models.nodes = self.bcdb.model_get(url="threefold.grid.node")
+            self._models.farmers = self.bcdb.model_get(url="threefold.grid.farmer")
+            self._models.reservations = self.bcdb.model_get(url="threefold.grid.reservation")
+            self._models.threebots = self.bcdb.model_get(url="threefold.grid.threebot")
+            self._models.webgateways = self.bcdb.model_get(url="threefold.grid.webgateway")
             self.capacity_planner.models = self._models
         return self._models
 

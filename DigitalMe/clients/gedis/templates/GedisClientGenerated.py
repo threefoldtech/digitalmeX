@@ -22,7 +22,7 @@ class GedisClientGenerated():
         cmd_name = "{{obj.namespace.lower()}}.{{obj.name.lower()}}.{{name}}" #what to use when calling redis
         {% if cmd.schema_in != None %}
         #schema in exists
-        schema_in = j.data.schema.get_from_url_latest(url="{{cmd.schema_in.url}}")
+        schema_in = j.data.schema.get_from_url(url="{{cmd.schema_in.url}}")
         args = schema_in.new()
 
         {% for prop in cmd.schema_in.properties %}
@@ -57,7 +57,7 @@ class GedisClientGenerated():
 
         {% if cmd.schema_out != None %}
         # print("{{cmd.schema_out.url}}")
-        schema_out = j.data.schema.get_from_url_latest(url="{{cmd.schema_out.url}}")
+        schema_out = j.data.schema.get_from_url(url="{{cmd.schema_out.url}}")
         if isinstance(res, list):
             res2 = list(map(lambda x: schema_out.new(serializeddata=x), res))
         else:

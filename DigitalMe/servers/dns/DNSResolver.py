@@ -72,7 +72,7 @@ class DNSResolver(j.application.JSBaseConfigClass):
                 break
 
         if not domain_obj:
-            model2 = j.data.schema.get_from_url_latest(url="jumpscale.resolver.record.1")
+            model2 = j.data.schema.get_from_url(url="jumpscale.resolver.record.1")
             domain_obj = model2.new()
 
         domain_obj = self.update_domain(domain_obj, **kwargs)

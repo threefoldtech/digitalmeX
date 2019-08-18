@@ -4,7 +4,7 @@ from Jumpscale import j
 class nodes(j.application.ThreeBotActorBase):
     def _init(self, **kwargs):
         bcdb = j.data.bcdb.get("tf_directory")
-        self.node_model = bcdb.model_get_from_url("tfgrid.node.2")
+        self.node_model = bcdb.model_get(url="tfgrid.node.2")
 
     def add(self, node, schema_out=None):
         """

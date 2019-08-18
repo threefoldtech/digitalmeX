@@ -102,7 +102,7 @@ class GraphQLFactory(JSBASE):
                 if request.method == "POST":
                     data = self.parse_data(request.body)
                     # Create a model with the data and save the model for later retrieval
-                    model = j.application.bcdb_system.model_get_from_schema(self._SCHEMA_TEXT)
+                    model = j.application.bcdb_system.model_get(schema=self._SCHEMA_TEXT)
                     model_objects = model.new()
                     model_objects.info_id = data["id"]
                     model_objects.title = data["title"]

@@ -7,23 +7,10 @@ import gevent
 
 
 class MyWorker(j.application.JSBaseClass):
-    def return_data(self, cat, obj):
-        data = [cat, obj.id, obj._json]
-        self.queue_return.put(data)
-
-    def error_handler(self, logdict):
-        # j.shell()
-        cat = "E"
-        logdict["cat"] = cat
-        data = j.data.serializers.json.dumps(logdict)
-        self.queue_return.put(data)
-
-    def __init__(self, worker_id=None, onetime=False, showout=True, debug=False):
+    def _init(self, worker_id=None, onetime=False, showout=True, debug=False):
         """
         :return:
         """
-
-        j.application.JSBaseClass.__init__(self)
 
         self.onetime = onetime
         self.showout = showout
@@ -60,33 +47,43 @@ class MyWorker(j.application.JSBaseClass):
         assert storclient._redis.source == "worker"
 
         self.bcdb = j.data.bcdb.get("myjobs", storclient=storclient, fromcache=False)
-        self.model_job = self.bcdb.model_get_from_url("jumpscale.myjobs.job")
-        self.model_action = self.bcdb.model_get_from_url("jumpscale.myjobs.action")
-        self.model_worker = self.bcdb.model_get_from_url("jumpscale.myjobs.worker")
-        # self.model_job.readonly = True
-        # self.model_action.readonly = True
-        # self.model_worker.readonly = True
+        self.model_job = self.bcdb.model_get(url="jumpscale.myjobs.job")
+        self.model_action = self.bcdb.model_get(url="jumpscale.myjobs.action")
+        self.model_worker = self.bcdb.model_get(url="jumpscale.myjobs.worker")
 
-        # self.model_worker.trigger_add(self._save_data)
-        # self.model_job.trigger_add(self._save_job)
+        self.model_job.nosave = True
+        self.model_action.nosave = True
+        self.model_worker.nosave = True
+
+        self.model_worker.trigger_add(self._save_data)
+        self.model_job.trigger_add(self._save_job)
 
         self.data = self.model_worker.get(worker_id)
         self.data.state = "new"
         self.data.current_job = 2147483647  # means nil
         self.data.id = worker_id
-        # self.data.save()  # save in bcdb will not happen because readonly is True, it will trigger the triggers
+        self.data.save()  # save in bcdb will not happen because readonly is True, it will trigger the triggers
 
         self.start()
 
-    def _save_data(self, obj, action, propertyname):
+    def return_data(self, cat, obj):
+        data = [cat, obj.id, obj._json]
+        data = j.data.serializers.json.dumps(data)
+        self.queue_return.put(data)
+
+    def error_handler(self, logdict):
+        data = j.data.serializers.json.dumps(logdict)
+        data2 = ["E", None, data]
+        data3 = j.data.serializers.json.dumps(data2)
+        self.queue_return.put(data3)
+
+    def _save_data(self, obj, action, propertyname, **kwargs):
         if action == "save":
             self.return_data("W", obj)
-        j.shell()
 
-    def _save_job(self, obj, action, propertyname):
+    def _save_job(self, obj, action, propertyname, **kwargs):
         if action == "save":
             self.return_data("J", obj)
-        j.shell()
 
     def start(self):
 
@@ -124,7 +121,7 @@ class MyWorker(j.application.JSBaseClass):
                 job = self.model_job.get(obj_id=jobid, die=False)
 
                 if job == None:
-                    print("ERROR: job:%s not found" % jobid)
+                    self._log_error("ERROR: job:%s not found" % jobid)
                 else:
                     # now have job
                     action = self.model_action.get(job.action_id, die=False)
@@ -138,8 +135,7 @@ class MyWorker(j.application.JSBaseClass):
                     self.data.save()
 
                     if self.showout:
-                        print("EXECUTE")
-                        print(job)
+                        self._log_info("execute", data=job)
 
                     try:
                         exec(action.code)
@@ -164,7 +160,6 @@ class MyWorker(j.application.JSBaseClass):
                         continue
 
                     try:
-                        # import ipdb; ipdb.set_trace()
                         res = method(*args, **kwargs)
                     except Exception as e:
                         tb = sys.exc_info()[-1]
@@ -178,9 +173,7 @@ class MyWorker(j.application.JSBaseClass):
 
                         if self.debug:
                             pudb.post_mortem(tb)
-                        # msg = err + "\nCOULD NOT EXECUTE METHOD {}.\n {}".format(action.methodname, action.code)
-                        if self.showout:
-                            print("ERROR:%s" % e)
+
                         if self.onetime:
                             return
                         continue
@@ -195,8 +188,8 @@ class MyWorker(j.application.JSBaseClass):
                         job.time_stop = j.data.time.epoch
                         job.save()
                         if self.showout:
-                            print("ERROR:%s" % e)
-                        if onetime:
+                            self._log_error("ERROR:%s" % e, exception=e, data=job)
+                        if self.onetime:
                             return
                         continue
 

@@ -42,7 +42,7 @@ class GedisCmds(JSBASE):
         self.server = server
 
         j.data.schema.get_from_text(SCHEMA)
-        self.schema = j.data.schema.get_from_url_latest(url="jumpscale.gedis.api")
+        self.schema = j.data.schema.get_from_url(url="jumpscale.gedis.api")
 
         self._cmds = {}
 
@@ -90,7 +90,7 @@ class GedisCmds(JSBASE):
             for s in self.data.schemas:
                 if s.content.strip().startswith("!"):
                     j.shell()
-                if not s.url in j.data.schema.url_to_md5:
+                if not j.data.schema.exists(url=s.url):
                     if not s.content.strip().startswith("!"):
                         j.data.schema.get_from_text(s.content, url=s.url)
             for cmd in self.data.cmds:
@@ -242,7 +242,7 @@ class GedisCmds(JSBASE):
                 schema = j.data.schema.get_from_text(schema_text=txt)
         else:
             url = txt.strip().lstrip("!")
-            schema = j.data.schema.get_from_url_latest(url=url)
+            schema = j.data.schema.get_from_url(url=url)
 
         self._schema_url_add(schema.url, schema.text)  # make sure we remember if needed
 
@@ -252,7 +252,7 @@ class GedisCmds(JSBASE):
             line_strip = line.strip()
             if line_strip.find("!") != -1:
                 url2 = line_strip.split("!", 1)[1]
-                s2 = j.data.schema.get_from_url_latest(url=url2)
+                s2 = j.data.schema.get_from_url(url=url2)
                 self._schema_url_add(s2.url, s2.text)
 
         return schema

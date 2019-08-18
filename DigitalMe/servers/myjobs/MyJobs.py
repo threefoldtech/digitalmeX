@@ -12,7 +12,7 @@ schema_job = """
 category*= ""
 time_start = 0 (T)
 time_stop = 0 (T)
-state* = "NEW"
+state* = "NEW,ERROR,OK,RUNNING,HALTED" (E)
 timeout = 0
 action_id* = 0
 args = (json)
@@ -49,10 +49,10 @@ halt = false (B)
 """
 
 
-class MyJobs(JSBASE):
+class MyJobs(JSBASE, j.application.JSFactoryTools):
     __jslocation__ = "j.servers.myjobs"
 
-    def _init(self):
+    def _init(self, **kwargs):
         self.queue_jobs_start = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:start")
         self.queue_return = j.clients.redis.queue_get(redisclient=j.core.db, key="queue:jobs:return")
         self.workers = {}
@@ -60,36 +60,27 @@ class MyJobs(JSBASE):
         self.workers_nr_max = 10
         self.mainloop = None
         self.dataloop = None
-        self.model_job = None
-        self.model_action = None
-        self.model_worker = None
+
+        db = j.data.bcdb.get("myjobs", storclient=j.clients.rdb.client_get())
+
+        self.model_job = db.model_get(schema=schema_job)
+        self.model_action = db.model_get(schema=schema_action)
+        self.model_worker = db.model_get(schema=schema_worker)
+
         self._init_ = False
         self.scheduled_ids = []
 
-    def init(self, reset=False):
+    def init(self):
         """
         activates the models and starts the worker manager if required
         """
-        if self._init_ == False or reset:
-
-            # if self.mainloop == None and  self.dataloop == None:
-            #     from gevent import monkey
-            #     monkey.patch_all()  #NEED TO BE VERY CAREFUL WITH THIS
+        if self._init_ is False:
 
             if self.mainloop != None:
                 self.mainloop.kill()
 
             if self.dataloop != None:
                 self.dataloop.kill()
-
-            db = j.data.bcdb.get("myjobs", storclient=j.clients.rdb.client_get())
-
-            self.model_job = db.model_get_from_schema(schema_job)
-            self.model_action = db.model_get_from_schema(schema_action)
-            self.model_worker = db.model_get_from_schema(schema_worker)
-
-            if reset:
-                self.halt(reset=True)
 
             self._init_ = True
 
@@ -151,10 +142,10 @@ class MyJobs(JSBASE):
             w = self.model_worker.set(w)
         self._log_debug("worker add: %s" % w.id, data=w._data)
         if subprocess:
-            worker = gipc.start_process(target=MyWorker, args=(w.id,))
+            worker = gipc.start_process(target=MyWorker, kwargs={"worker_id": w.id})
             self.workers[w.id] = worker
         else:
-            MyWorker(w.id, onetime=onetime, debug=debug)
+            MyWorker(worker_id=w.id, onetime=onetime, debug=debug)
             # will make sure the data comes back
             self._data_process_untill_empty(timeout=5)
 
@@ -199,58 +190,51 @@ class MyJobs(JSBASE):
             self._log_debug("data_process run")
             self._data_process_1time(timeout=1)
 
-    def _data_process_1time(self, timeout=0):
+    def _data_process_1time(self, timeout=0, die=True):
         r = self.queue_return.get(timeout=timeout)
         if r == None:
             return
+
         thedata = j.data.serializers.json.loads(r)  # change to json
-        cat = thedata["cat"]
-        if cat is None:
-            import ipdb
 
-            ipdb.set_trace()
-        if cat not in ["E"]:
-            ddict = thedata
+        cat, objid, data = thedata
+
         if cat == "W":
-            cat, objid, json_ = thedata
-
-            worker = self.model_worker.new(data=ddict)
+            worker = self.model_worker.new(data=data)
             worker.id = objid
             worker.save()
             return worker
         elif cat == "J":
-            cat, objid, json_ = thedata
-
-            job = self.model_job.new(data=ddict)
+            job = self.model_job.new(data=data)
             job.id = objid
             job.save()
-            # print(job)
             for queue_name in job.return_queues:
                 queue = j.clients.redis.getQueue(redisclient=j.core.db, name="myjobs:%s" % queue_name)
                 queue.put(job.id)
             return job
         elif cat == "E":
-            print(thedata["message"])
-            # cat, objid, json_ = thedata
-
-            # worker = self.model_worker.get(json_)
-            # j.core.tools.pprint(worker)
-            sys.exit(1)
+            datae = j.data.serializers.json.loads(data)
+            j.core.tools.log2stdout(datae)
+            if die:
+                sys.exit(1)
         else:
             raise j.exceptions.Base("return queue does not have right obj")
 
-    def _data_process_untill_empty(self, timeout=0):
+    def _data_process_untill_empty(self, timeout=0, die=True):
         self.init()
         res = []
 
         # need to wait till first one comes
-        r = self._data_process_1time(timeout=timeout)
+        r = self._data_process_1time(timeout=timeout, die=die)
         if not r:
-            return
+            return [r]
+        res.append(r)
 
         while r:
-            r = self._data_process_1time(timeout=0)
-        return res
+            r = self._data_process_1time(timeout=timeout, die=die)
+            if not r:
+                return res
+            res.append(r)
 
     def _main_loop_fixed(self, nr=10, debug=False):
         """
@@ -474,7 +458,13 @@ class MyJobs(JSBASE):
 
             self._init_ = False
 
-    def results(self, ids=None, timeout=100):
+    def reset(self):
+        # kill leftovers from last time, if any
+        self.halt(graceful=False, reset=True)
+        assert self.queue_jobs_start.qsize() == 0
+        assert self.queue_return.qsize() == 0
+
+    def results(self, ids=None, timeout=100, die=True):
         """
 
         :param ids: if not specified then will use self.scheduled_ids
@@ -486,111 +476,64 @@ class MyJobs(JSBASE):
             ids = self.scheduled_ids
         res = {}
         counter = 0
+
+        def check(res, ids):
+            for i in ids:
+                if i not in res:
+                    return False
+
         while len(ids) > 0:
-            self._data_process_untill_empty()
-            id = ids.pop(0)
-            job = self.model_job.get(id)
-            if job == None:
-                raise j.exceptions.Base("job:%s not found" % id)
-            if job.time_stop != 0:
-                if job.state == "OK":
-                    res[id] = job.result
-                else:
-                    raise j.exceptions.Base("job in error:\n%s" % job) from Exception(job.error)
-            if len(ids) > 0:
-                gevent.sleep(0.1)
-                counter += 1
-                if counter > timeout * 10:
-                    raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
+            res_ = self._data_process_untill_empty(die=die)
+            for job in res_:
+                if job.state not in ["RUNNING", "NEW"]:
+                    res[job.id] = job
+            if check(res, ids):
+                return res
+            gevent.sleep(0.1)
+            counter += 1
+            if counter > timeout * 10:
+                raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
+
         return res
 
     workers_start = workers_start_corex
 
-    def test(self):
+    def test(self, name="basic", start=False):
         """
-        js_shell "j.servers.myjobs.test()"
-        :return:
+        it's run all tests
+        kosmos 'j.servers.myjobs.test()'
+
         """
-        self.workers_start()
-        self.test1()
-        self.test2()
-        self.test3()
+        if start:
+            self.workers_start()
+        self._test_run(name=name)
 
-        print("TEST MYWORKERS FOR 3 TESTS DONE")
-
-    def test_spawn(self):
-        """
-        kosmos -p "j.servers.myjobs.test_spawn()"
-
-        note the -p it will make sure the monkey patching happens
-
-        this testfunction will test the debug window
-
-        :return:
-        """
-
-        j.core.myenv.config["LOGGER_PANEL_NRLINES"] = 15  # means 15 lines in panel  (-1 means auto, 0 means none)
-        j.tools.logger.debug = True
-
-        def something():
-            counter = 1
-            while True:
-                counter += 1
-                self._log_debug("test")
-                self._log_info("test:%s" % counter)
-                self._log_warning("test")
-                gevent.sleep(1)
-
-        gevent.spawn(something)
-
-        j.shell()  # you will see the shell is now interactive but yet still the something greenlet is running
-
-    def test_simple(self):
-        """
-        kosmos "j.servers.myjobs.test_simple()"
-        :return:
-        """
-        j.tools.logger.debug = True
-
-        def reset():
-            # kill leftovers from last time, if any
-            self.init(reset=True)
-            jobs = self.model_job.find()
-            assert len(jobs) == 0
-            assert self.queue_jobs_start.qsize() == 0
-            assert self.queue_return.qsize() == 0
-
-        def add(a, b):
-            return a + b
-
-        job = self.schedule(add, 1, 2)
-
-        self.worker_start(onetime=True)
-        print(self.results([job]))
-
-    def test_simple_error(self):
-        """
-        kosmos "j.servers.myjobs.test_simple_error()"
-        :return:
-        """
-        j.tools.logger.debug = True
-
-        def reset():
-            # kill leftovers from last time, if any
-            self.init(reset=True)
-            jobs = self.model_job.find()
-            assert len(jobs) == 0
-            assert self.queue_jobs_start.qsize() == 0
-            assert self.queue_return.qsize() == 0
-
-        def add(a, b):
-            raise ValueError("aaa")
-            return a + b
-
-        job = self.schedule(add, 1, 2)
-
-        self.worker_start(onetime=True)
-        print(self.results([job]))
+    # def test_spawn(self):
+    #     """
+    #     kosmos -p "j.servers.myjobs.test_spawn()"
+    #
+    #     note the -p it will make sure the monkey patching happens
+    #
+    #     this testfunction will test the debug window
+    #
+    #     :return:
+    #     """
+    #
+    #     j.core.myenv.config["LOGGER_PANEL_NRLINES"] = 15  # means 15 lines in panel  (-1 means auto, 0 means none)
+    #     j.tools.logger.debug = True
+    #
+    #     def something():
+    #         counter = 1
+    #         while True:
+    #             counter += 1
+    #             self._log_debug("test")
+    #             self._log_info("test:%s" % counter)
+    #             self._log_warning("test")
+    #             gevent.sleep(1)
+    #
+    #     gevent.spawn(something)
+    #
+    #     j.shell()  # you will see the shell is now interactive but yet still the something greenlet is running
 
     def test1(self):
         """

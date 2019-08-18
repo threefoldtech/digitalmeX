@@ -87,8 +87,7 @@ j.tools.markdowndocs.load_wikis()
             self.rack.add("gedis", self.gedis_server.gevent_server)
 
             gedis_reverse_proxy = openresty.reverseproxies.new(
-                name="gedis", port_source=8900, proxy_type='tcp',
-                port_dest=8901, ipaddr_dest='0.0.0.0'
+                name="gedis", port_source=8900, proxy_type="tcp", port_dest=8901, ipaddr_dest="0.0.0.0"
             )
 
             gedis_reverse_proxy.configure()
@@ -96,8 +95,7 @@ j.tools.markdowndocs.load_wikis()
             self.rack.bottle_server_add(port=4443)
 
             bottle_reverse_proxy = openresty.reverseproxies.new(
-                name="bottle", port_source=4442, proxy_type='http',
-                port_dest=4443, ipaddr_dest='0.0.0.0'
+                name="bottle", port_source=4442, proxy_type="http", port_dest=4443, ipaddr_dest="0.0.0.0"
             )
 
             bottle_reverse_proxy.configure()

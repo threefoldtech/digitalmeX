@@ -31,4 +31,4 @@ class USER(j.data.bcdb._BCDBModelClass):
             pass
 
     def _schema_get(self):
-        return j.data.schema.get_from_url_latest("threebot.phonebook.user.1")
+        return j.data.schema.get_from_url("threebot.phonebook.user.1")

@@ -76,7 +76,7 @@ class ReverseProxy(j.application.JSBaseConfigClass):
         j.sal.fs.createDir("%s/servers/http_proxy" % self._parent._parent._web_path)
         j.sal.fs.createDir("%s/servers/tcp_proxy" % self._parent._parent._web_path)
 
-        if self.proxy_type in ['http', 'websocket']:
+        if self.proxy_type in ["http", "websocket"]:
             r = j.tools.jinja2.template_render(text=self.HTTP_CONFIG, obj=self)
             j.sal.fs.writeFile("%s/servers/http_proxy/proxy_%s.conf" % (self._parent._parent._web_path, self.name), r)
         else:  # TCP proxy_type = 'tcp'

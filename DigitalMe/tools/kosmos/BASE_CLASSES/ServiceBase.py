@@ -44,7 +44,7 @@ class ServiceBase(j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
 
         if self.__class__._MODEL is None:
-            self.__class__._MODEL = j.world.system._bcdb.model_get_from_schema(self.__class__._SCHEMA_TXT)
+            self.__class__._MODEL = j.world.system._bcdb.model_get(schema=self.__class__._SCHEMA_TXT)
 
         self.actions = {}
         self._state = None

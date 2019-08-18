@@ -123,12 +123,12 @@ class BCDB(BackendMixin):
         self.bcdb.reset()
 
     def get_schema_by_url(self, url):
-        schema = j.data.schema.get_from_url_latest(url=url)
+        schema = j.data.schema.get_from_url(url=url)
         return schema
 
     def get_model_by_schema_url(self, schema_url):
 
-        return self.bcdb.model_get_from_url(schema_url)
+        return self.bcdb.model_get(url=schema_url)
 
     def get_object_by_id(self, obj_id, schema=None):
         m = self.get_model_by_schema_url(schema)

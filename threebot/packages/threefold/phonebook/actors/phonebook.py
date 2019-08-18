@@ -7,7 +7,7 @@ NONE = 2147483647
 class phonebook(JSBASE):
     def __init__(self, *args, **kwargs):
         bcdb = j.data.bcdb.get("threebot_phonebook")
-        self.phonebook_model = bcdb.model_get_from_url("threebot.phonebook.user.1")
+        self.phonebook_model = bcdb.model_get(url="threebot.phonebook.user.1")
 
     def register(self, **kwargs):
         """

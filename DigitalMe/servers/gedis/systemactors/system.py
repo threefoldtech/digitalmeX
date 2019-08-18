@@ -36,10 +36,10 @@ class system(JSBASE):
 
         schemas = {}
         for url in urls:
-            for md5 in j.data.schema.url_to_md5[url]:
-                assert j.data.schema.md5_to_schema[md5].url
-                self._log_debug(j.data.schema.md5_to_schema[md5].url, data=j.data.schema.md5_to_schema[md5].text)
-                schemas[md5] = (j.data.schema.md5_to_schema[md5].text, j.data.schema.md5_to_schema[md5].url)
+            s = j.data.schema.get_from_url(url)
+            schemas.append(s)
+            self._log_debug(s.url, data=s.text)
+                schemas[md5] = (s.text, s.url)
         schemas = j.data.serializers.msgpack.dumps(schemas)
         return schemas
 

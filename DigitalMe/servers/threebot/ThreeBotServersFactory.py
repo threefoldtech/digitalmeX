@@ -62,7 +62,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         cl.reload()
 
-        s = j.data.schema.get_from_url_latest("tfgrid.node.2")
+        s = j.data.schema.get_from_url("tfgrid.node.2")
         node = s.new()
         node.node_id = "111"
         node2 = cl.actors.nodes.add(node)
