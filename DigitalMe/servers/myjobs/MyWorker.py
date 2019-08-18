@@ -179,7 +179,7 @@ class MyWorker(j.application.JSBaseClass):
                         continue
 
                     try:
-                        job.result = j.data.serializers.json.dumps({"result": res})
+                        job.result = j.data.serializers.json.dumps(res)
                     except Exception as e:
                         job.error = (
                             str(e) + "\nCOULD NOT SERIALIZE RESULT OF THE METHOD, make sure json can be used on result"
