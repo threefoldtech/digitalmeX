@@ -611,7 +611,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
         reset()
 
-        self.workers_start_corex()
+        self.workers_start_tmux()
 
         # test the behaviour for 1 job in process, only gevent for data handling
         jobid = self.schedule(add_error, 1, 2)
@@ -648,7 +648,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
         # lets start from scratch, now we know the super basic stuff is working
         reset()
-        self.workers_start_corex()
+        self.workers_start_tmux()
 
 
         for x in range(10):
@@ -721,7 +721,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
 
         reset()
-        self.workers_start_corex(nrworkers=10)
+        self.workers_start_tmux(nrworkers=10)
 
         print("wait to schedule jobs")
         gevent.sleep(2)
