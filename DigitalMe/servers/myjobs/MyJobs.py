@@ -156,9 +156,9 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         if not self.dataloop:
             self.dataloop = gevent.spawn(self._data_loop)
 
-    def workers_start_corex(self, nrworkers=3, debug=False):
+    def workers_start_tmux(self, nrworkers=3, debug=False):
         """
-        kosmos "j.servers.myjobs.workers_start_corex(1)"
+        kosmos "j.servers.myjobs.workers_start_tmux(1)"
         """
         # j.builders.apps.corex.install()
         # j.servers.corex.default.start()  # starts corex at port 1500
@@ -534,7 +534,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         self.scheduled_ids = []
         return res
 
-    workers_start = workers_start_corex
+    workers_start = workers_start_tmux
 
     def test(self, name="basic", start=False):
         """
@@ -804,7 +804,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         :return:
         """
         if start:
-            j.servers.myjobs.workers_start_corex(4)
+            j.servers.myjobs.workers_start_tmux(4)
 
         def wait_1sec():
             import time
