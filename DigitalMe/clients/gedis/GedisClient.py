@@ -79,7 +79,7 @@ class GedisClient(JSConfigBase):
         for key, data in r2.items():
             schema_text, schema_url = data
             if not j.data.schema.exists(md5=key):
-                j.data.schema.add_from_text(schema_text, url=schema_url)
+                j.data.schema.get_from_text(schema_text, url=schema_url)
         cmds_meta = self._redis.execute_command("api_meta_get", self.namespace)
         cmds_meta = j.data.serializers.msgpack.loads(cmds_meta)
         if cmds_meta["cmds"] == {}:
@@ -109,7 +109,7 @@ class GedisClient(JSConfigBase):
             # get the schemas
             for schemaobj in actormeta.data.schemas:
                 self._log_info("load schema: %s" % schemaobj.url)
-                j.data.schema.add_from_text(schemaobj.content, url=schemaobj.url)
+                j.data.schema.get_from_text(schemaobj.content, url=schemaobj.url)
 
             self._log_info("cmds for actor:%s" % actorname)
 
