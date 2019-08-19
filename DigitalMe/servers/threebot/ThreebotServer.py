@@ -55,12 +55,13 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
             wikis_load_cmd = """
-from Jumpscale import j
-j.tools.markdowndocs.load_wikis()
+            from Jumpscale import j
+            j.tools.markdowndocs.load_wikis()
             """
             wikis_loader = j.servers.startupcmd.get(
                 "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
             )
+
             if not wikis_loader.is_running():
                 wikis_loader.start()
 
