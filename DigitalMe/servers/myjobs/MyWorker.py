@@ -6,20 +6,13 @@ import gevent
 import signal
 
 
-class TimedOutExc(Exception):
-    pass
-
-
 def deadline(timeout, *args):
     def decorate(f):
-        def handler(signum, frame):
-            raise TimedOutExc()
-
         def new_f(*args, **kwargs):
-            signal.signal(signal.SIGALRM, handler)
-            signal.alarm(timeout)
+            if timeout:
+                with gevent.Timeout(timeout):
+                    return f(*args, **kwargs)
             return f(*args, **kwargs)
-            signal.alarm(0)
 
         new_f.__name__ = f.__name__
         return new_f
@@ -182,10 +175,11 @@ class MyWorker(j.application.JSBaseClass):
 
                     try:
                         res = deadline(job.timeout)(method)(*args, **kwargs)
-                    except Exception as e:
+                    except BaseException as e:
                         tb = sys.exc_info()[-1]
-                        if isinstance(e, TimedOutExc):
+                        if isinstance(e, gevent.Timeout):
                             msg = 'time out'
+                            e = j.exceptions.Base(msg)
                         else:
                             msg = "cannot execute action"
                             job.time_stop = j.data.time.epoch

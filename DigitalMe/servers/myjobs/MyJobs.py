@@ -28,7 +28,7 @@ schema_action = """
 @url = jumpscale.myjobs.action
 actorname = ""
 methodname = ""
-key* = ""  #hash    
+key* = ""  #hash
 code = ""
 
 
@@ -356,7 +356,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         method,
         *args,
         category="",
-        timeout=120,
+        timeout=0,
         inprocess=False,
         return_queues=[],
         return_queues_reset=False,
@@ -779,8 +779,6 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         for x in range(40):
             self.schedule(wait_2sec)
 
-        self.start()
-
         gevent.joinall([self.dataloop, self.mainloop])
 
         print("TEST OK")
@@ -810,8 +808,6 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             ids.append(self.schedule(wait_1sec))
 
         res = self.results(ids)
-
-        j.shell()
 
     def test4(self, start=True, count=20):
         """
