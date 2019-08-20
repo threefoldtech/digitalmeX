@@ -76,7 +76,7 @@ class GedisClientGenerated():
         try:
             logdict = j.data.serializers.json.loads(str(e))
         except Exception as e2:
-            j.shell()
+            # j.shell()
             j.core.myenv.exception_handle(exception_obj=e,die=True)
             print(1)
             j.shell()

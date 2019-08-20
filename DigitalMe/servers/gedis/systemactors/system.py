@@ -38,7 +38,7 @@ class system(JSBASE):
         for url in urls:
             s = j.data.schema.get_from_url(url)
             self._log_debug(s.url, data=s.text)
-            schemas[s.md5] = (s.text, s.url)
+            schemas[s._md5] = (s.text, s.url)
         schemas = j.data.serializers.msgpack.dumps(schemas)
         return schemas
 
