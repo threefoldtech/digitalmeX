@@ -1,5 +1,4 @@
 from Jumpscale import j
-import time
 
 
 def main(self):
@@ -43,3 +42,9 @@ def main(self):
     # print(self.results([job]))
 
     self._log_info("basic error test done")
+
+    self.halt(reset=True)
+
+
+
+    print("TEST OK")

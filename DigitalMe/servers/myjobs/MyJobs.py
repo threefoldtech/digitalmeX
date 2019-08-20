@@ -2,7 +2,8 @@ import inspect
 from Jumpscale import j
 import gipc
 import gevent
-import sys
+import time
+
 from .MyWorker import MyWorker
 
 JSBASE = j.application.JSBaseClass
@@ -103,7 +104,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
     def workers_count(self):
         return len(self.workers.values())
 
-    def start(self, debug=False, fixed_workers=None):
+    def start(self, debug=False, fixed_workers=None, subprocess=False):
         """
 
         kosmos -p "j.servers.myjobs.start()"
@@ -122,7 +123,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         # self.init()
         if not debug:
             if not fixed_workers:
-                self.mainloop = gevent.spawn(self._main_loop)
+                self.mainloop = gevent.spawn(self._main_loop, subprocess)
             else:
                 self._main_loop_fixed(nr=fixed_workers, debug=debug)  # does not wait, no need to do in gevent
         self.dataloop = gevent.spawn(self._data_loop)  # returns the data
@@ -134,7 +135,6 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                 self._main_loop_fixed(nr=fixed_workers, debug=debug)
 
     def worker_start(self, onetime=False, subprocess=True, worker_id=None, debug=False):
-
         self.init()
         if onetime:
             subprocess = False
@@ -251,7 +251,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         if debug:
             j.shell()
 
-    def _main_loop(self):
+    def _main_loop(self, subprocess=False):
         self._log_debug("monitor start")
 
         def test_workers_more():
@@ -312,7 +312,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                 # test if we need to add workers
                 while test_workers_more():
                     print("WORKERS START")
-                    self.worker_start()
+                    self.worker_start(subprocess=subprocess)
             else:
 
                 # test if we have too many workers
@@ -478,7 +478,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             ids = self.scheduled_ids
         res = {}
         counter = 0
-
+        now = time.time()
         if len(ids) > 0:
             current_id = ids[0]
         else:
@@ -524,7 +524,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                 return res
 
             counter += 1
-            if counter > timeout * 10:
+            if time.time() - now > timeout:
                 self.scheduled_ids = []
                 raise j.exceptions.Base("timeout for results with jobids:%s" % ids)
 
@@ -537,7 +537,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
     workers_start = workers_start_tmux
 
-    def test(self, name="basic", start=False):
+    def test(self, name='basic', start=False):
         """
         it's run all tests
         kosmos 'j.servers.myjobs.test()'
@@ -545,5 +545,9 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         """
         if start:
             self.workers_start()
+
         self._test_run(name=name)
 
+        self.halt(reset=True)
+
+        print("TEST OK ALL PASSED")

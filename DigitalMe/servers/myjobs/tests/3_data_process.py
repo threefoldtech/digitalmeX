@@ -22,4 +22,4 @@ def main(self, start=True, count=20):
         for id in ids:
             assert res[id] == "OK"
 
-        print("TESTOK")
+        print("TEST OK")

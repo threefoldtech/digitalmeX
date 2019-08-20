@@ -28,6 +28,12 @@ def main(self):
     assert len(res.values()) == 1
     assert v[0] == str(3)
 
+    job = self.model_job.find()[0]
+    assert job.error == {}
+    assert job.result == "3"
+    assert job.state == "OK"
+    assert job.time_stop > 0
+
     jobid = self.schedule(add, 3, 4)
 
     self.worker_start(onetime=True)
@@ -38,6 +44,6 @@ def main(self):
 
     print(res)
 
-    print("Basic Done")
+    self.halt(reset=True)
 
-    print("**DONE**")
+    print("TEST OK")

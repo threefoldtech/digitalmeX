@@ -13,7 +13,6 @@ def main(self):
 
     gevent.joinall([self.dataloop, self.mainloop])
 
-    print("TEST OK")
-
     self.halt(reset=True)
 
+    print("TEST OK")

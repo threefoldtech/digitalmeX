@@ -28,7 +28,7 @@ def main(self):
 
     reset()
 
-    self.workers_start_tmux()
+    cmds = self.workers_start_tmux()
 
     # test the behaviour for 1 job in process, only gevent for data handling
     jobid = self.schedule(add_error, 1, 2)
@@ -50,18 +50,6 @@ def main(self):
     assert job.result == ""
     assert job.state == "ERROR"
     assert job.time_stop > 0
-
-    # j.servers.myjobs.schedule(add, 1, 2)
-    # self.worker_start(onetime=True)
-    #
-    # jobs = self.model_job.find()
-    # assert len(jobs) == 2
-    # job = jobs[1]
-    # import ipdb; ipdb.set_trace()
-    # assert job.error == ""
-    # assert job.result == "3"
-    # assert job.state == "OK"
-    # assert job.time_stop > 0
 
     # lets start from scratch, now we know the super basic stuff is working
     reset()
@@ -170,4 +158,4 @@ def main(self):
 
     self.halt(reset=True)
 
-    print("TEST1 OK, ALL PASSED")
+    print("TEST OK")
