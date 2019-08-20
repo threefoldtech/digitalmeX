@@ -1,5 +1,5 @@
 from Jumpscale import j
-from .GeventGunServer import GeventGunServer
+from .gundb.geventserver import GeventGunServer
 from geventwebsocket import WebSocketServer, WebSocketApplication, Resource
 from collections import OrderedDict
 
@@ -19,7 +19,7 @@ class GundbFactory(JSBASE):
         returns a gevent server for j.servers.rack
 
         """
-        server = WebSocketServer(("", port), Resource(OrderedDict([("/", GeventGunServer)])))
+        server = WebSocketServer(("", port), Resource(OrderedDict([("/gun", GeventGunServer)])))
         return server
 
     def install(self):

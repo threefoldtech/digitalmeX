@@ -2,9 +2,11 @@
 <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gun/lib/unset.js"></script>
 <script>
-  var gun = Gun("ws://172.17.0.2:7766/")
 
-  let basicTest = () => {
+var gun = Gun("ws://172.17.0.2:7766/gun")
+
+let basicTest = () => {
+    console.log("basic test.")
     gun.get("proj.simple://1").put({
       "attr1": "val"
     })
@@ -16,20 +18,14 @@
       "attr2": "zc"
     }) // should fail.
     */
-
-    /*
-    gun.get("proj.simple://2").get("list/mychars").set("a")
-    gun.get("proj.simple://2").get("list/mychars").set("b")
-    gun.get("proj.simple://2").get("list/mychars").set("c")
-    */
   }
 
   let midTest = () => {
-    /*
+    console.log("mid test")
+
     gun.get("proj.person://4").put({
-      "name": "ahmed"
+      name: "ahmed"
     })
-    */
     gun.get("proj.person://4").put({
       "name": "ahmed"
     })
@@ -50,7 +46,7 @@
 
 
   let advTest = () => {
-
+    console.log("advanced test")
     gun.get("proj.human://7").put({
       "name": "xmon"
     })
@@ -73,17 +69,32 @@
     gun.get("proj.human://8").get("list_favcolors").set("white")
     gun.get("proj.human://8").get("list_favcolors").set("red")
     gun.get("proj.human://8").get("list_favcolors").set("blue")
-
-    gun.get("proj.human://8").get("list_langs").set({
-      "name": "python"
-    })
-    gun.get("proj.human://8").get("list_langs").set({
-      "name": "ruby"
-    })
+    // gun.get("proj.human://8").get("list_favcolors").unset("red")
+    let python = gun.get('langs_python').put({name:'python'})
+    gun.get("proj.human://8").get("list_langs").set(python)
+    let ruby = gun.get('langs_ruby').put({name:'ruby'})
+    gun.get("proj.human://8").get("list_langs").set(ruby)
 
   }
-  basicTest()
-  midTest()
-  advTest()
-  console.log("here now..")
+  let nesetedListTest = () => {
+     gun.get("proj.programmar://8").get("list_langs").set({
+         "name": "python",
+         "list_releases": {
+         "0": "3.6",
+         "1": "3.7"
+         }
+     })
+  }
+  let unsetObjTest = () => {
+					let football = gun.get("footbal").put({name: 'football'})
+					let tennis = gun.get("tennis").put({name: 'tennis'})
+  	gun.get("proj.programmar://9").get("list_hobbies").set(football);
+  	gun.get("proj.programmar://9").get("list_hobbies").set(tennis);
+  	gun.get("proj.programmar://9").get("list_hobbies").unset(tennis);
+	}
+    basicTest()
+    midTest()
+    advTest()
+    nesetedListTest()
+	unsetObjTest()
 </script>
