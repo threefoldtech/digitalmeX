@@ -24,7 +24,7 @@ class ServerRack(JSBASE):
         self._logger_enable()
         # self._monkeypatch_done = False
 
-    def add(self, name, server):
+    def add(self, name, server, start=False):
         """
         add a gevent server e.g
 
@@ -38,6 +38,8 @@ class ServerRack(JSBASE):
         """
         assert server
         self.servers[name] = server
+        if start:
+            server.start()
 
     def bottle_server_add(self, name="bottle", port=4442, app=None, websocket=False):
 
