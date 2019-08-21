@@ -1,62 +1,45 @@
-import imp
-import os
 import nacl
 
 from Jumpscale import j
-from redis.connection import ConnectionError
 
 JSConfigBase = j.application.JSBaseConfigClass
 
 
-class GedisClientActors(j.application.JSBaseClass):
-    pass
-
-
-class GedisClientSchemas(j.application.JSBaseClass):
-    pass
-
-
-class GedisClient(JSConfigBase):
+class ThreebotClient(JSConfigBase):
     _SCHEMATEXT = """
-    @url = jumpscale.gedis.client
-    name* = "main"
-    host = "127.0.0.1" (S)
-    port = 8900 (ipport)
+    @url = jumpscale.threebot.client
+    name* = ""                      #is the bot dns
+    tid = 0 (I)                     #threebot id
+    host = "127.0.0.1" (S)          #for caching purposes
+    port = 8900 (ipport)            #for caching purposes
+    pubkey = ""                     #for caching purposes
     namespace = "default" (S)
-    password_ = "" (S)
-    ssl = False (B)
-    ssl_keyfile = "" (S)
-    ssl_certfile = "" (S)
-    ssl_ca_certs = "" (S)
     """
 
     def _init(self, **kwargs):
-        # j.clients.gedis.latest = self
-        self._namespace = self.namespace
-        self._actorsmeta = {}
-        self.schemas = None
-        self._actors = None
-        self._code_generated_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "gedis", self.name, "client")
-        j.sal.fs.createDir(self._code_generated_dir)
-        j.sal.fs.touch(j.sal.fs.joinPaths(self._code_generated_dir, "__init__.py"))
-        self._redis_ = None
-        self._reset()
+        self._gedis = None
+        assert self.name != ""
 
-    def _update_trigger(self, key, val):
-        self._reset()
-
-    def _reset(self):
-        self._redis_ = None  # connection to server
-        # self._models = None
-        self._actors = None
+    @property
+    def gedis(self):
+        if not self._gedis:
+            self._gedis = j.clients.gedis.get(name=self.name, host=self.host, port=self.port, namespace=self.namespace)
+        return self._gedis
 
     def ping(self):
-        test = self._redis.execute_command("ping")
-        if test:
-            return True
-        return False
+        return self.gedis.ping()
 
     def auth(self, bot_id):
+        nacl_cl = j.data.nacl.get()
+        nacl_cl._load_privatekey()
+        signing_key = nacl.signing.SigningKey(nacl_cl.privkey.encode())
+        epoch = str(j.data.time.epoch)
+        signed_message = signing_key.sign(epoch.encode())
+        cmd = "auth {} {} {}".format(bot_id, epoch, signed_message)
+        res = self._redis.execute_command(cmd)
+        return res
+
+    def sign(self, bot_id):
         nacl_cl = j.data.nacl.get()
         nacl_cl._load_privatekey()
         signing_key = nacl.signing.SigningKey(nacl_cl.privkey.encode())

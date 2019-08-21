@@ -8,7 +8,7 @@ from collections import defaultdict
 
 SCHEME_UID_PAT = "(?P<schema>.+?)://(?P<id>.+)"
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.todoitem
 title* = "" (S)
@@ -17,7 +17,7 @@ done* = False (B)
 """
 )
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.todolist
 name* = "" (S)
@@ -25,7 +25,7 @@ list_todos* = (LO) !proj.todoitem
 
 """
 )
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.simple
 attr1* = "" (S)
@@ -34,13 +34,13 @@ list_mychars* = (LS)
 """
 )
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.email
 addr* = "" (S)
 """
 )
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.person
 name* = "" (S)
@@ -49,7 +49,7 @@ email* = "" !proj.email
 )
 
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.os
 name* = "" (S)
@@ -57,7 +57,7 @@ name* = "" (S)
 )
 
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.phone
 model* = "" (S)
@@ -65,7 +65,7 @@ os* = "" !proj.os
 """
 )
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.lang
 name* = ""
@@ -73,7 +73,7 @@ name* = ""
 )
 
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.human
 name* = "" (S)
@@ -83,7 +83,7 @@ phone* = "" !proj.phone
 """
 )
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.post
 name = "" (S)
@@ -93,7 +93,7 @@ body = "" (S)
 """
 )
 
-j.data.schema.add_from_text(
+j.data.schema.get_from_text(
     """
 @url = proj.blog
 name* = "" (S)

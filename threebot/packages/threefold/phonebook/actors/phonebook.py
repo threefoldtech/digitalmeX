@@ -46,13 +46,13 @@ class phonebook(JSBASE):
             if not self.phonebook_model.exists(id=user_id):
                 users = []
             else:
-                users = [self.phonebook_model.get(id=user_id)]
+                users = [self.phonebook_model.new(id=user_id)]
         elif name:
             users = self.phonebook_model.find(name=name)
         elif email:
             users = self.phonebook_model.find(email=email)
         else:
-            raise j.exceptions.NotFound("param error (%s)" % locals())
+            raise j.exceptions.NotFound("param error need to specify user_id or name or email")
 
         if len(users) <= 0:
             raise j.exceptions.NotFound("user not found (%s)" % locals())
