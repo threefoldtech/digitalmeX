@@ -537,6 +537,15 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
 
     workers_start = workers_start_tmux
 
+    def wait(self, queue_name, size, timeout=120):
+        queue = j.clients.redis.queue_get(redisclient=j.core.db, key="myjobs:%s" % queue_name)
+        with gevent.Timeout(timeout, False):
+            while True:
+                if queue.qsize() < size:
+                    gevent.sleep(0)
+                    continue
+                return queue
+
     def test(self, name='basic', start=False):
         """
         it's run all tests

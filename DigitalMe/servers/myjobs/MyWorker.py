@@ -222,5 +222,6 @@ class MyWorker(j.application.JSBaseClass):
                     self.data.current_job = 2147483647
                     self.data.save()
 
+            gevent.sleep(0)
             if self.onetime:
                 return
