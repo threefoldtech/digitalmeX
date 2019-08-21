@@ -9,9 +9,12 @@ class Package(j.application.ThreeBotPackageBase):
         """
         zdb_admin = j.clients.zdb.client_admin_get()
         # zdb_admin.reset()
-        zdb_admin.namespace_new("threebot_phonebook", secret="123456")
-        zdb = j.clients.zdb.get(name="threebot_phonebook", port=9900, secret_="123456")
-        bcdb = j.data.bcdb.get(name="threebot_phonebook", storclient=zdb)
+        name = "threebot_phonebook"
+        if not j.data.bcdb.exists(name=name):
+            zdb = zdb_admin.namespace_new(name, secret="123456")
+            bcdb = j.data.bcdb.new(name=name, storclient=zdb)
+        else:
+            bcdb = j.data.bcdb.get(name=name)
 
     def start(self):
         """

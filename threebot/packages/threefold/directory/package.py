@@ -7,18 +7,20 @@ class Package(j.application.ThreeBotPackageBase):
         is called at install time
         :return:
         """
-        zdb_admin = j.clients.zdb.client_admin_get()
-        # zdb_admin.reset()
-        zdb_admin.namespace_new("tf_directory", secret="123456")
-        zdb = j.clients.zdb.get(name="tf_directory", port=9900, secret_="123456")
-        bcdb = j.data.bcdb.get(name="tf_directory", storclient=zdb)
+
+        name = "tf_directory"
+        if not j.data.bcdb.exists(name=name):
+            zdb_admin = j.clients.zdb.client_admin_get()
+            zdb = zdb_admin.namespace_new(name, secret="123456")
+            bcdb = j.data.bcdb.new(name=name, storclient=zdb)
+        else:
+            bcdb = j.data.bcdb.get(name=name)
 
     def start(self):
         """
         called when the 3bot starts
         :return:
         """
-
         bcdb = j.data.bcdb.get(name="tf_directory")
 
         bcdb.models_add(path=self.package_root + "/models")

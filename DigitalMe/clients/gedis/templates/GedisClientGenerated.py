@@ -76,10 +76,10 @@ class GedisClientGenerated():
         try:
             logdict = j.data.serializers.json.loads(str(e))
         except Exception as e2:
-            j.shell()
+            # j.shell()
             j.core.myenv.exception_handle(exception_obj=e,die=True)
-            print(1)
-            j.shell()
+            # print(1)
+            # j.shell()
         addr = self._redis.connection_pool.connection_kwargs["host"]
         port = self._redis.connection_pool.connection_kwargs["port"]
         msg = "GEDIS SERVER %s:%s"%(addr,port)
@@ -90,4 +90,5 @@ class GedisClientGenerated():
             j.shell()
         j.core.tools.log2stdout(logdict=logdict, data_show=True)
         j.core.tools.process_logdict_for_handlers(logdict=logdict, iserror=True)
-        sys.exit(1)
+
+        raise j.exceptions.Input("error in client")

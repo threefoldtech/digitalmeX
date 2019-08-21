@@ -10,51 +10,51 @@ assuming you have these schemas registered in your system
 ```
 bcdb = j.data.bcdb.get(name="test")
 bcdb.reset()
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.todo
 title* = "" (S)
 done* = False (B)
 
 """)
 
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.todolist
 name* = "" (S)
 todos* = (LO) !proj.todo
 
 """)
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.simple
 attr1* = "" (S)
 attr2* = 0 (I)
 mychars* = (LS) 
 """)
 
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.email
 addr* = "" (S)
 """)
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.person
 name* = "" (S)
 email* = "" !proj.email
 """)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.os
 name* = "" (S)
 """)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.phone
 model* = "" (S)
 os* = "" !proj.os
 """)
 
 
-j.data.schema.add_from_text("""
+j.data.schema.get_from_text("""
 @url = proj.human
 name* = "" (S)
 phone* = "" !proj.phone
