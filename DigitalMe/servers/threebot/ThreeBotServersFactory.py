@@ -2,10 +2,8 @@ from .ThreebotServer import ThreeBotServer
 from Jumpscale import j
 from .OpenPublish import OpenPublish
 
-JSConfigs = j.application.JSBaseConfigsClass
 
-
-class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
+class ThreeBotServersFactory(j.application.JSBaseConfigsClass, j.application.JSFactoryTools):
     """
     Factory for 3bots
     """
@@ -32,58 +30,32 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
     def bcdb_get(self, name, secret="", use_zdb=False):
         return self.default.bcdb_get(name, secret, use_zdb)
 
-    def test(self, start=True):
+    def test(self, name="basic", start=False):
         """
 
-        kosmos 'j.servers.threebot.test(start=False)'
-        kosmos 'j.servers.threebot.test()'
+        kosmos 'j.servers.threebot.test(name="basic")'
+        kosmos 'j.servers.threebot.test(start=True)'
         :return:
         """
-        self.install()
         if start:
             self.default.stop()
             self.default.start(background=True)
 
-        # add an actor
+            self.client = j.clients.gedis.get(name="threebot")
+            # self.client = j.clients.gedis.get(name="threebot", host="134.209.90.92")
 
-        # cl = j.clients.gedis.get(name="threebot")
-        cl = j.clients.gedis.get(name="threebot", host="134.209.90.92")
+            assert self.client.ping()
 
-        cl.actors.phonebook.get()
+            self.client.actors.package_manager.package_add(
+                "tf_directory",
+                git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
+            )
 
-        j.shell()
-        w
+            self.client.actors.package_manager.package_add(
+                "threebot_phonebook",
+                git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
+            )
 
-        assert cl.ping()
+            self.client.reload()
 
-        cl.actors.package_manager.package_add(
-            "tf_directory",
-            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
-        )
-
-        cl.actors.package_manager.package_add(
-            "threebot_phonebook",
-            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
-        )
-
-        cl.reload()
-
-        s = j.data.schema.get_from_url("tfgrid.node.2")
-        node = s.new()
-        node.node_id = "111"
-        node2 = cl.actors.nodes.add(node)
-
-        node3 = cl.actors.nodes.add(node)
-
-        ns = cl.actors.nodes.list()
-
-        r = cl.actors.farms.list()
-
-        u = cl.actors.phonebook.register(
-            name="kristof.gouna", email="kristof@test.com", pubkey="aaaaa", signature="bbbbb"
-        )
-
-        u2 = cl.actors.phonebook.get(user_id=None, name="kristof.gouna")
-        u3 = cl.actors.phonebook.get(user_id=None, email="kristof@test.com")
-
-        self._log_info("ThreeBot worked")
+        self._test_run(name=name)

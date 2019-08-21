@@ -1,13 +1,6 @@
 from Jumpscale import j
 import os
 
-JSBASE = j.application.JSBaseClass
-
-# WIKI_CONFIG_TEMPLATE = "templates/WIKI_CONF_TEMPLATE.conf"
-# WEBSITE_CONFIG_TEMPLATE = "templates/WEBSITE_CONF_TEMPLATE.conf"
-# WEBSITE_STATIC_CONFIG_TEMPLATE = "templates/WEBSITE_STATIC_CONF_TEMPLATE.conf"
-# OPEN_PUBLISH_REPO = "https://github.com/threefoldtech/OpenPublish"
-
 
 from .OpenRestyServer import OpenRestyServer
 
