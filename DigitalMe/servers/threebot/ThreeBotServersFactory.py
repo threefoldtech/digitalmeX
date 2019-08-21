@@ -46,7 +46,13 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass):
 
         # add an actor
 
-        cl = j.clients.gedis.get(name="threebot")
+        # cl = j.clients.gedis.get(name="threebot")
+        cl = j.clients.gedis.get(name="threebot", host="134.209.90.92")
+
+        cl.actors.phonebook.get()
+
+        j.shell()
+        w
 
         assert cl.ping()
 
