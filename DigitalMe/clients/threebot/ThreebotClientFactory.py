@@ -19,7 +19,7 @@ class ThreebotClientFactory(j.application.JSBaseConfigsClass):
         return self._explorer
 
     def sign(self, payload):
-        n = j.data.nacl.get()
+        n = j.data.nacl.default
         return n.signing_key.sign(payload)
 
     def threebot_record_get(self, user_id=None, name=None):
@@ -27,7 +27,7 @@ class ThreebotClientFactory(j.application.JSBaseConfigsClass):
         j.shell()
 
     def threebot_register(self, name, email, ipaddr="", description="", pubkey=None):
-        n = j.data.nacl.get()
+        n = j.data.nacl.default
         if not pubkey:
             pubkey = n.verify_key.encode()
         self._log(pubkey)
@@ -41,25 +41,27 @@ class ThreebotClientFactory(j.application.JSBaseConfigsClass):
         # encrypted = n.encrypt(b"a", hex=False, public_key=pubkey_obj)
         # n.decrypt(encrypted)
 
-        j.shell()
-
-        if isinstance(pubkey, bytes):
-            pubkey = binascii.hexlify(pubkey).decode()
-        else:
+        if not isinstance(pubkey, bytes):
             raise j.exceptions.Input("needs to be bytes")
 
-        payload = name + email + pubkey + ipaddr + description
-        signature = self.sign(payload.encode())
+        from io import BytesIO
+
+        buffer = BytesIO()
+        buffer.write(name.encode())
+        buffer.write(email.encode())
+        buffer.write(pubkey)
+        buffer.write(ipaddr.encode())
+        buffer.write(description.encode())
+
+        # payload = name + email + pubkey + ipaddr + description
+        payload = buffer.getvalue()
+        signature = n.sign(payload)
 
         # need to show how to use the pubkey to verify the signature & get the data
+        assert n.verify(payload, signature, verify_key=pubkey)
 
-        pubkey_binary = binascii.unhexlify(pubkey)
-        self._log(pubkey_binary)
-        assert n.verify(payload.encode(), signature, verify_key=pubkey_binary)
         j.shell()
-        w
-        import nacl
-
+        asd
         r = self.explorer.client.actors.phonebook.register(name=name, email=email, pubkey=pubkey, signature=signature)
 
         j.shell()
