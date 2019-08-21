@@ -13,31 +13,31 @@ class Website(j.application.JSBaseConfigClass):
         @url = jumpscale.openresty.website.1
         name* = (S)
         port = 80
-        location = 
+        location =
         domain = ""
         path = ""
-        
+
         """
 
     CONFIG = """
         server {
             {% if obj.domain %}
-            server_name ~^(www\.)?{{domain}}$;
+            server_name ~^(www\.)?{{obj.domain}}$;
             {% endif %}
             listen {{obj.port}};
             lua_code_cache on;
-        
+            default_type text/html;
+
             include vhosts/static.conf.loc;
             include vhosts/websocket.conf.loc;
             include vhosts/docsites.conf.loc;
-            
+
             location /{{obj.location}} {
-                default_type text/html;
                 root {{obj.path}};
             }
 
         }
-        
+
         """
 
     def configure(self, config=None):
@@ -46,25 +46,7 @@ class Website(j.application.JSBaseConfigClass):
 
         config is a server config file of nginx (in text format)
 
-        e.g.
-
-        server {
-            {% if obj.domain %}
-            server_name ~^(www\.)?{{domain}}$;
-            {% endif %}
-            listen {{obj.port}};
-            lua_code_cache on;
-
-            include vhosts/static.conf.loc;
-            include vhosts/websocket.conf.loc;
-            include vhosts/docsites.conf.loc;
-
-            location /{{obj.location}} {
-                default_type text/html;
-                root {{obj.path}};
-            }
-
-        }
+        see `CONFIG` for an example.
 
         can use template variables with obj...  (obj is this obj = self)
 

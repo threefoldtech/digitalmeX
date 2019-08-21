@@ -15,7 +15,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         @url = jumpscale.threebotserver.1
         name* = "main" (S)
         executor = tmux,corex (E)
-        adminsecret_ = "123456"  (S)      
+        adminsecret_ = "123456"  (S)
         """
 
     def _init(self, **kwargs):
@@ -23,6 +23,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         self._rack = None
         self._gedis_server = None
         self._startup_cmd = None
+        self._openresty = None
         j.servers.threebot.current = self
 
     @property
@@ -36,6 +37,12 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         if not self._gedis_server:
             self._gedis_server = j.servers.gedis.get("threebot_%s" % self.name, port=8901)
         return self._gedis_server
+
+    @property
+    def openresty(self):
+        if not self._openresty:
+            self._openresty = j.servers.openresty.get("threebot", executor=self.executor)
+        return self._openresty
 
     def start(self, background=False):
         """
@@ -53,7 +60,6 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
 
-            openresty = j.servers.openresty.get("threebot", executor=self.executor)
             wikis_load_cmd = """
             from Jumpscale import j
             j.tools.markdowndocs.load_wikis()
@@ -65,7 +71,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             if not wikis_loader.is_running():
                 wikis_loader.start()
 
-            openresty.install()
+            self.openresty.install()
 
             j.servers.sonic.default.start()
 
@@ -76,7 +82,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             app = j.servers.gedis_websocket.default.app
             self.rack.websocket_server_add("websocket", 9999, app)
 
-            websocket_reverse_proxy = openresty.reverseproxies.new(
+            websocket_reverse_proxy = self.openresty.reverseproxies.new(
                 name="websocket", port_source=4444, proxy_type="websocket", port_dest=9999, ipaddr_dest="0.0.0.0"
             )
 
@@ -87,7 +93,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             self.rack.add("gedis", self.gedis_server.gevent_server)
 
-            gedis_reverse_proxy = openresty.reverseproxies.new(
+            gedis_reverse_proxy = self.openresty.reverseproxies.new(
                 name="gedis", port_source=8900, proxy_type="tcp", port_dest=8901, ipaddr_dest="0.0.0.0"
             )
 
@@ -95,7 +101,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             self.rack.bottle_server_add(port=4443)
 
-            bottle_reverse_proxy = openresty.reverseproxies.new(
+            bottle_reverse_proxy = self.openresty.reverseproxies.new(
                 name="bottle", port_source=4442, proxy_type="http", port_dest=4443, ipaddr_dest="0.0.0.0"
             )
 
@@ -105,7 +111,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             for package in j.tools.threebotpackage.find():
                 package.start()
 
-            openresty.start()
+            self.openresty.start()
             self.rack.start()
 
         else:

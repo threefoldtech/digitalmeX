@@ -1,0 +1,29 @@
+<html>
+
+<head>
+    <script src="/static/weblibs/gedis/gedis_client.js"></script>
+
+    <script>
+        function getJobs() {
+            return GEDIS_CLIENT.execute(info = { "namespace": "default", "actor": "myjobs", "command": "list_jobs" })
+        }
+
+
+
+        function getWorkers() {
+            return GEDIS_CLIENT.execute(info = { "namespace": "default", "actor": "myjobs", "command": "list_workers" })
+        }
+
+
+        function print(promise) { promise.then(data => console.log(data)) }
+
+        print(getWorkers())
+        print(getJobs())
+    </script>
+</head>
+
+<body>
+    <h1>hello websites + gedis</h1>
+</body>
+
+</html>
