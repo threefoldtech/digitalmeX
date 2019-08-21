@@ -60,7 +60,7 @@ class MyWorker(j.application.JSBaseClass):
         storclient = j.clients.rdb.client_get(redisclient=redisclient)
         assert storclient._redis.source == "worker"
 
-        self.bcdb = j.data.bcdb.get("myjobs", storclient=storclient, fromcache=False)
+        self.bcdb = j.data.bcdb.get("myjobs", storclient=storclient)
         self.model_job = self.bcdb.model_get(url="jumpscale.myjobs.job")
         self.model_action = self.bcdb.model_get(url="jumpscale.myjobs.action")
         self.model_worker = self.bcdb.model_get(url="jumpscale.myjobs.worker")
