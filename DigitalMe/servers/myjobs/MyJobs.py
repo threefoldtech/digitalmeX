@@ -251,7 +251,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
         if debug:
             j.shell()
 
-    def _main_loop(self, subprocess=False):
+    def _main_loop(self, subprocess=True):
         self._log_debug("monitor start")
 
         def test_workers_more():
@@ -298,7 +298,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                         # print("TIMEOUT")
                         # print(w)
                         self._log_info("KILL:%s in worker %s" % (w.id, job.id))
-                        gproc.kill()
+                        gproc.terminate()
                         self.workers.pop(wid)
                         job.state = "ERROR"
                         job.error = "TIMEOUT"
@@ -313,6 +313,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                 while test_workers_more():
                     print("WORKERS START")
                     self.worker_start(subprocess=subprocess)
+                gipc.gipc.gevent.joinall([p for p in self.workers.values()])
             else:
 
                 # test if we have too many workers
@@ -444,8 +445,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
             job_running = w.current_job != 2147483647
 
             if not graceful or not job_running:
-                gproc.kill()
-                gproc.terminate()  # dont know difference
+                gproc.terminate()
 
         if reset:
             self.model_action.destroy()

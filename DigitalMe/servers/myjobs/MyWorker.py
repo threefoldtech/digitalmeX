@@ -100,11 +100,10 @@ class MyWorker(j.application.JSBaseClass):
             self.return_data("J", obj)
 
     def start(self):
-
         while True:
+            res = None
 
             if self.onetime:
-                res = None
                 while not res:
                     res = self.queue_jobs_start.get(timeout=0)
                     gevent.sleep(0.1)
@@ -120,13 +119,12 @@ class MyWorker(j.application.JSBaseClass):
                     print("WORKER REMOVE SELF:%s" % self.data.id)
                     return
             else:
-                res.decode()
                 jobid = int(res)
 
                 # update worker has been active
                 self.data = self.model_worker.get(self.data.id)
 
-                if res == "halt":
+                if res == b"halt":
                     return
                 self.data.last_update = j.data.time.epoch
                 self.data.current_job = jobid
