@@ -2,19 +2,15 @@ from Jumpscale import j
 
 
 class Package(j.application.ThreeBotPackageBase):
+    def _init(self):
+        self.bcdb = self.package.threebot_server.bcdb_get("threebot_phonebook")
+
     def prepare(self):
         """
         is called at install time
         :return:
         """
-        zdb_admin = j.clients.zdb.client_admin_get()
-        # zdb_admin.reset()
-        name = "threebot_phonebook"
-        if not j.data.bcdb.exists(name=name):
-            zdb = zdb_admin.namespace_new(name, secret="123456")
-            bcdb = j.data.bcdb.new(name=name, storclient=zdb)
-        else:
-            bcdb = j.data.bcdb.get(name=name)
+        pass
 
     def start(self):
         """
@@ -22,9 +18,7 @@ class Package(j.application.ThreeBotPackageBase):
         :return:
         """
 
-        bcdb = j.data.bcdb.get("threebot_phonebook")
-
-        bcdb.models_add(path=self.package_root + "/models")
+        self.bcdb.models_add(path=self.package_root + "/models")
 
         self.gedis_server.actors_add(j.sal.fs.joinPaths(self.package_root, "actors"))
 

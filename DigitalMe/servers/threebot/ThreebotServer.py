@@ -6,6 +6,11 @@ from .OpenPublish import OpenPublish
 JSConfigs = j.application.JSBaseConfigsClass
 
 
+class BCDBs:
+    def __init__(self):
+        pass
+
+
 class ThreeBotServer(j.application.JSBaseConfigClass):
     """
     Open Publish factory
@@ -24,13 +29,32 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
         self._gedis_server = None
         self._startup_cmd = None
         self._openresty = None
+
+        self.bcdbs = BCDBs()
         j.servers.threebot.current = self
+
+    @property
+    def secret(self):
+        return self.adminsecret_
 
     @property
     def rack(self):
         if not self._rack:
             self._rack = j.servers.rack.get()
         return self._rack
+
+    def bcdb_get(self, name):
+        if not name in self.bcdbs__dict__:
+            # will be made more secure but for now ok
+            zdb_admin = j.clients.zdb.client_admin_get()
+            name = "wiki"
+            if not j.data.bcdb.exists(name=name):
+                zdb = zdb_admin.namespace_new(name, secret=self.secret)
+                bcdb = j.data.bcdb.new(name=name, storclient=zdb)
+            else:
+                bcdb = j.data.bcdb.get(name=name)
+            self.bcdbs__dict__[name] = bcdb
+        return self.bcdbs__dict__[name]
 
     @property
     def gedis_server(self):
@@ -60,17 +84,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
             zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
 
-            wikis_load_cmd = """
-            from Jumpscale import j
-            j.tools.markdowndocs.load_wikis()
-            """
-            wikis_loader = j.servers.startupcmd.get(
-                "wikis_loader", cmd_start=wikis_load_cmd, timeout=60 * 60, executor=self.executor, interpreter="python"
-            )
-
-            if not wikis_loader.is_running():
-                wikis_loader.start()
-
+            self.openresty = j.servers.openresty.get("threebot", executor=self.executor)
             self.openresty.install()
 
             j.servers.sonic.default.start()

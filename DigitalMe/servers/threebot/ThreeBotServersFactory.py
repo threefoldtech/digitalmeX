@@ -14,6 +14,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass, j.application.JSF
     def _init(self):
         self._default = None
         self.current = None
+        self.client = None
 
     @property
     def default(self):
@@ -30,32 +31,39 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass, j.application.JSF
     def bcdb_get(self, name, secret="", use_zdb=False):
         return self.default.bcdb_get(name, secret, use_zdb)
 
-    def test(self, name="basic", start=False):
+    def test(self, name="basic", wiki=False):
         """
 
         kosmos 'j.servers.threebot.test(name="basic")'
-        kosmos 'j.servers.threebot.test(start=True)'
         :return:
         """
-        if start:
+        if j.sal.nettools.tcpPortConnectionTest("localhost", 5354) == False:
+            # means needs to be started
+            self.install()
             self.default.stop()
             self.default.start(background=True)
 
-            self.client = j.clients.gedis.get(name="threebot")
-            # self.client = j.clients.gedis.get(name="threebot", host="134.209.90.92")
+        self.client = j.clients.gedis.get(name="threebot")
+        # self.client = j.clients.gedis.get(name="threebot", host="134.209.90.92")
 
-            assert self.client.ping()
+        assert self.client.ping()
 
+        self.client.actors.package_manager.package_add(
+            "tf_directory",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
+        )
+
+        self.client.actors.package_manager.package_add(
+            "threebot_phonebook",
+            git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
+        )
+
+        if wiki:
             self.client.actors.package_manager.package_add(
-                "tf_directory",
-                git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/directory",
+                "tf_wiki",
+                git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/wiki",
             )
 
-            self.client.actors.package_manager.package_add(
-                "threebot_phonebook",
-                git_url="https://github.com/threefoldtech/digitalmeX/tree/development_jumpscale/threebot/packages/threefold/phonebook",
-            )
-
-            self.client.reload()
+        self.client.reload()
 
         self._test_run(name=name)
