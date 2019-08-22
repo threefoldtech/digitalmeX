@@ -35,6 +35,7 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass, j.application.JSF
         """
 
         kosmos 'j.servers.threebot.test(name="basic")'
+        kosmos 'j.servers.threebot.test(name="onlystart",wiki=True)'
         :return:
         """
         if j.sal.nettools.tcpPortConnectionTest("localhost", 5354) == False:
@@ -66,4 +67,6 @@ class ThreeBotServersFactory(j.application.JSBaseConfigsClass, j.application.JSF
 
         self.client.reload()
 
-        self._test_run(name=name)
+        if not name == "onlystart":
+
+            self._test_run(name=name)
