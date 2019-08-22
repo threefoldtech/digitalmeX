@@ -1,29 +1,31 @@
+<!doctype html>
 <html>
 
 <head>
+    <meta charset='utf8'>
+    <meta name='viewport' content='width=device-width'>
+
+    <title>Svelte app</title>
+
+    <link rel='icon' type='image/png' href='/myjobs/favicon.png'>
+    <link rel='stylesheet' href='/myjobs/global.css'>
+    <link rel='stylesheet' href='/myjobs/bundle.css'>
+
     <script src="/static/weblibs/gedis/gedis_client.js"></script>
+    <script defer src='/myjobs/bundle.js'></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
 
-    <script>
-        function getJobs() {
-            return GEDIS_CLIENT.execute(info = { "namespace": "default", "actor": "myjobs", "command": "list_jobs" })
-        }
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 
-
-
-        function getWorkers() {
-            return GEDIS_CLIENT.execute(info = { "namespace": "default", "actor": "myjobs", "command": "list_workers" })
-        }
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
 
-        function print(promise) { promise.then(data => console.log(data)) }
-
-        print(getWorkers())
-        print(getJobs())
-    </script>
 </head>
 
 <body>
-    <h1>hello websites + gedis</h1>
 </body>
 
 </html>

@@ -52,7 +52,7 @@ JOBS = """
 "state": "OK",
 "timeout": "0",
 "action_id": "4",
-"args": "[\n1,\n2\n]",
+"args": [1,2],
 "kwargs": "{}",
 "result": "3",
 "error": "{}",
@@ -66,7 +66,7 @@ JOBS = """
 "state": "OK",
 "timeout": "0",
 "action_id": "6",
-"args": "[\n1,\n2\n]",
+"args": [1,2],
 "kwargs": "{}",
 "result": "3",
 "error": "{}",
@@ -80,51 +80,12 @@ JOBS = """
 "state": "OK",
 "timeout": "0",
 "action_id": "6",
-"args": "[\n1,\n2\n]",
+"args": [1,2],
 "kwargs": "{}",
 "result": "3",
 "error": "{}",
 "return_queues": [],
 "id": 8
-}
-]
-}
-print(getWorkers())
-undefined
-VM5682:12 {
-"workers": [
-{
-"timeout": "3,600",
-"time_start": "2019/08/21 15:57:51",
-"last_update": "2019/08/21 16:10:03",
-"current_job": "-",
-"error": "",
-"state": "NEW",
-"pid": "0",
-"halt": false,
-"id": 1
-},
-{
-"timeout": "3,600",
-"time_start": "2019/08/21 15:57:54",
-"last_update": "2019/08/21 15:57:54",
-"current_job": "-",
-"error": "",
-"state": "new",
-"pid": "0",
-"halt": false,
-"id": 2
-},
-{
-"timeout": "3,600",
-"time_start": "2019/08/21 15:57:56",
-"last_update": "2019/08/21 16:03:42",
-"current_job": "-",
-"error": "",
-"state": "NEW",
-"pid": "0",
-"halt": false,
-"id": 3
 }
 ]
 }
