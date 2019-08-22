@@ -16,6 +16,7 @@ def deadline(timeout, *args):
 
         new_f.__name__ = f.__name__
         return new_f
+
     return decorate
 
 
@@ -30,7 +31,6 @@ class MyWorker(j.application.JSBaseClass):
         self.debug = debug
 
         assert worker_id
-
 
         if self.debug:
             j.application.debug = self.debug
@@ -176,14 +176,12 @@ class MyWorker(j.application.JSBaseClass):
                     except BaseException as e:
                         tb = sys.exc_info()[-1]
                         if isinstance(e, gevent.Timeout):
-                            msg = 'time out'
+                            msg = "time out"
                             e = j.exceptions.Base(msg)
                         else:
                             msg = "cannot execute action"
                             job.time_stop = j.data.time.epoch
-                        logdict = j.core.tools.log(
-                            tb=tb, exception=e, msg=msg, data=action.code, stdout=self.showout
-                        )
+                        logdict = j.core.tools.log(tb=tb, exception=e, msg=msg, data=action.code, stdout=self.showout)
                         job.error = logdict
                         job.state = "ERROR"
 

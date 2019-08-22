@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class Package(j.application.ThreeBotPackageBase):
-    def _init(self):
+    def _init(self, **kwargs):
         self.bcdb = self.package.threebot_server.bcdb_get("tf_directory")
 
     def prepare(self):

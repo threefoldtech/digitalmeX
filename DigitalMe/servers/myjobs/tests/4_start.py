@@ -2,7 +2,6 @@ import gevent
 
 
 def main(self, count=100):
-
     def wait_1sec():
         gevent.sleep(1)
         return "OK"
