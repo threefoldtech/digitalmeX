@@ -5,6 +5,7 @@ class Wiki:
     def __init__(self, name, url):
         self.name = name
         self.url = url
+        # TODO: use the myjobs, wiki per wiki
 
     def load(self, name, url):
         a = j.tools.markdowndocs.load(url=url, name=name)
