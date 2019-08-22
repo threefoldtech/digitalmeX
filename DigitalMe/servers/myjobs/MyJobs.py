@@ -546,7 +546,7 @@ class MyJobs(JSBASE, j.application.JSFactoryTools):
                     continue
                 return queue
 
-    def test(self, name='basic', start=False):
+    def test(self, name="basic", start=False):
         """
         it's run all tests
         kosmos 'j.servers.myjobs.test()'

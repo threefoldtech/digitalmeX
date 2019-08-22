@@ -45,6 +45,4 @@ def main(self):
 
     self.halt(reset=True)
 
-
-
     print("TEST OK")

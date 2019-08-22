@@ -17,7 +17,7 @@ class Wikis:
 
 
 class Package(j.application.ThreeBotPackageBase):
-    def _init(self):
+    def _init(self, **kwargs):
         self.branch = "development"
 
     def load(self, url):

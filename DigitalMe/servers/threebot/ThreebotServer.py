@@ -73,7 +73,7 @@ class ThreeBotServer(j.application.JSBaseConfigClass):
 
             j.application.debug = False  # otherwise we get a pudb session
 
-            zdb = j.servers.zdb.new("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
+            zdb = j.servers.zdb.get("threebot", adminsecret_=self.adminsecret_, executor=self.executor)
             zdb.start()
 
             openresty = j.servers.openresty.get("threebot", executor=self.executor)
