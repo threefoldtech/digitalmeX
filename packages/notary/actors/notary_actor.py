@@ -88,6 +88,7 @@ class notary_actor(JSBASE):
 
         return schema_out.new(serializeddata=j.data.serializers.jsxdata.dumps(result[0]))
 
+
 def _hash_content(threebot_id, content):
     """
     return the 32 bytes blake2 hash of
