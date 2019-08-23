@@ -6,7 +6,7 @@ JSConfigBase = j.application.JSBaseConfigClass
 class ThreeBotPackage(JSConfigBase):
     _SCHEMATEXT = """
         @url = jumpscale.threebot.package.1
-        name* = "main"        
+        name* = "main"
         giturl = "" (S)  #if empty then local
         path = ""
         threebotserver_name = ""
@@ -19,6 +19,10 @@ class ThreeBotPackage(JSConfigBase):
     @property
     def gedis_server(self):
         return self.threebot_server.gedis_server
+
+    @property
+    def openresty(self):
+        return self.threebot_server.openresty
 
     def _init(self, **kwargs):
         if self.giturl:
