@@ -160,7 +160,8 @@ class App(object):
                     ct = types.get('.' + j.sal.fs.getFileExtension(file))
                     if ct:
                         content_type = ct
-                self.db.file_write(file, request.body, append=True, create=True)
+                for line in request.body:
+                    self.db.file_write(file, line.decode(), append=True, create=True)
                 obj = self.db._file_model.get_by_name(name=file)[0]
                 obj.content_type = content_type
                 obj.epoch = int(time.time())
