@@ -13,6 +13,7 @@ class FileManServer(JSConfigClient):
        """
 
     def start(self, background=False):
+        self.install()
         if not background:
             rack = j.servers.rack.get()
             app = App(self._dirpath)()
