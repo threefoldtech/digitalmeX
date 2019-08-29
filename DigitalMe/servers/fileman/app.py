@@ -216,10 +216,10 @@ class App(object):
             destination = request.GET.get('destination')
 
             def copy_dir(src, dest):
-                self.db.dir_copy(src, dest)
+                self.db.dir_copy_from_bcdbfs(src, dest)
 
             def move_dir(src, dest):
-                self.db.dir_copy(src, dest)
+                self.db.dir_copy_from_bcdbfs(src, dest)
                 self.db.dir_remove(src)
 
             if action == 'copy':
@@ -239,10 +239,10 @@ class App(object):
             destination = request.GET.get('destination')
 
             def copy_file(src, dest):
-                self.db.file_copy(src, dest)
+                self.db.file_copy_form_bcdbfs(src, dest)
 
             def move_file(src, dest):
-                self.db.file_copy(src, dest)
+                self.db.file_copy_form_bcdbfs(src, dest)
                 self.db.file_delete(src)
 
             if action == 'copy':
