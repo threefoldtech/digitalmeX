@@ -134,15 +134,15 @@ class ServerRack(JSBASE):
             userDict["description"] = description
             userDict["roles"] = roles
 
-        if user_mapping == {}:
-            addUser("", "root", "root", "")
+        # if user_mapping == {}:
+        #     addUser("", "root", "root", "")
 
         config = {
             "host": "0.0.0.0",
             "port": port,
             "provider_mapping": {"/": webdavprovider},
             "verbose": 1,
-            "simple_dc": {"user_mapping": user_mapping},
+            "simple_dc": {"user_mapping": user_mapping or {"*": True}},
         }
 
         app = WsgiDAVApp(config)
