@@ -63,11 +63,11 @@ class WebdavServer(JSConfigClient):
 
         return self._app
 
-    def start(self, background=False):
+    def start(self, background=False, debug=False):
         self.install()
         if not background:
             rack = j.servers.rack.get()
-            server = WSGIServer(("0.0.0.0", self.port), application=self.get_app())
+            server = WSGIServer(("0.0.0.0", self.port), application=self.get_app(debug=debug))
             rack.add(name=self.name, server=server)
             rack.start()
 
